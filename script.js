@@ -4,28 +4,58 @@
   if (menuButton && nav) menuButton.addEventListener('click', () => nav.classList.toggle('open'));
   document.querySelectorAll('#year').forEach(el => el.textContent = new Date().getFullYear());
 
-  const canvas = document.getElementById('particles');
+  // Subtle falling-rain particles: each drop falls a short distance, then starts again.
+  const canvas = document.getElementById('rain');
   if (!canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const ctx = canvas.getContext('2d');
-  let width = 0, height = 0, dots = [];
-  const count = Math.min(75, Math.floor(window.innerWidth / 17));
+  let width = 0, height = 0, drops = [];
+  const count = Math.min(95, Math.max(35, Math.floor(window.innerWidth / 12)));
+
+  function makeDrop(randomY = true) {
+    return {
+      x: Math.random() * width,
+      y: randomY ? Math.random() * height : -Math.random() * 80,
+      length: 2 + Math.random() * 5,
+      speed: 0.7 + Math.random() * 1.5,
+      drift: -0.12 + Math.random() * 0.24,
+      alpha: 0.14 + Math.random() * 0.28,
+      distance: 70 + Math.random() * 190,
+      travelled: 0
+    };
+  }
+
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    width = window.innerWidth; height = window.innerHeight;
-    canvas.width = width * dpr; canvas.height = height * dpr;
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    dots = Array.from({length:count}, () => ({x:Math.random()*width,y:Math.random()*height,r:.5+Math.random()*1.25,vx:(Math.random()-.5)*.32,vy:(Math.random()-.5)*.32,a:.18+Math.random()*.42}));
+    drops = Array.from({ length: count }, () => makeDrop());
   }
+
   function draw() {
-    ctx.clearRect(0,0,width,height);
-    for (const p of dots) {
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < -5) p.x = width+5; if (p.x > width+5) p.x = -5;
-      if (p.y < -5) p.y = height+5; if (p.y > height+5) p.y = -5;
-      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fillStyle = 'rgba(155,195,255,'+p.a+')'; ctx.fill();
+    ctx.clearRect(0, 0, width, height);
+    for (let i = 0; i < drops.length; i++) {
+      const p = drops[i];
+      p.y += p.speed;
+      p.x += p.drift;
+      p.travelled += p.speed;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x + p.drift * 1.5, p.y + p.length);
+      ctx.strokeStyle = 'rgba(155,195,255,' + p.alpha + ')';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      if (p.travelled >= p.distance || p.y > height + 8) {
+        drops[i] = makeDrop(false);
+      }
     }
     requestAnimationFrame(draw);
   }
-  resize(); window.addEventListener('resize', resize); draw();
+
+  resize();
+  window.addEventListener('resize', resize);
+  draw();
 })();
