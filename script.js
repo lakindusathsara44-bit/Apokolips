@@ -6,20 +6,20 @@
 
   // Subtle falling-rain particles: each drop falls a short distance, then starts again.
   const canvas = document.getElementById('rain');
-  if (!canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
   let width = 0, height = 0, drops = [];
-  const count = Math.min(95, Math.max(35, Math.floor(window.innerWidth / 12)));
+  const count = Math.min(150, Math.max(65, Math.floor(window.innerWidth / 7)));
 
   function makeDrop(randomY = true) {
     return {
       x: Math.random() * width,
       y: randomY ? Math.random() * height : -Math.random() * 80,
-      length: 2 + Math.random() * 5,
-      speed: 0.7 + Math.random() * 1.5,
+      length: 4 + Math.random() * 7,
+      speed: 1.1 + Math.random() * 2.0,
       drift: -0.12 + Math.random() * 0.24,
-      alpha: 0.14 + Math.random() * 0.28,
-      distance: 70 + Math.random() * 190,
+      alpha: 0.32 + Math.random() * 0.42,
+      distance: 100 + Math.random() * 260,
       travelled: 0
     };
   }
@@ -44,8 +44,8 @@
       ctx.beginPath();
       ctx.moveTo(p.x, p.y);
       ctx.lineTo(p.x + p.drift * 1.5, p.y + p.length);
-      ctx.strokeStyle = 'rgba(155,195,255,' + p.alpha + ')';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(175,210,255,' + p.alpha + ')';
+      ctx.lineWidth = 1.25;
       ctx.stroke();
 
       if (p.travelled >= p.distance || p.y > height + 8) {
