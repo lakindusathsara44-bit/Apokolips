@@ -23,18 +23,6 @@
     .plan-name{font:11px 'DM Mono',monospace;letter-spacing:1.5px;color:#9dbde8}
     .plan-select{margin-top:auto;padding:11px 14px;border:1px solid rgba(112,169,255,.45);border-radius:7px;background:rgba(65,125,210,.12);color:#dce8fa;font:600 12px inherit;cursor:pointer;transition:background .2s,border-color .2s}
     .plan-select:hover{background:rgba(65,125,210,.25);border-color:rgba(112,169,255,.9)}
-    .plan-dialog{width:min(92vw,480px);max-height:88vh;overflow:auto;background:#0c1018;color:#e8eef8;border:1px solid rgba(112,169,255,.4);border-radius:14px;padding:24px;box-shadow:0 20px 70px #000b}
-    .plan-dialog::backdrop{background:rgba(0,0,0,.78);backdrop-filter:blur(4px)}
-    .plan-dialog h2{margin:0 0 8px;font-size:21px}
-    .plan-dialog p{color:#9aa8bc;font-size:13px;line-height:1.6}
-    .plan-form{display:grid;gap:13px;margin-top:18px}
-    .plan-form label{display:grid;gap:6px;color:#c9d5e7;font-size:12px}
-    .plan-form input{width:100%;box-sizing:border-box;padding:12px;border:1px solid #303b4d;border-radius:7px;background:#080c13;color:#fff;font:inherit}
-    .plan-form input:focus{outline:2px solid rgba(112,169,255,.6);border-color:#70a9ff}
-    .plan-dialog-actions{display:flex;gap:10px;margin-top:8px}
-    .plan-dialog-actions button{flex:1;padding:12px;border-radius:7px;cursor:pointer;font-weight:700}
-    .plan-send{border:0;background:#70a9ff;color:#07101e}
-    .plan-cancel{border:1px solid #39465a;background:transparent;color:#dce8fa}
     .plan-price{font-size:32px;font-weight:800;letter-spacing:-1.5px;margin:22px 0 4px}
     .plan-price small{font-size:11px;font-weight:500;letter-spacing:0;color:#929baa}
     .plan-count{font-size:13px;color:#c9d5e7;margin-bottom:20px}
@@ -53,50 +41,19 @@
 <article class="plan-card"><div class="plan-name">APOKOLIPS PREMIUM</div><div class="plan-price">LKR 6,000 <small>/ month</small></div><div class="plan-count">40 subdomains</div><div class="plan-feature">The largest package for managing many subdomains.</div><button class="plan-select" type="button" data-plan="Apokolips Premium">Choose Plan →</button></article>
 </section>
 
-<dialog class="plan-dialog" id="planDialog" aria-labelledby="planDialogTitle">
-  <h2 id="planDialogTitle">Plan Request</h2>
-  <p>Enter your details below. Your email app will open with a prepared request addressed to Apokolips.</p>
-  <form class="plan-form" id="planRequestForm">
-    <label>Plan Name<input id="requestPlan" name="plan" type="text" required readonly></label>
-    <label>Your Name<input name="userName" type="text" autocomplete="name" placeholder="Enter your full name" required></label>
-    <label>Your Phone / WhatsApp Number<input name="userNumber" type="tel" autocomplete="tel" placeholder="+94 7X XXX XXXX" required></label>
-    <label>Your Email Address<input name="userEmail" type="email" autocomplete="email" placeholder="you@example.com" required></label>
-    <div class="plan-dialog-actions">
-      <button class="plan-cancel" type="button" id="closePlanDialog">Cancel</button>
-      <button class="plan-send" type="submit">Continue to Email →</button>
-    </div>
-  </form>
-</dialog>
+
 \n<div class="plan-note"><strong style="color:#dce8fa">Please note:</strong> These plans provide subdomains only. Website hosting, storage, and website files are not included. You must have your own hosting provider that supports custom domains. DNS connection and HTTPS availability depend on your hosting provider.</div>
 </main>
 <footer class="footer"><span>© <span id="year"></span> Lakindu Sathsara</span><span><a href="index.html">BACK TO HOME ↑</a></span></footer><script src="script.js"></script>
 <script>
 (function(){
-  const dialog=document.getElementById('planDialog');
-  const form=document.getElementById('planRequestForm');
-  const planInput=document.getElementById('requestPlan');
   document.querySelectorAll('.plan-select').forEach(button=>{
     button.addEventListener('click',()=>{
-      planInput.value=button.dataset.plan;
-      dialog.showModal();
+      const plan=button.dataset.plan;
+      const subject='Plan Subscription Request - '+plan;
+      const body='Dear Apokolips Team,\n\nI would like to request the '+plan+' subdomain plan. Please review my request and let me know the next steps to activate the plan.\n\nUSER DETAILS\nPlan Name: '+plan+'\nUser Name: [Enter your full name]\nUser Number: [Enter your phone / WhatsApp number]\nUser Email: [Enter your email address]\n\nREQUEST\nI kindly request you to contact me regarding this plan and guide me through the registration and payment process.\n\nThank you.\n[Your Name]';
+      window.location.href='mailto:apokolips.contact@gmail.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
     });
-  });
-  document.getElementById('closePlanDialog').addEventListener('click',()=>dialog.close());
-  dialog.addEventListener('click',event=>{
-    if(event.target===dialog) dialog.close();
-  });
-  form.addEventListener('submit',event=>{
-    event.preventDefault();
-    if(!form.reportValidity()) return;
-    const data=new FormData(form);
-    const plan=data.get('plan');
-    const name=data.get('userName').trim();
-    const number=data.get('userNumber').trim();
-    const email=data.get('userEmail').trim();
-    const subject='Plan Request - '+plan;
-    const body='Hello Apokolips Team,\n\nI would like to request the following subdomain plan.\n\nPlan Name: '+plan+'\nUser Name: '+name+'\nUser Number: '+number+'\nUser Email: '+email+'\n\nPlease contact me with the next steps.\n\nThank you,\n'+name;
-    window.location.href='mailto:apokolips.contact@gmail.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
-    dialog.close();
   });
 })();
 </script></body></html>
