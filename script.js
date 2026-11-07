@@ -4,6 +4,35 @@
   if (menuButton && nav) menuButton.addEventListener('click', () => nav.classList.toggle('open'));
   document.querySelectorAll('#year').forEach(el => el.textContent = new Date().getFullYear());
 
+  // Public site-wide visitor counter (shared namespace across Apokolips pages).
+  const footer = document.querySelector('.footer');
+  if (footer && !footer.querySelector('.visitor-counter')) {
+    const counter = document.createElement('div');
+    counter.className = 'visitor-counter';
+    counter.setAttribute('aria-label', 'Public Apokolips visitor counter');
+    counter.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#aab4c3;font:10px "DM Mono",monospace;letter-spacing:.7px;';
+    const label = document.createElement('span');
+    label.textContent = 'TOTAL VISITORS';
+    const value = document.createElement('span');
+    value.className = 'counterapi';
+    value.setAttribute('aria-live', 'polite');
+    value.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:34px;min-height:22px;padding:2px 8px;border:1px solid rgba(112,169,255,.28);border-radius:5px;background:rgba(112,169,255,.07);color:#c7dcff;font-weight:700;letter-spacing:1px;';
+    counter.append(label, value);
+    footer.appendChild(counter);
+
+    if (!document.querySelector('script[data-apokolips-counter]')) {
+      const counterScript = document.createElement('script');
+      counterScript.src = 'https://counterapi.com/c.js?ns=apokolips.xyz';
+      counterScript.async = true;
+      counterScript.dataset.apokolipsCounter = 'true';
+      counterScript.onerror = () => {
+        value.textContent = '—';
+        value.title = 'Visitor count is temporarily unavailable';
+      };
+      document.body.appendChild(counterScript);
+    }
+  }
+
   const canvas = document.getElementById('rain');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
