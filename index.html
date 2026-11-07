@@ -55,11 +55,8 @@
   <footer class="footer">
     <span>© <span id="year"></span> Lakindu Sathsara</span>
     <span>BUILT WITH CURIOSITY <span class="accent">●</span></span>
-    <div class="visitor-counter" aria-label="Public Apokolips visitor counter" style="display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;color:#aab4c3;font:10px 'DM Mono',monospace;letter-spacing:.7px;width:100%;padding-top:12px;">
-      <span>VISITORS</span>
-      <span class="counterapi" ns="apokolips.xyz" action="view" key="site-visitors" startNumber="128" aria-live="polite" style="display:inline-flex;align-items:center;justify-content:center;min-width:38px;min-height:24px;padding:2px 9px;border:1px solid rgba(112,169,255,.28);border-radius:5px;background:rgba(112,169,255,.07);color:#c7dcff;font-weight:700;letter-spacing:1px;"></span>
-    </div>
+    <span class="visitor-counter" aria-label="Apokolips visitor count"><span>VISITORS</span> <strong id="visitor-count" aria-live="polite">128</strong></span>
   </footer>
-  <script async src="https://counterapi.com/c.js?ns=apokolips.xyz"></script>
+  <script src="visitor-counter.js" defer></script>
   <script src="script.js"></script>
 </body></html>

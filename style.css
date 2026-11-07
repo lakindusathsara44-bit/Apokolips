@@ -11,3 +11,8 @@
 /* Logo display safety override */
 .brand-mark{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;max-width:34px!important;max-height:34px!important;flex:0 0 34px!important;overflow:hidden!important;}
 .brand-mark img{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;}
+
+/* Homepage visitor counter: keep it inline with the existing footer items. */
+.footer .visitor-counter{display:inline-flex;align-items:center;gap:9px;color:#737c8b;font:10px 'DM Mono',monospace;letter-spacing:.7px;white-space:nowrap}
+.footer .visitor-counter strong{display:inline-flex;align-items:center;justify-content:center;min-width:34px;min-height:22px;padding:2px 8px;border:1px solid rgba(112,169,255,.28);border-radius:5px;background:rgba(112,169,255,.07);color:#c7dcff;font-weight:700;letter-spacing:1px}
+@media(max-width:700px){.footer .visitor-counter{margin-left:auto}}
