@@ -27,6 +27,12 @@
     .plan-price small{font-size:11px;font-weight:500;letter-spacing:0;color:#929baa}
     .plan-count{font-size:13px;color:#c9d5e7;margin-bottom:20px}
     .plan-feature{font-size:11px;color:#929baa;line-height:1.8;border-top:1px solid var(--line);padding-top:15px}
+
+    .subdomain-examples{margin-top:26px;padding:22px;border:1px solid var(--line);border-radius:10px;background:rgba(10,13,19,.72)}
+    .subdomain-examples h2{font-size:18px;margin:0 0 8px;color:#dce8fa}
+    .subdomain-examples p{font-size:12px;color:#929baa;line-height:1.8;margin:0 0 14px}
+    .example-domain-list{display:flex;flex-wrap:wrap;gap:9px}
+    .example-domain{padding:8px 11px;border:1px solid rgba(112,169,255,.25);border-radius:7px;background:rgba(65,125,210,.08);color:#bcd5fa;font:11px 'DM Mono',monospace}
     .plan-note{margin-top:26px;padding:20px;border:1px solid var(--line);border-radius:10px;background:rgba(10,13,19,.8);color:#929baa;font-size:11px;line-height:1.9}
     @media(max-width:900px){.plans-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:520px){.plans-grid{grid-template-columns:1fr}}
@@ -42,7 +48,20 @@
 </section>
 
 
-\n<div class="plan-note"><strong style="color:#dce8fa">Please note:</strong> These plans provide subdomains only. Website hosting, storage, and website files are not included. You must have your own hosting provider that supports custom domains. DNS connection and HTTPS availability depend on your hosting provider.</div>
+
+<section class="subdomain-examples" aria-labelledby="subdomain-example-title">
+<h2 id="subdomain-example-title">Choose your own subdomain name</h2>
+<p>You can request any name you like, subject to availability. Here are a few examples of how your website address could look:</p>
+<div class="example-domain-list">
+<span class="example-domain">yourname.apokolips.xyz</span>
+<span class="example-domain">myportfolio.apokolips.xyz</span>
+<span class="example-domain">mybusiness.apokolips.xyz</span>
+<span class="example-domain">shop.apokolips.xyz</span>
+<span class="example-domain">blog.apokolips.xyz</span>
+<span class="example-domain">project.apokolips.xyz</span>
+</div>
+</section>
+<div class="plan-note"><strong style="color:#dce8fa">Please note:</strong> These plans provide subdomains only. Website hosting, storage, and website files are not included. You must have your own hosting provider that supports custom domains. DNS connection and HTTPS availability depend on your hosting provider.</div>
 </main>
 <footer class="footer"><span>© <span id="year"></span> Lakindu Sathsara</span><span><a href="index.html">BACK TO HOME ↑</a></span></footer><script src="script.js"></script>
 <script>
