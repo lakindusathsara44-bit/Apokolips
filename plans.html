@@ -17,10 +17,10 @@
   <title>Subdomain Plans | Apokolips</title><link rel="stylesheet" href="style.css?v=20261107c">
   <style>
     .plans-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-    .plan-card{position:relative;background:linear-gradient(145deg,rgba(16,20,28,.96),rgba(8,10,15,.98));border:1px solid var(--line);border-radius:12px;padding:24px;display:flex;flex-direction:column;min-height:290px}
-    .plan-card.featured{transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
-    .plan-card.featured:hover,.plan-card.featured:focus-within{transform:translateY(-9px) scale(1.025);border-color:rgba(112,169,255,.9);box-shadow:0 14px 38px rgba(65,125,210,.24),0 0 22px rgba(65,125,210,.16);z-index:2}
-    @media(hover:none){.plan-card.featured:active{transform:translateY(-4px);border-color:rgba(112,169,255,.9);box-shadow:0 10px 28px rgba(65,125,210,.2)}}
+    .plan-card{position:relative;background:linear-gradient(145deg,rgba(16,20,28,.96),rgba(8,10,15,.98));border:1px solid var(--line);border-radius:12px;padding:24px;display:flex;flex-direction:column;min-height:290px;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
+    .plan-card.featured{border-color:rgba(112,169,255,.55);box-shadow:0 0 28px rgba(65,125,210,.08)}
+    .plan-card:hover,.plan-card:focus-within{transform:translateY(-9px) scale(1.025);border-color:rgba(112,169,255,.9);box-shadow:0 14px 38px rgba(65,125,210,.24),0 0 22px rgba(65,125,210,.16);z-index:2}
+    @media(hover:none){.plan-card:active{transform:translateY(-4px);border-color:rgba(112,169,255,.9);box-shadow:0 10px 28px rgba(65,125,210,.2)}}
     .plan-name{font:11px 'DM Mono',monospace;letter-spacing:1.5px;color:#9dbde8}
     .plan-price{font-size:32px;font-weight:800;letter-spacing:-1.5px;margin:22px 0 4px}
     .plan-price small{font-size:11px;font-weight:500;letter-spacing:0;color:#929baa}
