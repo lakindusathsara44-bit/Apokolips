@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050609">
+<meta name="description" content="Travel photos, videos and trip memories by Lakindu Sathsara.">
+<link rel="canonical" href="https://www.apokolips.xyz/blog.html">
+<title>Travel Blog | Apokolips</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.blog-hero{padding:42px 0 28px}.blog-kicker{color:#72b7ff;letter-spacing:.2em;font-size:.72rem;font-weight:800}.blog-title{font-size:clamp(2.5rem,7vw,5rem);line-height:1.02;margin:14px 0}.blog-title span{background:linear-gradient(90deg,#55aaff,#b18cff);-webkit-background-clip:text;background-clip:text;color:transparent}.blog-intro{max-width:650px;color:#aab4c5;line-height:1.8}.blog-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}.blog-actions a,.travel-button{display:inline-flex;align-items:center;gap:12px;padding:13px 19px;border:1px solid #2869a8;border-radius:12px;background:linear-gradient(110deg,#0c2b50,#10172a);color:#eaf5ff;text-decoration:none;font-weight:750;box-shadow:0 0 22px #087bff22}.blog-section{margin:26px 0}.blog-section h2{font-size:1.4rem}.media-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:18px}.media-card{overflow:hidden;border:1px solid #26364c;background:#0b101a;border-radius:16px}.media-card img,.media-card video{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#050609}.media-card video{aspect-ratio:16/10}.media-caption{padding:14px;color:#dce7f6}.media-caption small{display:block;color:#8293aa;margin-top:5px}.empty-state{padding:34px 22px;text-align:center;border:1px dashed #34506e;border-radius:18px;background:#0a111d}.empty-icon{font-size:2.4rem}.empty-state h3{margin:10px 0}.empty-state p{max-width:570px;margin:0 auto;color:#9baabe;line-height:1.75}.upload-guide{margin-top:20px;padding:18px;border-radius:14px;background:#0b1421;border:1px solid #243a56;color:#aab8ca;line-height:1.7}.upload-guide code{color:#8cc7ff}.back-link{color:#9fcfff}
+</style>
+</head>
+<body>
+<canvas id="rain" aria-hidden="true"></canvas>
+<header class="topbar"><a class="brand" href="index.html"><span class="brand-mark"><img src="file_00000000a7ec820890154ca6ed49b608.png" alt="Apokolips logo"></span><span>APOKOLIPS</span></a><button class="menu-toggle" aria-label="Toggle navigation">☰</button><nav class="nav"><a href="index.html">Home</a><a href="info.html">About Me</a><a href="project.gallery.html">Community Gallery</a><a href="My-project.html">My Projects</a><a href="plans.html">Subdomain Plans</a></nav></header>
+<main class="page-shell">
+<section class="blog-hero"><div class="blog-kicker">PERSONAL TRAVEL JOURNAL / 01</div><h1 class="blog-title">Places I've <span>explored.</span></h1><p class="blog-intro">A collection of travel moments, photographs, and videos. Every journey has a story — this is where I keep mine.</p><div class="blog-actions"><a href="info.html">← Back to About Me</a><a href="#memories">Explore memories ↓</a></div></section>
+<section class="blog-section" id="memories"><div class="small-label">MY TRIPS</div><h2>Photo & Video Memories</h2>
+<div class="media-grid" id="mediaGrid"></div>
+<div class="empty-state" id="emptyState"><div class="empty-icon">✧</div><h3>No travel memories added yet</h3><p>This space is ready for future trips. Photos and videos will appear here when they are uploaded to the GitHub repository.</p></div>
+</section>
+<section class="upload-guide"><strong>Adding your future trip media</strong><ol><li>Open the Apokolips GitHub repository and upload files into <code>trip-media/</code>.</li><li>Use JPG, PNG or WebP for photos, and MP4 for videos.</li><li>Open <code>blog.html</code> and add each file to the <code>tripMedia</code> list in the script, with its caption and date.</li><li>Commit the changes to GitHub. GitHub Pages will publish the updated blog.</li></ol><p>Tip: For large videos, use YouTube (Unlisted) or a video-hosting service and embed the video instead of storing huge files in Git.</p></section>
+</main>
+<footer class="footer"><span>© <span id="year"></span> Lakindu Sathsara</span><span><a href="index.html">BACK TO HOME ↑</a></span></footer>
+<script src="script.js"></script>
+<script>
+/* Add future media here. Example:
+{ type: "image", src: "trip-media/ella.jpg", title: "Ella trip", date: "2026-12-01" },
+{ type: "video", src: "trip-media/beach.mp4", title: "A day by the beach", date: "2026-12-02" }
+*/
+const tripMedia = [];
+const grid = document.getElementById("mediaGrid");
+const empty = document.getElementById("emptyState");
+if (tripMedia.length) {
+  empty.hidden = true;
+  tripMedia.forEach(item => {
+    const card = document.createElement("article");
+    card.className = "media-card";
+    const media = document.createElement(item.type === "video" ? "video" : "img");
+    media.src = item.src;
+    if (item.type === "video") { media.controls = true; media.preload = "metadata"; }
+    else { media.alt = item.title || "Trip photograph"; media.loading = "lazy"; }
+    const caption = document.createElement("div");
+    caption.className = "media-caption";
+    const title = document.createElement("strong");
+    title.textContent = item.title || "Travel memory";
+    const date = document.createElement("small");
+    date.textContent = item.date || "";
+    caption.append(title, date);
+    card.append(media, caption);
+    grid.append(card);
+  });
+}
+</script>
+</body></html>
