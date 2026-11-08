@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050609">
+<meta name="description" content="Travel photos, memories and videos by Lakindu Sathsara.">
+<link rel="icon" href="file_00000000a7ec820890154ca6ed49b608.ico">
+<link rel="stylesheet" href="style.css?v=20261108a">
+<title>My Travel Blog | Apokolips</title>
+<style>
+.blog-intro{max-width:760px}.blog-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0}.blog-empty{padding:42px 24px;text-align:center;border:1px dashed rgba(139,216,237,.28);border-radius:12px;background:rgba(12,15,21,.72)}.blog-empty .empty-icon{font-size:38px;margin-bottom:12px}.blog-empty h2{font-size:20px;margin:8px 0}.blog-empty p{max-width:520px;margin:0 auto;color:#9299a8;font-size:13px;line-height:1.8}.upload-guide{margin-top:16px}.upload-guide ol{padding-left:20px;color:#a8b0bf;font-size:12px;line-height:2}.upload-guide code{color:#8bd8ed;background:#101923;padding:2px 5px;border-radius:4px}.media-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:22px}.media-card{overflow:hidden;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:12px}.media-card img,.media-card video{width:100%;display:block;border-radius:8px;max-height:420px;object-fit:cover}.media-card p{font-size:12px;color:#a8b0bf;margin:10px 2px 2px}
+</style>
+</head>
+<body>
+<canvas id="rain" aria-hidden="true"></canvas>
+<header class="topbar"><a class="brand" href="index.html"><span class="brand-mark"><img src="file_00000000a7ec820890154ca6ed49b608.png" alt="Apokolips logo"></span><span>APOKOLIPS</span></a><button class="menu-toggle" aria-label="Toggle navigation">☰</button><nav class="nav"><a href="index.html">Home</a><a href="info.html">About Me</a><a class="active" href="blog.html">Travel Blog</a><a href="project.gallery.html">Community Gallery</a><a href="My-project.html">My Projects</a><a href="plans.html">Subdomain Plans</a></nav></header>
+<main class="page-shell">
+<div class="eyebrow">PERSONAL JOURNAL / TRAVEL</div>
+<h1 class="page-title">My <span class="gradient-text">journeys.</span></h1>
+<p class="page-lead blog-intro">A personal collection of places I visit, travel memories, photographs, and videos. New memories will appear here as I add them.</p>
+<div class="blog-toolbar"><a class="btn btn-ghost" href="info.html">← Back to Info</a><a class="btn btn-primary" href="index.html">Main Website ↗</a></div>
+<section class="blog-empty" id="empty-state"><div class="empty-icon" aria-hidden="true">✦</div><div class="small-label">THE JOURNEY STARTS HERE</div><h2>No travel posts yet</h2><p>I haven't uploaded any trip photos or videos yet. This space is ready for future travel memories.</p></section>
+<!--
+GITHUB MEDIA UPLOAD GUIDE:
+1. Create/open the trip-media folder in this repository.
+2. Upload your JPG/PNG photos and MP4 videos there using Add file > Upload files.
+3. Copy the uploaded file path and add a media-card below, replacing the example path and caption.
+PHOTO:
+<article class="media-card"><img src="trip-media/your-photo.jpg" alt="Describe the photo"><p>Your trip caption</p></article>
+VIDEO:
+<article class="media-card"><video controls preload="metadata"><source src="trip-media/your-video.mp4" type="video/mp4"></video><p>Your video caption</p></article>
+4. When the first post is added, remove the empty-state section above.
+-->
+<section class="upload-guide panel">
+<div class="small-label">HOW THIS BLOG WILL BE UPDATED</div><h2>Add photos & videos through GitHub</h2>
+<ol><li>Open this repository on GitHub and enter the <code>trip-media</code> folder.</li><li>Choose <strong>Add file → Upload files</strong> and upload your trip photos or MP4 videos.</li><li>After uploading, add the media to this page using an image or video card (the examples are included in the page source).</li><li>Commit the changes to publish them with the website.</li></ol>
+<p class="privacy-note">Tip: Keep videos reasonably compressed. GitHub is suitable for small website assets, but it is not a dedicated video-streaming service.</p>
+</section>
+</main>
+<footer class="footer"><span>© <span id="year"></span> Lakindu Sathsara</span><span><a href="info.html">ABOUT ME ↑</a></span></footer>
+<script src="script.js"></script>
+</body></html>
