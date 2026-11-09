@@ -90,7 +90,7 @@ function selectFile(lang){
  current=lang;$('language').value=lang;
  $('current-file-tab').classList.add('active');
  currentFileName=fileNames[lang];$('active-name').textContent=currentFileName;$('active-lang').textContent=langNames[lang];$('current-file-tab').textContent='● '+currentFileName;
- if(monacoReady){editor.setModel(models[lang]);editor.focus();}
+ if(monacoReady){editor.setModel(models[lang]);editor.focus();updateLiveOutput();if(lang==='python')$('run-label').textContent='Python preview runs when you press Run.';else if(!['html','css','javascript'].includes(lang))$('run-label').textContent=langNames[lang]+' preview is available through Run where supported.';}
 }
 function getCode(lang){return models[lang]?models[lang].getValue():starter[lang]}
 function setCode(lang,value){if(models[lang])models[lang].setValue(value)}
