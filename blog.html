@@ -45,6 +45,17 @@
 <p class="interaction-note" id="interactionStatus" role="status" aria-live="polite">Friends, Food,travel,love, enjoy forever</p>
 </div>
 </article>
+<article class="photo-post" id="travel-photo-20261016-wa0120" aria-label="Travel photo post">
+<img src="https://raw.githubusercontent.com/lakindusathsara44-bit/Apokolips/main/IMG-20261016-WA0120(1).jpg" alt="Additional travel photograph shared by Lakindu Sathsara" loading="lazy">
+<div class="post-content">
+<h3 class="post-title">Another moment to remember</h3>
+<div class="post-date">16 October 2026 · Personal photo</div>
+<p class="post-description">Another captured moment from the journey.</p>
+<div class="post-actions">
+<button class="share-media-button" type="button" data-share-media="travel-photo-20261016-wa0120" aria-label="Share this photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.6 10.7 6.8-4.4M8.6 13.3l6.8 4.4"></path></svg>Share</button>
+</div>
+</div>
+</article>
 <div class="media-grid" id="mediaGrid"></div>
 <div class="empty-state" id="emptyState" hidden><div class="empty-icon">✧</div><h3>No more travel memories yet</h3><p>This space is ready for future trips. Photos and videos will appear here when they are uploaded to the GitHub repository.</p></div>
 </section>
@@ -61,7 +72,8 @@
   const COMMENT_TABLE = "apokolips_blog_comments";
   const reactions = ["like", "love", "wow", "fire"];
   const shareLinks = {
-    "travel-photo-20261016": "https://www.apokolips.xyz/blog.html#travel-photo-20261016"
+    "travel-photo-20261016": "https://www.apokolips.xyz/blog.html#travel-photo-20261016",
+    "travel-photo-20261016-wa0120": "https://www.apokolips.xyz/blog.html#travel-photo-20261016-wa0120"
   };
   document.querySelectorAll("[data-share-media]").forEach(button => {
     button.addEventListener("click", async () => {
