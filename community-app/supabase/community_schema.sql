@@ -159,3 +159,10 @@ end $$;
 alter table public.community_posts replica identity full;
 alter table public.community_comments replica identity full;
 alter table public.community_votes replica identity full;
+
+
+-- Cover the comment-author and reply-parent foreign keys for efficient cascades and lookups.
+create index if not exists community_comments_author_idx
+  on public.community_comments (author_id);
+create index if not exists community_comments_parent_post_idx
+  on public.community_comments (parent_id, post_id);
