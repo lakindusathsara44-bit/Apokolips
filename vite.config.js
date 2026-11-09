@@ -10,7 +10,7 @@ export default defineConfig({
     emptyOutDir: true,
     cssCodeSplit: false,
     rollupOptions: {
-      input: 'plans-app/src/main.jsx',
+      input: 'src/main.jsx',
       output: {
         entryFileNames: 'plans.js',
         chunkFileNames: 'chunk-[name].js',
