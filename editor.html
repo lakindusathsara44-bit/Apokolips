@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#070b13">
+<meta name="description" content="Write, edit and run code in the Apokolips browser code editor.">
+<title>Code Editor | Apokolips</title>
+<link rel="icon" href="file_00000000a7ec820890154ca6ed49b608.ico">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<style>
+:root{color-scheme:dark;--bg:#070b13;--panel:#0d1421;--panel2:#101b2b;--line:#1d2b40;--muted:#8292aa;--text:#e8f0fc;--blue:#248cff;--cyan:#36d6e8}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% 0%,#10213a 0,transparent 38%),var(--bg);color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+button,select{font:inherit}button{cursor:pointer}.top{height:62px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:#080d17eF;position:sticky;top:0;z-index:5;backdrop-filter:blur(14px)}
+.brand{display:flex;align-items:center;gap:10px;color:var(--text);text-decoration:none;font-weight:800;letter-spacing:2px}.brand img{width:29px;height:29px;object-fit:contain}.brand small{color:var(--muted);font-weight:500;letter-spacing:0}
+.top-actions{display:flex;align-items:center;gap:9px}.top-link{color:#aabbd1;text-decoration:none;padding:8px 10px}.top-link:hover{color:white}
+.wrap{max-width:1500px;margin:auto;padding:24px 22px 38px}.heading{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:18px}.eyebrow{color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:2px}.heading h1{font-size:clamp(25px,4vw,36px);line-height:1.15;margin:5px 0 4px;letter-spacing:-1px}.sub{margin:0;color:var(--muted);font-size:13px}
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:13px 13px 0 0;padding:10px}
+select,.toolbtn{border:1px solid #263851;background:#111d2e;color:#dce9fb;border-radius:8px;padding:8px 11px;min-height:36px}.toolbtn:hover{border-color:#398df2;background:#142944}.toolbtn.primary{background:linear-gradient(110deg,#1674e8,#1464c5);border-color:#2889ff;color:white;font-weight:700;padding-inline:18px}.toolbtn.primary:hover{filter:brightness(1.12)}.toolbtn:disabled{opacity:.5;cursor:wait}.spacer{flex:1}.status{color:#93a5bd;font-size:11px;display:flex;align-items:center;gap:7px}.status:before{content:"";width:7px;height:7px;border-radius:50%;background:#27d99a;box-shadow:0 0 10px #27d99a}
+.workspace{border:1px solid var(--line);border-top:0;border-radius:0 0 13px 13px;overflow:hidden;background:#0b111c;box-shadow:0 20px 65px #0006}.tabs{height:42px;background:#0b111b;border-bottom:1px solid var(--line);display:flex;align-items:stretch;overflow:auto}.tab{border:0;border-right:1px solid var(--line);padding:0 16px;background:transparent;color:#91a2ba;white-space:nowrap}.tab.active{background:#121e2f;color:white;border-bottom:2px solid var(--blue)}.tab .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:8px;background:var(--tabcolor)}
+.editor-shell{height:min(62vh,650px);min-height:340px;position:relative}.editor{position:absolute;inset:0}.fallback{padding:20px;color:#aabbd1}
+.bottom{display:flex;justify-content:space-between;gap:10px;padding:8px 13px;background:#0b111b;border-top:1px solid var(--line);color:#8292aa;font-size:11px}.bottom strong{color:#b8c8dd;font-weight:600}
+.note{margin:13px 2px 0;color:#8192aa;font-size:12px}.note b{color:#b8d6ff}
+.modal{position:fixed;inset:0;background:#02050bd9;backdrop-filter:blur(8px);z-index:20;display:none;align-items:center;justify-content:center;padding:18px}.modal.open{display:flex}.dialog{width:min(1100px,100%);height:min(790px,94vh);background:#0c1421;border:1px solid #2a3c56;border-radius:15px;box-shadow:0 30px 100px #000b;display:flex;flex-direction:column;overflow:hidden}.dialog-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}.dialog-head h2{font-size:14px;margin:0}.dialog-head small{color:#8da0ba}.close{width:34px;height:34px;border:1px solid #31435d;border-radius:8px;background:#142033;color:white;font-size:20px}.result-area{display:grid;grid-template-rows:minmax(0,1fr) 150px;flex:1;min-height:0}.preview-wrap{background:white;min-height:0}.preview{width:100%;height:100%;border:0;background:white}.console-wrap{background:#080e18;border-top:1px solid var(--line);display:flex;flex-direction:column;min-height:0}.console-title{padding:7px 12px;color:#9eafc5;font-size:11px;border-bottom:1px solid #1b293b}.console{padding:8px 12px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;color:#b8c9df;font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}.console .err{color:#ff8888}.console .ok{color:#65e6b2}.dialog-foot{padding:8px 13px;border-top:1px solid var(--line);display:flex;justify-content:space-between;color:#8192aa;font-size:11px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#14253b;border:1px solid #315276;color:white;padding:10px 16px;border-radius:10px;z-index:30;display:none}.toast.show{display:block}
+@media(max-width:700px){.top{padding:0 13px}.top-link{display:none}.wrap{padding:18px 10px 28px}.heading{align-items:start;flex-direction:column}.toolbar{gap:6px;padding:8px}.toolbtn,select{padding:7px 9px;font-size:12px}.editor-shell{height:58vh;min-height:330px}.status{display:none}.result-area{grid-template-rows:minmax(0,1fr) 125px}.dialog{height:94vh}.bottom{font-size:10px}}
+</style>
+</head>
+<body>
+<header class="top">
+<a class="brand" href="index.html"><img src="file_00000000a7ec820890154ca6ed49b608.png" alt=""><span>APOKOLIPS <small> / CODE</small></span></a>
+<div class="top-actions"><a class="top-link" href="index.html">← Back to website</a><span style="color:#71839c;font-size:11px">BROWSER IDE</span></div>
+</header>
+<main class="wrap">
+<section class="heading"><div><div class="eyebrow">BUILD · EXPERIMENT · RUN</div><h1>Code Editor</h1><p class="sub">A lightweight browser IDE with smart suggestions and instant preview.</p></div></section>
+<div class="toolbar">
+<select id="language" aria-label="Programming language">
+<option value="html">HTML</option><option value="css">CSS</option><option value="javascript">JavaScript</option><option value="typescript">TypeScript</option><option value="python">Python</option><option value="json">JSON</option><option value="sql">SQL</option><option value="markdown">Markdown</option><option value="xml">XML</option><option value="java">Java</option><option value="cpp">C++</option><option value="c">C</option><option value="php">PHP</option><option value="go">Go</option><option value="rust">Rust</option><option value="shell">Shell</option>
+</select>
+<button class="toolbtn primary" id="run">▶ Run</button>
+<button class="toolbtn" id="save">Save</button>
+<button class="toolbtn" id="download">Download</button>
+<button class="toolbtn" id="reset">Reset</button>
+<span class="spacer"></span><span class="status" id="status">Editor ready</span>
+</div>
+<section class="workspace">
+<div class="tabs" id="tabs">
+<button class="tab active" data-file="html" style="--tabcolor:#e68b55">● index.html</button>
+<button class="tab" data-file="css" style="--tabcolor:#4c9fff">● style.css</button>
+<button class="tab" data-file="javascript" style="--tabcolor:#e9d36b">● script.js</button>
+</div>
+<div class="editor-shell"><div class="editor" id="editor"><div class="fallback">Loading code editor…</div></div></div>
+<div class="bottom"><span><strong id="active-name">index.html</strong> · <span id="active-lang">HTML</span></span><span>Suggestions: Ctrl + Space &nbsp; | &nbsp; Format: Shift + Alt + F</span><span>Apokolips IDE</span></div>
+</section>
+<p class="note"><b>Supported execution:</b> HTML, CSS and JavaScript run together in the preview. Python runs in a browser-based Python runtime. Other languages have syntax highlighting and editing support; running them requires a suitable compiler/runtime.</p>
+</main>
+<div class="modal" id="output-modal" role="dialog" aria-modal="true" aria-labelledby="output-title">
+<div class="dialog">
+<div class="dialog-head"><div><h2 id="output-title">▶ Live Output</h2><small id="run-label">Your code is running in an isolated preview.</small></div><button class="close" id="close-output" aria-label="Close output">×</button></div>
+<div class="result-area"><div class="preview-wrap"><iframe class="preview" id="preview" title="Code output" sandbox="allow-scripts"></iframe></div><div class="console-wrap"><div class="console-title">CONSOLE / OUTPUT</div><div class="console" id="console">Run your code to see output here.</div></div></div>
+<div class="dialog-foot"><span>Sandboxed preview · External network access depends on browser policy</span><button class="toolbtn" id="close-output-bottom">Close preview</button></div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs/loader.min.js"></script>
+<script>
+(function(){
+const starter={
+ html:'<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>My Apokolips Project</title>\n</head>\n<body>\n  <main class="card">\n    <h1>Hello, Apokolips!</h1>\n    <p>Start building something amazing.</p>\n    <button id="helloBtn">Click me</button>\n  </main>\n</body>\n</html>',
+ css:'body {\n  margin: 0;\n  min-height: 100vh;\n  display: grid;\n  place-items: center;\n  font-family: system-ui, sans-serif;\n  background: #eef4ff;\n}\n.card {\n  padding: 2rem;\n  border-radius: 18px;\n  background: white;\n  box-shadow: 0 12px 40px #10204020;\n  text-align: center;\n}\nbutton {\n  padding: 10px 18px;\n  border: 0;\n  border-radius: 8px;\n  background: #1678e8;\n  color: white;\n  cursor: pointer;\n}',
+ javascript:"document.getElementById('helloBtn')?.addEventListener('click', () => {\n  console.log('Hello from JavaScript!');\n  alert('It works!');\n});",
+ typescript:"const greeting: string = 'Hello from TypeScript!';\nconsole.log(greeting);",
+ python:"print('Hello from Python!')\nfor number in range(1, 6):\n    print('Number:', number)",
+ json:'{\n  "name": "Apokolips Project",\n  "version": "1.0.0",\n  "active": true\n}',
+ sql:"SELECT 'Hello from SQL' AS message;",
+ markdown:"# Hello, Apokolips!\n\nWrite your **Markdown** here.",
+ xml:'<?xml version="1.0"?>\n<project>\n  <name>Apokolips</name>\n</project>',
+ java:'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, Apokolips!");\n    }\n}',
+ cpp:'#include <iostream>\nint main() {\n    std::cout << "Hello, Apokolips!";\n    return 0;\n}',
+ c:'#include <stdio.h>\nint main(void) {\n    printf("Hello, Apokolips!\\n");\n    return 0;\n}',
+ php:'<?php\necho "Hello, Apokolips!";\n?>',
+ go:'package main\nimport "fmt"\nfunc main() {\n    fmt.Println("Hello, Apokolips!")\n}',
+ rust:'fn main() {\n    println!("Hello, Apokolips!");\n}',
+ shell:'echo "Hello, Apokolips!"'
+};
+const fileNames={html:'index.html',css:'style.css',javascript:'script.js',typescript:'main.ts',python:'main.py',json:'data.json',sql:'query.sql',markdown:'README.md',xml:'data.xml',java:'Main.java',cpp:'main.cpp',c:'main.c',php:'index.php',go:'main.go',rust:'main.rs',shell:'main.sh'};
+const langNames={html:'HTML',css:'CSS',javascript:'JavaScript',typescript:'TypeScript',python:'Python',json:'JSON',sql:'SQL',markdown:'Markdown',xml:'XML',java:'Java',cpp:'C++',c:'C',php:'PHP',go:'Go',rust:'Rust',shell:'Shell'};
+let models={},editor,current='html',monacoReady=false;
+const $=id=>document.getElementById(id);
+function notify(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2200)}
+function setStatus(msg){$('status').textContent=msg}
+function selectFile(lang){
+ current=lang;$('language').value=lang;
+ document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.file===lang));
+ $('active-name').textContent=fileNames[lang];$('active-lang').textContent=langNames[lang];
+ if(monacoReady){editor.setModel(models[lang]);editor.focus();}
+}
+function getCode(lang){return models[lang]?models[lang].getValue():starter[lang]}
+function setCode(lang,value){if(models[lang])models[lang].setValue(value)}
+function openOutput(){ $('output-modal').classList.add('open'); }
+function closeOutput(){ $('output-modal').classList.remove('open'); }
+$('close-output').onclick=closeOutput;$('close-output-bottom').onclick=closeOutput;
+$('output-modal').addEventListener('click',e=>{if(e.target===$('output-modal'))closeOutput()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOutput()});
+$('tabs').addEventListener('click',e=>{const t=e.target.closest('[data-file]');if(t)selectFile(t.dataset.file)});
+$('language').addEventListener('change',e=>selectFile(e.target.value));
+function appendConsole(message,kind){const line=document.createElement('div');line.className=kind||'';line.textContent=message;$('console').appendChild(line);$('console').scrollTop=$('console').scrollHeight;}
+function baseDocument(){
+ let html=getCode('html'),css=getCode('css'),js=getCode('javascript');
+ const bridge='<script>(function(){const send=(type,args)=>parent.postMessage({__apokolipsConsole:true,type,args:Array.from(args).map(x=>{try{return typeof x==="string"?x:JSON.stringify(x)}catch(e){return String(x)}})}, "*")};["log","info","warn","error"].forEach(k=>{const old=console[k];console[k]=function(){send(k,arguments);old.apply(console,arguments)}});window.addEventListener("error",e=>send("error",[e.message+" (line "+e.lineno+")"]));window.addEventListener("unhandledrejection",e=>send("error",[e.reason]));})();<\/script>';
+ const style='<style>'+css+'<\/style>';
+ const script='<script>'+js.replace(/<\/script/gi,'<\\/script')+'<\/script>';
+ if(/<head[\s>]/i.test(html)) html=html.replace(/<head([^>]*)>/i,'<head$1>'+style+bridge);
+ else html=style+bridge+html;
+ if(/<\/body>/i.test(html))html=html.replace(/<\/body>/i,script+'</body>');else html+=script;
+ return html;
+}
+window.addEventListener('message',e=>{if(e.data&&e.data.__apokolipsConsole){const msg=(e.data.args||[]).join(' ');appendConsole(msg,e.data.type==='error'?'err':e.data.type==='warn'?'':'');}});
+async function runPython(code){
+ $('run-label').textContent='Starting browser Python runtime…';appendConsole('Loading Python runtime (first run may take a moment)…');
+ if(!window.loadPyodide){
+  await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js';s.onload=resolve;s.onerror=()=>reject(new Error('Could not load Python runtime. Check your internet connection.'));document.head.appendChild(s)});
+ }
+ window.__apokolipsPyodide=window.__apokolipsPyodide||await loadPyodide();
+ let output='';window.__apokolipsPyodide.setStdout({batched:msg=>{output+=msg+'\n';}});
+ try{await window.__apokolipsPyodide.runPythonAsync(code);if(output.trim())appendConsole(output.trimEnd(),'ok');else appendConsole('Python finished successfully.','ok');}
+ catch(err){appendConsole(String(err),'err');}
+}
+$('run').onclick=async()=>{
+ if(!monacoReady){notify('Editor is still loading');return}
+ $('run').disabled=true;$('run').textContent='Running…';$('console').textContent='';$('preview').src='about:blank';openOutput();
+ try{
+  if(current==='python'){await runPython(getCode('python'));$('run-label').textContent='Python executed in the browser runtime.';$('preview').srcdoc='<html><body style="font:16px system-ui;padding:24px;color:#111"><h2>Python execution complete</h2><p>See the console panel for output.</p></body></html>';}
+  else if(current==='html'||current==='css'||current==='javascript'){
+   $('run-label').textContent='HTML, CSS and JavaScript are running in an isolated preview.';
+   $('preview').srcdoc=baseDocument();appendConsole('Preview started. Use the page above to interact with your app.','ok');
+  } else if(current==='typescript'){
+   $('run-label').textContent='Compiling TypeScript to JavaScript…';
+   const src=getCode('typescript');
+   if(!window.ts){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/typescript/5.7.2/typescript.min.js';s.onload=resolve;s.onerror=()=>reject(new Error('Could not load TypeScript compiler'));document.head.appendChild(s)});}
+   const js=ts.transpile(src);$('preview').srcdoc='<html><body><script>'+js.replace(/<\/script/gi,'<\\/script')+'<\/script><p style="font:14px system-ui;color:#555">TypeScript output is in the browser console (open DevTools if needed).</p></body></html>';appendConsole('TypeScript compiled and executed.','ok');
+  } else if(current==='json'){
+   const parsed=JSON.parse(getCode('json'));$('preview').srcdoc='<pre style="font:14px/1.6 monospace;padding:20px;white-space:pre-wrap">'+escapeHtml(JSON.stringify(parsed,null,2))+'</pre>';appendConsole('Valid JSON.','ok');
+  } else {
+   $('run-label').textContent=langNames[current]+' is supported for editing and syntax highlighting.';
+   $('preview').srcdoc='<html><body style="font:15px system-ui;padding:25px;color:#222"><h2>Runtime not configured</h2><p>'+langNames[current]+' code can be edited here, but this static browser editor does not include a secure compiler for it yet.</p><p>Use Download to save your source file and run it with the appropriate local toolchain.</p></body></html>';
+   appendConsole('No execution runtime is configured for '+langNames[current]+'. Your source code has not been executed.','err');
+  }
+ }catch(err){$('run-label').textContent='Execution failed.';appendConsole(err.message||String(err),'err');}
+ finally{$('run').disabled=false;$('run').textContent='▶ Run';}
+};
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+$('save').onclick=()=>{try{const data={};Object.keys(fileNames).forEach(k=>data[k]=getCode(k));localStorage.setItem('apokolips-editor-project-v1',JSON.stringify(data));notify('Project saved in this browser');setStatus('Saved locally');}catch(e){notify('Could not save in this browser');}};
+$('download').onclick=()=>{const blob=new Blob([getCode(current)],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=fileNames[current];a.click();URL.revokeObjectURL(url);notify('Downloaded '+fileNames[current]);};
+$('reset').onclick=()=>{if(confirm('Reset all editor files to the starter examples?')){Object.keys(starter).forEach(k=>setCode(k,starter[k]));selectFile(current);notify('Starter code restored');}};
+const saved=(()=>{try{return JSON.parse(localStorage.getItem('apokolips-editor-project-v1')||'null')}catch(e){return null}})();
+if(window.require){
+ require.config({paths:{vs:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs'}});
+ require(['vs/editor/editor.main'],function(){
+  Object.keys(starter).forEach(lang=>{models[lang]=monaco.editor.createModel(saved&&typeof saved[lang]==='string'?saved[lang]:starter[lang],lang);});
+  editor=monaco.editor.create($('editor'),{model:models.html,theme:'vs-dark',automaticLayout:true,fontSize:14,fontFamily:"'Cascadia Code',Consolas,monospace",minimap:{enabled:false},scrollBeyondLastLine:false,wordWrap:'on',tabSize:2,insertSpaces:true,autoClosingBrackets:'always',autoClosingQuotes:'always',autoIndent:'full',formatOnPaste:true,formatOnType:true,suggestOnTriggerCharacters:true,quickSuggestions:{other:true,comments:false,strings:true},parameterHints:{enabled:true},snippetSuggestions:'top',renderValidationDecorations:'on',glyphMargin:false,folding:true,bracketPairColorization:{enabled:true},padding:{top:14,bottom:14}});
+  monaco.editor.setTheme('vs-dark');monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({noSemanticValidation:false,noSyntaxValidation:false});monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({noSemanticValidation:false,noSyntaxValidation:false});
+  monaco.languages.typescript.javascriptDefaults.setCompilerOptions({target:monaco.languages.typescript.ScriptTarget.ES2020,allowNonTsExtensions:true,checkJs:true});monaco.languages.typescript.typescriptDefaults.setCompilerOptions({target:monaco.languages.typescript.ScriptTarget.ES2020,strict:true});
+  monaco.languages.registerCompletionItemProvider('html',{provideCompletionItems:()=>({suggestions:[{label:'html:5',kind:monaco.languages.CompletionItemKind.Snippet,insertText:'<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>${1:Document}</title>\n</head>\n<body>\n  ${2}\n</body>\n</html>',insertTextRules:monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,documentation:'HTML5 starter template'}]})});
+  monaco.languages.registerCompletionItemProvider('javascript',{triggerCharacters:['.'],provideCompletionItems:(model,pos)=>({suggestions:[{label:'log',kind:monaco.languages.CompletionItemKind.Snippet,insertText:'console.log(${1:value});',insertTextRules:monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,documentation:'Console log'}]})});
+  monaco.languages.registerCompletionItemProvider('python',{triggerCharacters:['.'],provideCompletionItems:()=>({suggestions:['print','def','class','for','while','if','elif','else','import','from','return','try','except','with','lambda'].map(x=>({label:x,kind:monaco.languages.CompletionItemKind.Keyword,insertText:x}))})});
+  monacoReady=true;setStatus('Editor ready · IntelliSense on');$('editor').querySelector('.fallback')?.remove();selectFile('html');
+ },function(err){$('editor').innerHTML='<div class="fallback">Could not load Monaco Editor. Check your internet connection and reload this page.</div>';setStatus('Editor failed to load');});
+}else{$('editor').innerHTML='<div class="fallback">Could not load Monaco Editor. Check your internet connection and reload this page.</div>';}
+})();
+</script>
+</body>
+</html>
