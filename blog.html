@@ -117,12 +117,12 @@
       .from(COMMENT_TABLE)
       .select("display_name,body,created_at")
       .eq("post_slug", POST_SLUG)
-      .order("created_at", { ascending: true })
+      .order("created_at", { ascending: false })
       .limit(100);
     if (error) throw error;
     const list = document.getElementById("commentList");
     list.replaceChildren();
-    (data || []).forEach(comment => {
+    (data || []).slice().reverse().forEach(comment => {
       const item = document.createElement("article");
       item.className = "comment-item";
       const name = document.createElement("strong");
