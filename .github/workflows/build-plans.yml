@@ -1,0 +1,39 @@
+name: Build Apokolips Plans (Vite)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plans.html'
+      - 'plans-app/**'
+      - 'package.json'
+      - 'vite.config.js'
+      - '.github/workflows/build-plans.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm install
+      - name: Build React + Vite assets
+        run: npm run build
+      - name: Commit generated plans assets
+        run: |
+          if git diff --quiet -- assets/plans; then
+            echo "No generated asset changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/plans
+          git commit -m "Build React Vite plans assets"
+          git push
