@@ -19,7 +19,7 @@
 <main class="page-shell">
 <section class="blog-hero"><div class="blog-kicker">PERSONAL TRAVEL JOURNAL / 01</div><h1 class="blog-title">Places I've <span>explored.</span></h1><p class="blog-intro">A collection of travel moments, photographs, and videos. Every journey has a story — this is where I keep mine.</p><div class="blog-actions"><a href="info.html">← Back to About Me</a><a href="#memories">Explore memories ↓</a></div></section>
 <section class="blog-section" id="memories"><div class="small-label">MY TRIPS</div><h2>Photo & Video Memories</h2>
-<article class="photo-post" aria-label="Travel photo post">
+<article class="photo-post" id="travel-photo-20261016" data-post-slug="travel-memory-2026-10-16" aria-label="Travel photo post">
 <img src="https://raw.githubusercontent.com/lakindusathsara44-bit/Apokolips/main/IMG-20261016-WA0139.jpg" alt="Travel memory shared by Lakindu Sathsara" loading="lazy">
 <div class="post-content">
 <h3 class="post-title">A moment worth remembering</h3>
@@ -45,8 +45,8 @@
 <p class="interaction-note" id="interactionStatus" role="status" aria-live="polite">Friends, Food,travel,love, enjoy forever</p>
 </div>
 </article>
-<article class="photo-post" id="travel-photo-20261016-wa0120" aria-label="Travel photo post">
-<img src="https://raw.githubusercontent.com/lakindusathsara44-bit/Apokolips/main/IMG-20261016-WA0120(1).jpg" alt="Additional travel photograph shared by Lakindu Sathsara" loading="lazy">
+<article class="photo-post" id="travel-photo-20261016-wa0120" data-post-slug="travel-photo-20261016-wa0120" aria-label="Travel photo post">
+<img src="https://raw.githubusercontent.com/lakindusathsara44-bit/Apokolips/main/IMG-20261016-WA0120%281%29.jpg" alt="Additional travel photograph shared by Lakindu Sathsara" loading="lazy">
 <div class="post-content">
 <h3 class="post-title">Another moment to remember</h3>
 <div class="post-date">16 October 2026 · Personal photo</div>
@@ -67,198 +67,296 @@
 (() => {
   const SUPABASE_URL = "https://oqyfvvwplvbmmursbpkd.supabase.co";
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fA9X_kf1Fz_DNDXa1I97Sg_RKXCojsd";
-  const POST_SLUG = "travel-memory-2026-10-16";
   const REACTION_TABLE = "apokolips_blog_reactions";
   const COMMENT_TABLE = "apokolips_blog_comments";
-  const reactions = ["like", "love", "wow", "fire"];
-  const shareLinks = {
-    "travel-photo-20261016": "https://www.apokolips.xyz/blog.html#travel-photo-20261016",
-    "travel-photo-20261016-wa0120": "https://www.apokolips.xyz/blog.html#travel-photo-20261016-wa0120"
-  };
-  document.querySelectorAll("[data-share-media]").forEach(button => {
-    button.addEventListener("click", async () => {
-      const url = shareLinks[button.dataset.shareMedia] || window.location.href;
-      const shareData = { title: "Travel memory | Apokolips", text: "Check out this travel memory on Apokolips.", url };
-      try {
-        if (navigator.share) await navigator.share(shareData);
-        else if (navigator.clipboard && window.isSecureContext) {
-          await navigator.clipboard.writeText(url);
-          button.lastChild.textContent = " Link copied";
-        } else {
-          window.prompt("Copy this link to share:", url);
-        }
-      } catch (error) {
-        if (error && error.name !== "AbortError") window.prompt("Copy this link to share:", url);
-      }
-    });
-  });
-
-  const status = document.getElementById("interactionStatus");
-  const reactionBar = document.getElementById("reactionBar");
-  const commentForm = document.getElementById("commentForm");
-  const submitButton = commentForm.querySelector('button[type="submit"]');
-  const localStateKey = "apokolips-blog-social-v2";
+  const REACTIONS = [
+    { type: "like", label: "👍 Like" },
+    { type: "love", label: "❤️ Love" },
+    { type: "wow", label: "😍 Wow" },
+    { type: "fire", label: "🔥 Fire" }
+  ];
   const visitorStorageKey = "apokolips-blog-visitor-v1";
-
-  function getVisitorId() {
-    let id = localStorage.getItem(visitorStorageKey);
-    if (!id) {
-      id = crypto.randomUUID();
-      localStorage.setItem(visitorStorageKey, id);
-    }
-    return id;
+  let visitorId = localStorage.getItem(visitorStorageKey);
+  if (!visitorId) {
+    visitorId = (window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+          const r = Math.random() * 16 | 0;
+          return (c === "x" ? r : (r & 3 | 8)).toString(16);
+        });
+    localStorage.setItem(visitorStorageKey, visitorId);
   }
 
-  const visitorId = getVisitorId();
-  let localState = {};
-  try { localState = JSON.parse(localStorage.getItem(localStateKey) || "{}") || {}; } catch (_) {}
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     global: { headers: { "x-blog-visitor": visitorId } }
   });
+  const cards = new Map();
 
-  const setStatus = (message, isError = false) => {
-    status.textContent = message;
-    status.style.color = isError ? "#ff9b9b" : "#829bb8";
-  };
+  function slugify(value) {
+    return String(value || "").toLowerCase()
+      .replace(/https?:\/\//g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80) || "travel-memory";
+  }
 
-  function renderReactions(rows) {
-    const counts = Object.fromEntries(reactions.map(type => [type, 0]));
-    rows.forEach(row => { if (counts[row.reaction] !== undefined) counts[row.reaction]++; });
+  function getCardSlug(card) {
+    if (card.dataset.postSlug) return slugify(card.dataset.postSlug);
+    const media = card.querySelector("img, video");
+    const source = media ? (media.currentSrc || media.src || media.getAttribute("src")) : "";
+    const filename = source.split("/").pop().split("?")[0].replace(/%[0-9a-f]{2}/ig, "");
+    const base = filename.replace(/\.[a-z0-9]{2,5}$/i, "");
+    return slugify(card.id || base || "travel-memory");
+  }
+
+  function makeButton(type, label) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "reaction-button";
+    button.dataset.reaction = type;
+    button.setAttribute("aria-pressed", "false");
+    button.append(document.createTextNode(label + " "));
+    const count = document.createElement("span");
+    count.className = "reaction-number";
+    count.textContent = "0";
+    button.append(count);
+    return button;
+  }
+
+  function enhanceCard(card) {
+    if (card.dataset.socialReady === "true") return;
+    const content = card.querySelector(".post-content, .media-caption");
+    if (!content) return;
+    card.dataset.socialReady = "true";
+
+    const slug = getCardSlug(card);
+    card.dataset.postSlug = slug;
+    if (!card.id) card.id = "travel-" + slug;
+
+    content.querySelectorAll(".post-actions, .comments, .interaction-note, #interactionStatus").forEach(el => el.remove());
+
+    const actions = document.createElement("div");
+    actions.className = "post-actions";
+    actions.setAttribute("aria-label", "React to this media");
+    REACTIONS.forEach(item => actions.append(makeButton(item.type, item.label)));
+
+    const total = document.createElement("span");
+    total.className = "reaction-count";
+    total.textContent = "0 reactions";
+    actions.append(total);
+
+    const share = document.createElement("button");
+    share.type = "button";
+    share.className = "share-media-button";
+    share.textContent = "↗ Share";
+    share.setAttribute("aria-label", "Share this photo or video");
+    actions.append(share);
+
+    const comments = document.createElement("section");
+    comments.className = "comments";
+    const heading = document.createElement("h3");
+    heading.append(document.createTextNode("Comments "));
+    const commentCount = document.createElement("span");
+    commentCount.className = "comment-count";
+    commentCount.textContent = "(0)";
+    heading.append(commentCount);
+
+    const form = document.createElement("form");
+    form.className = "comment-form";
+    const name = document.createElement("input");
+    name.type = "text";
+    name.maxLength = 40;
+    name.placeholder = "Your name";
+    name.setAttribute("aria-label", "Your name");
+    name.required = true;
+    const message = document.createElement("textarea");
+    message.maxLength = 500;
+    message.placeholder = "Write a comment...";
+    message.setAttribute("aria-label", "Write a comment");
+    message.required = true;
+    const submit = document.createElement("button");
+    submit.type = "submit";
+    submit.textContent = "Post comment";
+    form.append(name, message, submit);
+
+    const list = document.createElement("div");
+    list.className = "comment-list";
+    list.setAttribute("aria-live", "polite");
+    const note = document.createElement("p");
+    note.className = "interaction-note";
+    note.setAttribute("role", "status");
+    note.setAttribute("aria-live", "polite");
+    note.textContent = "Loading shared reactions and comments…";
+    comments.append(heading, form, list, note);
+    content.append(actions, comments);
+
+    const state = { card, slug, actions, comments, form, name, message, submit, list, note, commentCount, selected: null };
+    cards.set(slug, state);
+
+    actions.addEventListener("click", async event => {
+      const reactionButton = event.target.closest("button[data-reaction]");
+      if (reactionButton) {
+        await saveReaction(state, reactionButton.dataset.reaction);
+        return;
+      }
+      if (event.target.closest(".share-media-button")) {
+        const title = card.querySelector(".post-title, h3")?.textContent?.trim() || "Travel memory";
+        const url = window.location.origin + window.location.pathname + "#" + card.id;
+        const shareData = { title: title + " | Apokolips", text: "Check out this travel memory on Apokolips.", url };
+        try {
+          if (navigator.share) await navigator.share(shareData);
+          else if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(url);
+            note.textContent = "Link copied. Share it with your friends.";
+          } else {
+            window.prompt("Copy this link to share:", url);
+          }
+        } catch (error) {
+          if (error?.name !== "AbortError") window.prompt("Copy this link to share:", url);
+        }
+      }
+    });
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const displayName = name.value.trim().slice(0, 40);
+      const body = message.value.trim().slice(0, 500);
+      if (!displayName || !body) return;
+      submit.disabled = true;
+      submit.textContent = "Posting…";
+      try {
+        const { error } = await supabaseClient.from(COMMENT_TABLE).insert({
+          post_slug: slug, visitor_id: visitorId, display_name: displayName, body
+        });
+        if (error) throw error;
+        message.value = "";
+        await loadComments(state);
+        setNote(state, "Your comment is now visible to other visitors.");
+      } catch (error) {
+        console.error("Comment save failed:", error);
+        setNote(state, "Comment could not be posted. Please try again.", true);
+      } finally {
+        submit.disabled = false;
+        submit.textContent = "Post comment";
+      }
+    });
+    refreshCard(state);
+  }
+
+  function setNote(state, message, isError = false) {
+    state.note.textContent = message;
+    state.note.style.color = isError ? "#ff9b9b" : "#829bb8";
+  }
+
+  async function loadReactions(state) {
+    const { data, error } = await supabaseClient
+      .from(REACTION_TABLE).select("reaction,visitor_id").eq("post_slug", state.slug);
+    if (error) throw error;
+    const counts = Object.fromEntries(REACTIONS.map(item => [item.type, 0]));
+    state.selected = null;
+    (data || []).forEach(row => {
+      if (counts[row.reaction] !== undefined) counts[row.reaction]++;
+      if (row.visitor_id === visitorId) state.selected = row.reaction;
+    });
     let total = 0;
-    reactions.forEach(type => {
-      const count = counts[type];
+    REACTIONS.forEach(item => {
+      const button = state.actions.querySelector('[data-reaction="' + item.type + '"]');
+      const count = counts[item.type];
       total += count;
-      document.getElementById("count-" + type).textContent = count;
-      const button = document.querySelector('[data-reaction="' + type + '"]');
-      const selected = localState.selectedReaction === type;
+      button.querySelector(".reaction-number").textContent = count;
+      const selected = state.selected === item.type;
       button.classList.toggle("selected", selected);
       button.setAttribute("aria-pressed", String(selected));
     });
-    document.getElementById("totalReactions").textContent = total + (total === 1 ? " reaction" : " reactions");
+    state.actions.querySelector(".reaction-count").textContent = total + (total === 1 ? " reaction" : " reactions");
   }
 
-  async function loadReactions() {
+  async function loadComments(state) {
     const { data, error } = await supabaseClient
-      .from(REACTION_TABLE)
-      .select("reaction")
-      .eq("post_slug", POST_SLUG);
+      .from(COMMENT_TABLE).select("display_name,body,created_at")
+      .eq("post_slug", state.slug).order("created_at", { ascending: true }).limit(100);
     if (error) throw error;
-    renderReactions(data || []);
-  }
-
-  async function loadComments() {
-    const { data, error } = await supabaseClient
-      .from(COMMENT_TABLE)
-      .select("display_name,body,created_at")
-      .eq("post_slug", POST_SLUG)
-      .order("created_at", { ascending: false })
-      .limit(100);
-    if (error) throw error;
-    const list = document.getElementById("commentList");
-    list.replaceChildren();
-    (data || []).slice().reverse().forEach(comment => {
+    state.list.replaceChildren();
+    (data || []).forEach(comment => {
       const item = document.createElement("article");
       item.className = "comment-item";
-      const name = document.createElement("strong");
-      name.textContent = comment.display_name;
-      const message = document.createElement("p");
-      message.textContent = comment.body;
+      const author = document.createElement("strong");
+      author.textContent = comment.display_name;
+      const body = document.createElement("p");
+      body.textContent = comment.body;
       const time = document.createElement("small");
       time.textContent = new Date(comment.created_at).toLocaleString();
       time.style.color = "#71849c";
-      item.append(name, message, time);
-      list.append(item);
+      item.append(author, body, time);
+      state.list.append(item);
     });
-    document.getElementById("commentCount").textContent = "(" + (data || []).length + ")";
+    state.commentCount.textContent = "(" + (data || []).length + ")";
   }
 
-  async function refreshAll() {
+  async function refreshCard(state) {
     try {
-      await Promise.all([loadReactions(), loadComments()]);
-      setStatus("Live: reactions and comments are shared with other visitors.");
+      await Promise.all([loadReactions(state), loadComments(state)]);
+      setNote(state, "Live: reactions and comments are shared with everyone.");
     } catch (error) {
-      console.error("Blog data load failed:", error);
-      setStatus("Could not load shared interactions. Please refresh the page and try again.", true);
+      console.error("Could not load social data for " + state.slug, error);
+      setNote(state, "Could not load shared activity. Refresh the page and try again.", true);
     }
   }
 
-  reactionBar.addEventListener("click", async event => {
-    const button = event.target.closest("button[data-reaction]");
-    if (!button || button.disabled) return;
-    const type = button.dataset.reaction;
-    if (localState.selectedReaction === type) return;
-    reactionBar.querySelectorAll("button").forEach(item => item.disabled = true);
+  async function saveReaction(state, type) {
+    if (state.selected === type) return;
+    state.actions.querySelectorAll("button").forEach(button => button.disabled = true);
     try {
       const { data: updated, error: updateError } = await supabaseClient
-        .from(REACTION_TABLE)
-        .update({ reaction: type })
-        .eq("post_slug", POST_SLUG)
-        .eq("visitor_id", visitorId)
-        .select("post_slug");
+        .from(REACTION_TABLE).update({ reaction: type })
+        .eq("post_slug", state.slug).eq("visitor_id", visitorId).select("id");
       if (updateError) throw updateError;
-
       if (!updated || updated.length === 0) {
-        const { error: insertError } = await supabaseClient
-          .from(REACTION_TABLE)
-          .insert({ post_slug: POST_SLUG, visitor_id: visitorId, reaction: type });
+        const { error: insertError } = await supabaseClient.from(REACTION_TABLE).insert({
+          post_slug: state.slug, visitor_id: visitorId, reaction: type
+        });
         if (insertError && insertError.code === "23505") {
-          const { error: retryError } = await supabaseClient
-            .from(REACTION_TABLE)
-            .update({ reaction: type })
-            .eq("post_slug", POST_SLUG)
-            .eq("visitor_id", visitorId);
+          const { error: retryError } = await supabaseClient.from(REACTION_TABLE)
+            .update({ reaction: type }).eq("post_slug", state.slug).eq("visitor_id", visitorId);
           if (retryError) throw retryError;
         } else if (insertError) {
           throw insertError;
         }
       }
-      localState.selectedReaction = type;
-      localStorage.setItem(localStateKey, JSON.stringify(localState));
-      await loadReactions();
-      setStatus("Your reaction has been shared.");
+      await loadReactions(state);
+      setNote(state, "Your reaction has been shared.");
     } catch (error) {
-      console.error("Reaction save failed:", error);
-      setStatus("Your reaction could not be saved. Please try again.", true);
+      console.error("Reaction save failed for " + state.slug, error);
+      setNote(state, "Your reaction could not be saved. Please try again.", true);
     } finally {
-      reactionBar.querySelectorAll("button").forEach(item => item.disabled = false);
+      state.actions.querySelectorAll("button").forEach(button => button.disabled = false);
     }
-  });
+  }
 
-  commentForm.addEventListener("submit", async event => {
-    event.preventDefault();
-    const nameInput = document.getElementById("commentName");
-    const textInput = document.getElementById("commentText");
-    const displayName = nameInput.value.trim().slice(0, 40);
-    const body = textInput.value.trim().slice(0, 500);
-    if (!displayName || !body) return;
-    submitButton.disabled = true;
-    submitButton.textContent = "Posting…";
-    try {
-      const { error } = await supabaseClient.from(COMMENT_TABLE).insert({
-        post_slug: POST_SLUG,
-        visitor_id: visitorId,
-        display_name: displayName,
-        body
-      });
-      if (error) throw error;
-      textInput.value = "";
-      await loadComments();
-      setStatus("Your comment has been posted for everyone to see.");
-    } catch (error) {
-      console.error("Comment save failed:", error);
-      setStatus("Your comment could not be posted. Please try again.", true);
-    } finally {
-      submitButton.disabled = false;
-      submitButton.textContent = "Post comment";
-    }
-  });
+  function enhanceAll(root = document) {
+    root.querySelectorAll(".photo-post, .media-card").forEach(enhanceCard);
+  }
 
-  supabaseClient.channel("apokolips-blog-" + POST_SLUG)
-    .on("postgres_changes", { event: "*", schema: "public", table: REACTION_TABLE, filter: "post_slug=eq." + POST_SLUG }, () => loadReactions())
-    .on("postgres_changes", { event: "INSERT", schema: "public", table: COMMENT_TABLE, filter: "post_slug=eq." + POST_SLUG }, () => loadComments())
+  enhanceAll();
+  const mediaRoot = document.getElementById("memories") || document.body;
+  const observer = new MutationObserver(records => {
+    records.forEach(record => record.addedNodes.forEach(node => {
+      if (node.nodeType === 1) {
+        if (node.matches?.(".photo-post, .media-card")) enhanceCard(node);
+        enhanceAll(node);
+      }
+    }));
+  });
+  observer.observe(mediaRoot, { childList: true, subtree: true });
+
+  supabaseClient.channel("apokolips-blog-all-media")
+    .on("postgres_changes", { event: "*", schema: "public", table: REACTION_TABLE }, payload => {
+      cards.forEach(state => { if (!payload.new?.post_slug || payload.new.post_slug === state.slug || payload.old?.post_slug === state.slug) loadReactions(state).catch(console.error); });
+    })
+    .on("postgres_changes", { event: "*", schema: "public", table: COMMENT_TABLE }, payload => {
+      cards.forEach(state => { if (!payload.new?.post_slug || payload.new.post_slug === state.slug || payload.old?.post_slug === state.slug) loadComments(state).catch(console.error); });
+    })
     .subscribe();
-
-  refreshAll();
 })();
 </script>
 </body></html>
