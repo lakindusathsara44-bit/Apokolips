@@ -39,7 +39,7 @@ select,.toolbtn{border:1px solid #263851;background:#111d2e;color:#dce9fb;border
 <option value="html">HTML</option><option value="css">CSS</option><option value="javascript">JavaScript</option><option value="typescript">TypeScript</option><option value="python">Python</option><option value="json">JSON</option><option value="sql">SQL</option><option value="markdown">Markdown</option><option value="xml">XML</option><option value="java">Java</option><option value="cpp">C++</option><option value="c">C</option><option value="php">PHP</option><option value="go">Go</option><option value="rust">Rust</option><option value="shell">Shell</option>
 </select>
 <button class="toolbtn primary" id="run">▶ Run</button>
-<button class="toolbtn" id="save">Save</button>
+<button class="toolbtn" id="save">Save to Device</button>
 <button class="toolbtn" id="download">Download</button>
 <button class="toolbtn" id="reset">Reset</button>
 <span class="spacer"></span><span class="status" id="status">Editor ready</span>
@@ -53,7 +53,7 @@ select,.toolbtn{border:1px solid #263851;background:#111d2e;color:#dce9fb;border
 <div class="editor-shell"><div class="editor" id="editor"><div class="fallback">Loading code editor…</div></div></div>
 <div class="bottom"><span><strong id="active-name">index.html</strong> · <span id="active-lang">HTML</span></span><span>Suggestions: Ctrl + Space &nbsp; | &nbsp; Format: Shift + Alt + F</span><span>Apokolips IDE</span></div>
 </section>
-<p class="note"><b>Supported execution:</b> HTML, CSS and JavaScript run together in the preview. Python runs in a browser-based Python runtime. Other languages have syntax highlighting and editing support; running them requires a suitable compiler/runtime.</p>
+<p class="note"><b>Saving:</b> Save to Device writes your project files into a folder you choose (where supported). If folder access is unavailable, it downloads a ZIP to your device's Downloads folder. Your code is not saved in browser storage. <b>Supported execution:</b> HTML, CSS and JavaScript run together in the preview. Python runs in a browser-based Python runtime. Other languages have syntax highlighting and editing support; running them requires a suitable compiler/runtime.</p>
 </main>
 <div class="modal" id="output-modal" role="dialog" aria-modal="true" aria-labelledby="output-title">
 <div class="dialog">
@@ -86,7 +86,7 @@ const starter={
 };
 const fileNames={html:'index.html',css:'style.css',javascript:'script.js',typescript:'main.ts',python:'main.py',json:'data.json',sql:'query.sql',markdown:'README.md',xml:'data.xml',java:'Main.java',cpp:'main.cpp',c:'main.c',php:'index.php',go:'main.go',rust:'main.rs',shell:'main.sh'};
 const langNames={html:'HTML',css:'CSS',javascript:'JavaScript',typescript:'TypeScript',python:'Python',json:'JSON',sql:'SQL',markdown:'Markdown',xml:'XML',java:'Java',cpp:'C++',c:'C',php:'PHP',go:'Go',rust:'Rust',shell:'Shell'};
-let models={},editor,current='html',monacoReady=false;
+let models={},editor,current='html',monacoReady=false,selectedSaveFolder=null;
 const $=id=>document.getElementById(id);
 function notify(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2200)}
 function setStatus(msg){$('status').textContent=msg}
@@ -151,14 +151,16 @@ $('run').onclick=async()=>{
  finally{$('run').disabled=false;$('run').textContent='▶ Run';}
 };
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-$('save').onclick=()=>{try{const data={};Object.keys(fileNames).forEach(k=>data[k]=getCode(k));localStorage.setItem('apokolips-editor-project-v1',JSON.stringify(data));notify('Project saved in this browser');setStatus('Saved locally');}catch(e){notify('Could not save in this browser');}};
+function projectFiles(){const files={'index.html':getCode('html'),'style.css':getCode('css'),'script.js':getCode('javascript')};Object.keys(fileNames).forEach(k=>{if(!['html','css','javascript'].includes(k)&&getCode(k)!==starter[k])files[fileNames[k]]=getCode(k)});return files;}
+async function downloadProjectZip(){if(!window.JSZip){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';s.onload=resolve;s.onerror=()=>reject(new Error('Could not load ZIP tool. Check your internet connection.'));document.head.appendChild(s)});}const zip=new JSZip(),files=projectFiles();Object.entries(files).forEach(([name,content])=>zip.file(name,content));const blob=await zip.generateAsync({type:'blob'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Apokolips-Project.zip';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);notify('Project ZIP downloaded to your device');setStatus('Downloaded to device');}
+$('save').onclick=async()=>{const btn=$('save');btn.disabled=true;try{if(window.showDirectoryPicker){if(!selectedSaveFolder)selectedSaveFolder=await window.showDirectoryPicker({id:'apokolips-project-folder',mode:'readwrite'});const projectFolder=await selectedSaveFolder.getDirectoryHandle('Apokolips-Project',{create:true});for(const [name,content] of Object.entries(projectFiles())){const handle=await projectFolder.getFileHandle(name,{create:true});const writable=await handle.createWritable();await writable.write(content);await writable.close();}notify('Saved in your selected device folder');setStatus('Saved to device folder');}else{await downloadProjectZip();}}catch(err){if(err&&err.name==='AbortError'){notify('Folder selection cancelled');}else{console.error(err);notify('Folder save failed. Downloading project ZIP…');try{await downloadProjectZip();}catch(zipErr){notify(zipErr.message||'Could not save project');}}}finally{btn.disabled=false;}};
 $('download').onclick=()=>{const blob=new Blob([getCode(current)],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=fileNames[current];a.click();URL.revokeObjectURL(url);notify('Downloaded '+fileNames[current]);};
 $('reset').onclick=()=>{if(confirm('Reset all editor files to the starter examples?')){Object.keys(starter).forEach(k=>setCode(k,starter[k]));selectFile(current);notify('Starter code restored');}};
-const saved=(()=>{try{return JSON.parse(localStorage.getItem('apokolips-editor-project-v1')||'null')}catch(e){return null}})();
+// Code is intentionally not stored in browser storage. Each new session starts with the clean starter templates.
 if(window.require){
  require.config({paths:{vs:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs'}});
  require(['vs/editor/editor.main'],function(){
-  Object.keys(starter).forEach(lang=>{models[lang]=monaco.editor.createModel(saved&&typeof saved[lang]==='string'?saved[lang]:starter[lang],lang);});
+  Object.keys(starter).forEach(lang=>{models[lang]=monaco.editor.createModel(starter[lang],lang);});
   editor=monaco.editor.create($('editor'),{model:models.html,theme:'vs-dark',automaticLayout:true,fontSize:14,fontFamily:"'Cascadia Code',Consolas,monospace",minimap:{enabled:false},scrollBeyondLastLine:false,wordWrap:'on',tabSize:2,insertSpaces:true,autoClosingBrackets:'always',autoClosingQuotes:'always',autoIndent:'full',formatOnPaste:true,formatOnType:true,suggestOnTriggerCharacters:true,quickSuggestions:{other:true,comments:false,strings:true},parameterHints:{enabled:true},snippetSuggestions:'top',renderValidationDecorations:'on',glyphMargin:false,folding:true,bracketPairColorization:{enabled:true},padding:{top:14,bottom:14}});
   monaco.editor.setTheme('vs-dark');monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({noSemanticValidation:false,noSyntaxValidation:false});monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({noSemanticValidation:false,noSyntaxValidation:false});
   monaco.languages.typescript.javascriptDefaults.setCompilerOptions({target:monaco.languages.typescript.ScriptTarget.ES2020,allowNonTsExtensions:true,checkJs:true});monaco.languages.typescript.typescriptDefaults.setCompilerOptions({target:monaco.languages.typescript.ScriptTarget.ES2020,strict:true});
