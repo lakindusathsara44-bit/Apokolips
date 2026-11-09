@@ -36,24 +36,20 @@ select,.toolbtn{border:1px solid #263851;background:#111d2e;color:#dce9fb;border
 <section class="heading"><div><div class="eyebrow">BUILD · EXPERIMENT · RUN</div><h1>Code Editor</h1><p class="sub">A lightweight browser IDE with smart suggestions and instant preview.</p></div></section>
 <div class="toolbar">
 <select id="language" aria-label="Programming language">
-<option value="html">HTML</option><option value="css">CSS</option><option value="javascript">JavaScript</option><option value="typescript">TypeScript</option><option value="python">Python</option><option value="json">JSON</option><option value="sql">SQL</option><option value="markdown">Markdown</option><option value="xml">XML</option><option value="java">Java</option><option value="cpp">C++</option><option value="c">C</option><option value="php">PHP</option><option value="go">Go</option><option value="rust">Rust</option><option value="shell">Shell</option>
+<option value="html">HTML</option><option value="css">CSS</option><option value="javascript">JavaScript</option><option value="typescript">TypeScript</option><option value="python">Python</option><option value="json">JSON</option><option value="sql">SQL</option><option value="markdown">Markdown</option><option value="xml">XML</option><option value="java">Java</option><option value="cpp">C++</option><option value="c">C</option><option value="php">PHP</option><option value="go">Go</option><option value="rust">Rust</option><option value="shell">Shell</option><option value="plaintext">Plain Text</option>
 </select>
 <button class="toolbtn primary" id="run">▶ Run</button>
-<button class="toolbtn" id="save">Save to Device</button>
+<button class="toolbtn" id="open-file">Open File</button><input id="file-input" type="file" hidden><button class="toolbtn" id="save">Save to Device</button>
 <button class="toolbtn" id="download">Download</button>
 <button class="toolbtn" id="reset">Reset</button>
 <span class="spacer"></span><span class="status" id="status">Editor ready</span>
 </div>
 <section class="workspace">
-<div class="tabs" id="tabs">
-<button class="tab active" data-file="html" style="--tabcolor:#e68b55">● index.html</button>
-<button class="tab" data-file="css" style="--tabcolor:#4c9fff">● style.css</button>
-<button class="tab" data-file="javascript" style="--tabcolor:#e9d36b">● script.js</button>
-</div>
+<div class="tabs" id="file-bar"><button class="tab active" id="current-file-tab">● index.html</button></div>
 <div class="editor-shell"><div class="editor" id="editor"><div class="fallback">Loading code editor…</div></div></div>
 <div class="bottom"><span><strong id="active-name">index.html</strong> · <span id="active-lang">HTML</span></span><span>Suggestions: Ctrl + Space &nbsp; | &nbsp; Format: Shift + Alt + F</span><span>Apokolips IDE</span></div>
 </section>
-<p class="note"><b>Saving:</b> Save to Device writes your project files into a folder you choose (where supported). If folder access is unavailable, it downloads a ZIP to your device's Downloads folder. Your code is not saved in browser storage. <b>Supported execution:</b> HTML, CSS and JavaScript run together in the preview. Python runs in a browser-based Python runtime. Other languages have syntax highlighting and editing support; running them requires a suitable compiler/runtime.</p>
+<p class="note"><b>Files:</b> Open File imports a source file from your device. Only the selected file is shown. HTML supports inline CSS and JavaScript. Save to Device or Ctrl + S writes the active file into your selected folder. <b>Execution:</b> HTML, CSS and JavaScript can be previewed; Python runs in the browser runtime. Other languages need an external compiler/runtime.</p>
 </main>
 <div class="modal" id="output-modal" role="dialog" aria-modal="true" aria-labelledby="output-title">
 <div class="dialog">
@@ -82,18 +78,19 @@ const starter={
  php:'<?php\necho "Hello, Apokolips!";\n?>',
  go:'package main\nimport "fmt"\nfunc main() {\n    fmt.Println("Hello, Apokolips!")\n}',
  rust:'fn main() {\n    println!("Hello, Apokolips!");\n}',
- shell:'echo "Hello, Apokolips!"'
+ shell:'echo "Hello, Apokolips!"',
+ plaintext:''
 };
-const fileNames={html:'index.html',css:'style.css',javascript:'script.js',typescript:'main.ts',python:'main.py',json:'data.json',sql:'query.sql',markdown:'README.md',xml:'data.xml',java:'Main.java',cpp:'main.cpp',c:'main.c',php:'index.php',go:'main.go',rust:'main.rs',shell:'main.sh'};
-const langNames={html:'HTML',css:'CSS',javascript:'JavaScript',typescript:'TypeScript',python:'Python',json:'JSON',sql:'SQL',markdown:'Markdown',xml:'XML',java:'Java',cpp:'C++',c:'C',php:'PHP',go:'Go',rust:'Rust',shell:'Shell'};
-let models={},editor,current='html',monacoReady=false,selectedSaveFolder=null;
+const fileNames={html:'index.html',css:'style.css',javascript:'script.js',typescript:'main.ts',python:'main.py',json:'data.json',sql:'query.sql',markdown:'README.md',xml:'data.xml',java:'Main.java',cpp:'main.cpp',c:'main.c',php:'index.php',go:'main.go',rust:'main.rs',shell:'main.sh',plaintext:'untitled.txt'};
+const langNames={html:'HTML',css:'CSS',javascript:'JavaScript',typescript:'TypeScript',python:'Python',json:'JSON',sql:'SQL',markdown:'Markdown',xml:'XML',java:'Java',cpp:'C++',c:'C',php:'PHP',go:'Go',rust:'Rust',shell:'Shell',plaintext:'Plain Text'};
+let models={},editor,current='html',monacoReady=false,selectedSaveFolder=null,currentFileName='index.html';
 const $=id=>document.getElementById(id);
 function notify(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2200)}
 function setStatus(msg){$('status').textContent=msg}
 function selectFile(lang){
  current=lang;$('language').value=lang;
  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.file===lang));
- $('active-name').textContent=fileNames[lang];$('active-lang').textContent=langNames[lang];
+ currentFileName=fileNames[lang];$('active-name').textContent=currentFileName;$('active-lang').textContent=langNames[lang];$('current-file-tab').textContent='● '+currentFileName;
  if(monacoReady){editor.setModel(models[lang]);editor.focus();}
 }
 function getCode(lang){return models[lang]?models[lang].getValue():starter[lang]}
@@ -103,18 +100,14 @@ function closeOutput(){ $('output-modal').classList.remove('open'); }
 $('close-output').onclick=closeOutput;$('close-output-bottom').onclick=closeOutput;
 $('output-modal').addEventListener('click',e=>{if(e.target===$('output-modal'))closeOutput()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOutput()});
-$('tabs').addEventListener('click',e=>{const t=e.target.closest('[data-file]');if(t)selectFile(t.dataset.file)});
 $('language').addEventListener('change',e=>selectFile(e.target.value));
 function appendConsole(message,kind){const line=document.createElement('div');line.className=kind||'';line.textContent=message;$('console').appendChild(line);$('console').scrollTop=$('console').scrollHeight;}
 function baseDocument(){
- let html=getCode('html'),css=getCode('css'),js=getCode('javascript');
- const bridge='<script>(function(){const send=(type,args)=>parent.postMessage({__apokolipsConsole:true,type,args:Array.from(args).map(x=>{try{return typeof x==="string"?x:JSON.stringify(x)}catch(e){return String(x)}})}, "*")};["log","info","warn","error"].forEach(k=>{const old=console[k];console[k]=function(){send(k,arguments);old.apply(console,arguments)}});window.addEventListener("error",e=>send("error",[e.message+" (line "+e.lineno+")"]));window.addEventListener("unhandledrejection",e=>send("error",[e.reason]));})();<\/script>';
- const style='<style>'+css+'<\/style>';
- const script='<script>'+js.replace(/<\/script/gi,'<\\/script')+'<\/script>';
- if(/<head[\s>]/i.test(html)) html=html.replace(/<head([^>]*)>/i,'<head$1>'+style+bridge);
- else html=style+bridge+html;
- if(/<\/body>/i.test(html))html=html.replace(/<\/body>/i,script+'</body>');else html+=script;
- return html;
+ const bridge='<script>(function(){const send=(type,args)=>parent.postMessage({__apokolipsConsole:true,type,args:Array.from(args).map(x=>{try{return typeof x==="string"?x:JSON.stringify(x)}catch(e){return String(x)}})}, "*")};["log","info","warn","error"].forEach(k=>{const old=console[k];console[k]=function(){send(k,arguments);old.apply(console,arguments)}});window.addEventListener("error",e=>send("error",[e.message+" (line "+e.lineno+")"]));window.addEventListener("unhandledrejection",e=>send("error",[e.reason]));})();<\\/script>';
+ if(current==='html'){let html=getCode('html');if(/<head[\\s>]/i.test(html))return html.replace(/<head([^>]*)>/i,'<head$1>'+bridge);return bridge+html;}
+ if(current==='css')return '<!doctype html><html><head><meta charset="utf-8">'+bridge+'<style>'+getCode('css')+'<\\/style></head><body><h2>CSS preview</h2><p>Your stylesheet is applied to this preview page.</p></body></html>';
+ if(current==='javascript')return '<!doctype html><html><head><meta charset="utf-8">'+bridge+'</head><body><h2>JavaScript preview</h2><script>'+getCode('javascript').replace(/<\\/script/gi,'<\\\\/script')+'<\\/script></body></html>';
+ return '';
 }
 window.addEventListener('message',e=>{if(e.data&&e.data.__apokolipsConsole){const msg=(e.data.args||[]).join(' ');appendConsole(msg,e.data.type==='error'?'err':e.data.type==='warn'?'':'');}});
 async function runPython(code){
@@ -133,7 +126,7 @@ $('run').onclick=async()=>{
  try{
   if(current==='python'){await runPython(getCode('python'));$('run-label').textContent='Python executed in the browser runtime.';$('preview').srcdoc='<html><body style="font:16px system-ui;padding:24px;color:#111"><h2>Python execution complete</h2><p>See the console panel for output.</p></body></html>';}
   else if(current==='html'||current==='css'||current==='javascript'){
-   $('run-label').textContent='HTML, CSS and JavaScript are running in an isolated preview.';
+   $('run-label').textContent=langNames[current]+' is running in an isolated preview.';
    $('preview').srcdoc=baseDocument();appendConsole('Preview started. Use the page above to interact with your app.','ok');
   } else if(current==='typescript'){
    $('run-label').textContent='Compiling TypeScript to JavaScript…';
@@ -151,10 +144,19 @@ $('run').onclick=async()=>{
  finally{$('run').disabled=false;$('run').textContent='▶ Run';}
 };
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function projectFiles(){const files={'index.html':getCode('html'),'style.css':getCode('css'),'script.js':getCode('javascript')};Object.keys(fileNames).forEach(k=>{if(!['html','css','javascript'].includes(k)&&getCode(k)!==starter[k])files[fileNames[k]]=getCode(k)});return files;}
-async function downloadProjectZip(){if(!window.JSZip){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';s.onload=resolve;s.onerror=()=>reject(new Error('Could not load ZIP tool. Check your internet connection.'));document.head.appendChild(s)});}const zip=new JSZip(),files=projectFiles();Object.entries(files).forEach(([name,content])=>zip.file(name,content));const blob=await zip.generateAsync({type:'blob'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Apokolips-Project.zip';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);notify('Project ZIP downloaded to your device');setStatus('Downloaded to device');}
-$('save').onclick=async()=>{const btn=$('save');btn.disabled=true;try{if(window.showDirectoryPicker){if(!selectedSaveFolder)selectedSaveFolder=await window.showDirectoryPicker({id:'apokolips-project-folder',mode:'readwrite'});const projectFolder=await selectedSaveFolder.getDirectoryHandle('Apokolips-Project',{create:true});for(const [name,content] of Object.entries(projectFiles())){const handle=await projectFolder.getFileHandle(name,{create:true});const writable=await handle.createWritable();await writable.write(content);await writable.close();}notify('Saved in your selected device folder');setStatus('Saved to device folder');}else{await downloadProjectZip();}}catch(err){if(err&&err.name==='AbortError'){notify('Folder selection cancelled');}else{console.error(err);notify('Folder save failed. Downloading project ZIP…');try{await downloadProjectZip();}catch(zipErr){notify(zipErr.message||'Could not save project');}}}finally{btn.disabled=false;}};
-$('download').onclick=()=>{const blob=new Blob([getCode(current)],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=fileNames[current];a.click();URL.revokeObjectURL(url);notify('Downloaded '+fileNames[current]);};
+async function saveCurrentFile(){
+ if(!monacoReady)return;
+ if(!selectedSaveFolder&&window.showDirectoryPicker)selectedSaveFolder=await window.showDirectoryPicker({id:'apokolips-project-folder',mode:'readwrite'});
+ if(selectedSaveFolder){const handle=await selectedSaveFolder.getFileHandle(currentFileName,{create:true});const writable=await handle.createWritable();await writable.write(getCode(current));await writable.close();notify('Saved '+currentFileName+' to selected folder');setStatus('Saved to device folder');}
+ else downloadCurrentFile();
+}
+function downloadCurrentFile(){const blob=new Blob([getCode(current)],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=currentFileName;a.click();setTimeout(()=>URL.revokeObjectURL(url),1200);notify('Downloaded '+currentFileName);setStatus('Downloaded to device');}
+$('save').onclick=async()=>{try{await saveCurrentFile();}catch(err){if(err&&err.name==='AbortError')notify('Folder selection cancelled');else{console.error(err);notify(err.message||'Could not save file');}}};
+$('download').onclick=downloadCurrentFile;
+$('open-file').onclick=()=>$('file-input').click();
+const extensionLanguage={html:'html',htm:'html',css:'css',js:'javascript',mjs:'javascript',cjs:'javascript',ts:'typescript',tsx:'typescript',py:'python',json:'json',sql:'sql',md:'markdown',markdown:'markdown',xml:'xml',java:'java',cpp:'cpp',cc:'cpp',cxx:'cpp',c:'c',h:'c',php:'php',go:'go',rs:'rust',sh:'shell',bash:'shell',txt:'plaintext'};
+$('file-input').addEventListener('change',async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;const ext=(file.name.split('.').pop()||'').toLowerCase(),lang=extensionLanguage[ext]||'plaintext';const source=await file.text();selectFile(lang);setCode(lang,source);currentFileName=file.name;$('active-name').textContent=file.name;$('current-file-tab').textContent='● '+file.name;setStatus('Opened '+file.name);notify('Imported '+file.name);e.target.value='';});
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();saveCurrentFile().catch(err=>{if(err.name!=='AbortError')notify(err.message||'Save failed');});}});
 $('reset').onclick=()=>{if(confirm('Reset all editor files to the starter examples?')){Object.keys(starter).forEach(k=>setCode(k,starter[k]));selectFile(current);notify('Starter code restored');}};
 // Code is intentionally not stored in browser storage. Each new session starts with the clean starter templates.
 if(window.require){
