@@ -89,7 +89,7 @@ function notify(msg){$('toast').textContent=msg;$('toast').classList.add('show')
 function setStatus(msg){$('status').textContent=msg}
 function selectFile(lang){
  current=lang;$('language').value=lang;
- document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.file===lang));
+ $('current-file-tab').classList.add('active');
  currentFileName=fileNames[lang];$('active-name').textContent=currentFileName;$('active-lang').textContent=langNames[lang];$('current-file-tab').textContent='● '+currentFileName;
  if(monacoReady){editor.setModel(models[lang]);editor.focus();}
 }
