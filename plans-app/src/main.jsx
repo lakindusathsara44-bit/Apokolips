@@ -76,7 +76,7 @@ function App() {
     if (!chosenPlan || submitting) return;
 
     const names = form.requested_subdomain.split(/[\n,]+/).map((item) => item.trim()).filter(Boolean);
-    const validName = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+    const validName = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
     if (!names.length || names.length > Number(chosenPlan.subdomain_limit) || names.some((name) => !validName.test(name))) {
       setFormError('Enter between 1 and ' + chosenPlan.subdomain_limit + ' valid subdomain name(s). Use lowercase letters, numbers, and hyphens only.');
       return;
@@ -172,7 +172,7 @@ function App() {
             <label>Email address<input name="email" type="email" value={form.email} onChange={updateForm} autoComplete="email" required maxLength="254" placeholder="you@example.com" /></label>
             <label>Phone / WhatsApp <span className="optional-label">Optional</span><input name="whatsapp" type="tel" value={form.whatsapp} onChange={updateForm} autoComplete="tel" maxLength="30" placeholder="+94..." /></label>
             <label className="form-wide">Preferred subdomain name(s)<small>Enter one name per line or separate multiple names with commas. Maximum {chosenPlan.subdomain_limit}.</small><textarea name="requested_subdomain" value={form.requested_subdomain} onChange={updateForm} required rows="3" placeholder={'e.g. myportfolio' + (Number(chosenPlan.subdomain_limit) > 1 ? '\nmyproject' : '')} /></label>
-            <label className="form-wide">Project details <span className="optional-label">Optional</span><textarea name="notes" value={form.notes} onChange={updateForm} rows="3" maxLength="1500" placeholder="Tell us briefly about your website or project." /></label>
+            <label className="form-wide">Project details <span className="optional-label">Optional</span><textarea name="notes" value={form.notes} onChange={updateForm} rows="3" maxLength="850" placeholder="Tell us briefly about your website or project." /></label>
             {formError && <p className="form-error form-wide" role="alert">{formError}</p>}
             <div className="form-actions form-wide"><button className="submit-application" type="submit" disabled={submitting}>{submitting ? 'Submitting…' : 'Submit application'} <span>↗</span></button><button className="cancel-application" type="button" onClick={() => { setChosenPlan(null); setFormError(''); }}>Cancel</button></div>
           </form>
