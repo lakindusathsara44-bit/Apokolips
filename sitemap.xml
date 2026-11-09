@@ -3,9 +3,4 @@
   <url><loc>https://apokolips.xyz/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
   <url><loc>https://apokolips.xyz/info.html</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
   <url><loc>https://apokolips.xyz/My-project.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url>
-    <loc>https://apokolips.xyz/Community.chat.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
 </urlset>
