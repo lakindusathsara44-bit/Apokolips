@@ -124,7 +124,10 @@ function AuthModal({
         const { data, error: authError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: { data: { username: username.toLowerCase(), display_name: displayName.trim() } }
+          options: {
+            emailRedirectTo: window.location.origin + '/Community.chat.html',
+            data: { username: username.toLowerCase(), display_name: displayName.trim() }
+          }
         });
         if (authError) throw authError;
         if (data.session) {
