@@ -525,7 +525,7 @@ function App() {
       <label className="header-search"><span aria-hidden="true">⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search discussions…" aria-label="Search discussions" /><kbd>⌘ K</kbd></label>
       <div className="header-actions">
         <a className="back-link" href="index.html">Main website ↗</a>
-        {user ? <div className="user-chip"><Avatar name={user.user_metadata?.display_name || user.email || 'Member'} /><span>{user.user_metadata?.display_name || user.email?.split('@')[0] || 'Member'}</span><button type="button" onClick={signOut}>Sign out</button></div> : <button className="primary-button sign-in-button" type="button" onClick={() => setAuthOpen(true)}>Sign in</button>}
+        {user ? <div className="user-chip"><Avatar name={String(user.user_metadata?.display_name || user.email || 'Member')} /><span>{String(user.user_metadata?.display_name || user.email?.split('@')[0] || 'Member')}</span><button type="button" onClick={signOut}>Sign out</button></div> : <button className="primary-button sign-in-button" type="button" onClick={() => setAuthOpen(true)}>Sign in</button>}
       </div>
     </header>
 
@@ -553,7 +553,7 @@ function App() {
         </section>
 
         <div className="composer-launch">
-          <Avatar name={user?.user_metadata?.display_name || user?.email || 'You'} />
+          <Avatar name={String(user?.user_metadata?.display_name || user?.email || 'You')} />
           <button type="button" onClick={() => user ? setComposerOpen(!composerOpen) : setAuthOpen(true)}>{user ? 'What would you like to share?' : 'Sign in to start a discussion…'}</button>
           <button type="button" className="composer-plus" onClick={() => user ? setComposerOpen(!composerOpen) : setAuthOpen(true)} aria-label="Create a post">＋</button>
         </div>
