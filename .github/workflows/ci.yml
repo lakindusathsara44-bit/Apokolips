@@ -32,7 +32,13 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
+
+      - name: Install frontend dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build Community static assets
+        run: npm run build:community
 
       - name: Check required files, HTML references, and sitemap
         run: python .github/scripts/verify_site.py
