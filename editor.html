@@ -103,10 +103,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOutput()});
 $('language').addEventListener('change',e=>selectFile(e.target.value));
 function appendConsole(message,kind){const line=document.createElement('div');line.className=kind||'';line.textContent=message;$('console').appendChild(line);$('console').scrollTop=$('console').scrollHeight;}
 function baseDocument(){
- const bridge='<script>(function(){const send=(type,args)=>parent.postMessage({__apokolipsConsole:true,type,args:Array.from(args).map(x=>{try{return typeof x==="string"?x:JSON.stringify(x)}catch(e){return String(x)}})}, "*")};["log","info","warn","error"].forEach(k=>{const old=console[k];console[k]=function(){send(k,arguments);old.apply(console,arguments)}});window.addEventListener("error",e=>send("error",[e.message+" (line "+e.lineno+")"]));window.addEventListener("unhandledrejection",e=>send("error",[e.reason]));})();<\\/script>';
- if(current==='html'){let html=getCode('html');if(/<head[\\s>]/i.test(html))return html.replace(/<head([^>]*)>/i,'<head$1>'+bridge);return bridge+html;}
- if(current==='css')return '<!doctype html><html><head><meta charset="utf-8">'+bridge+'<style>'+getCode('css')+'<\\/style></head><body><h2>CSS preview</h2><p>Your stylesheet is applied to this preview page.</p></body></html>';
- if(current==='javascript')return '<!doctype html><html><head><meta charset="utf-8">'+bridge+'</head><body><h2>JavaScript preview</h2><script>'+getCode('javascript').replace(/<\\/script/gi,'<\\\\/script')+'<\\/script></body></html>';
+ const bridge='<script>(function(){const send=(type,args)=>parent.postMessage({__apokolipsConsole:true,type,args:Array.from(args).map(x=>{try{return typeof x==="string"?x:JSON.stringify(x)}catch(e){return String(x)}})}, "*")};["log","info","warn","error"].forEach(k=>{const old=console[k];console[k]=function(){send(k,arguments);old.apply(console,arguments)}});window.addEventListener("error",e=>send("error",[e.message+" (line "+e.lineno+")"]));window.addEventListener("unhandledrejection",e=>send("error",[e.reason]));})();<\/script>';
+ if(current==='html'){let html=getCode('html');if(/<head[\s>]/i.test(html))return html.replace(/<head([^>]*)>/i,'<head$1>'+bridge);return bridge+html;}
+ if(current==='css')return '<!doctype html><html><head><meta charset="utf-8">'+bridge+'<style>'+getCode('css')+'<\/style></head><body><h2>CSS preview</h2><p>Your stylesheet is applied to this preview page.</p></body></html>';
+ if(current==='javascript')return '<!doctype html><html><head><meta charset="utf-8">'+bridge+'</head><body><h2>JavaScript preview</h2><script>'+getCode('javascript').replace(/<\/script/gi,'<\\/script')+'<\/script></body></html>';
  return '';
 }
 window.addEventListener('message',e=>{if(e.data&&e.data.__apokolipsConsole){const msg=(e.data.args||[]).join(' ');appendConsole(msg,e.data.type==='error'?'err':e.data.type==='warn'?'':'');}});
