@@ -1,0 +1,33 @@
+name: Verify Apokolips plans build
+
+on:
+  pull_request:
+    paths:
+      - 'plans-app/**'
+      - 'package.json'
+      - 'vite.config.js'
+      - '.github/workflows/plans-build.yml'
+  push:
+    branches:
+      - main
+      - 'feature/supabase-plans-orders'
+    paths:
+      - 'plans-app/**'
+      - 'package.json'
+      - 'vite.config.js'
+      - '.github/workflows/plans-build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build React + Vite plans page
+        run: npm run build
