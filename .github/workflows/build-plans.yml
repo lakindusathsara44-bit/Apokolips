@@ -21,19 +21,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - name: Install dependencies
         run: npm install
       - name: Build React + Vite assets
         run: npm run build
       - name: Commit generated plans assets
         run: |
-          if git diff --quiet -- assets/plans; then
+          git add assets/plans
+          if git diff --cached --quiet; then
             echo "No generated asset changes."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/plans
           git commit -m "Build React Vite plans assets"
           git push
