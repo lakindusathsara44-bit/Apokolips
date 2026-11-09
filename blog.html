@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="style.css">
 <style>
 .blog-hero{padding:42px 0 28px}.blog-kicker{color:#72b7ff;letter-spacing:.2em;font-size:.72rem;font-weight:800}.blog-title{font-size:clamp(2.5rem,7vw,5rem);line-height:1.02;margin:14px 0}.blog-title span{background:linear-gradient(90deg,#55aaff,#b18cff);-webkit-background-clip:text;background-clip:text;color:transparent}.blog-intro{max-width:650px;color:#aab4c5;line-height:1.8}.blog-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}.blog-actions a,.travel-button{display:inline-flex;align-items:center;gap:12px;padding:13px 19px;border:1px solid #2869a8;border-radius:12px;background:linear-gradient(110deg,#0c2b50,#10172a);color:#eaf5ff;text-decoration:none;font-weight:750;box-shadow:0 0 22px #087bff22}.blog-section{margin:26px 0}.blog-section h2{font-size:1.4rem}.media-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:18px}.media-card{overflow:hidden;border:1px solid #26364c;background:#0b101a;border-radius:16px}.media-card img,.media-card video{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#050609}.media-card video{aspect-ratio:16/10}.media-caption{padding:14px;color:#dce7f6}.media-caption small{display:block;color:#8293aa;margin-top:5px}.empty-state{padding:34px 22px;text-align:center;border:1px dashed #34506e;border-radius:18px;background:#0a111d}.empty-icon{font-size:2.4rem}.empty-state h3{margin:10px 0}.empty-state p{max-width:570px;margin:0 auto;color:#9baabe;line-height:1.75}.upload-guide{margin-top:20px;padding:18px;border-radius:14px;background:#0b1421;border:1px solid #243a56;color:#aab8ca;line-height:1.7}.upload-guide code{color:#8cc7ff}.back-link{color:#9fcfff}
+.photo-post{max-width:760px;margin:18px auto 0;overflow:hidden;border:1px solid #263d59;border-radius:18px;background:linear-gradient(145deg,#0d1420,#080c13);box-shadow:0 16px 45px #0005}.photo-post>img{display:block;width:100%;max-height:620px;aspect-ratio:4/3;object-fit:cover;background:#050609}.post-content{padding:18px}.post-title{font-size:1.12rem;color:#edf5ff;margin:0 0 6px}.post-date{color:#8293aa;font-size:.8rem}.post-description{color:#aab8ca;line-height:1.7;margin:12px 0}.post-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:12px 0;border-top:1px solid #223148;border-bottom:1px solid #223148}.reaction-button{border:1px solid #2b405b;background:#101b2a;color:#dceaff;border-radius:999px;padding:8px 13px;cursor:pointer;font:inherit;font-size:.9rem}.reaction-button:hover,.reaction-button.selected{border-color:#4c9cff;background:#102d4d;box-shadow:0 0 14px #168bff25}.reaction-count{color:#8fa4bd;font-size:.85rem;margin-left:auto}.comments{padding-top:15px}.comments h3{font-size:1rem;margin:0 0 12px;color:#e8f2ff}.comment-form{display:grid;grid-template-columns:minmax(0,1fr);gap:9px}.comment-form input,.comment-form textarea{width:100%;box-sizing:border-box;background:#080e18;border:1px solid #2a3b53;border-radius:10px;padding:11px 12px;color:#eef6ff;font:inherit}.comment-form textarea{min-height:76px;resize:vertical}.comment-form button{justify-self:start;border:1px solid #347fc5;border-radius:10px;padding:10px 16px;background:linear-gradient(110deg,#123e6b,#14223a);color:#fff;font-weight:750;cursor:pointer}.comment-list{display:grid;gap:10px;margin-top:15px}.comment-item{padding:11px 13px;border:1px solid #202f43;border-radius:11px;background:#0a111b}.comment-item strong{color:#a9d5ff;font-size:.9rem}.comment-item p{margin:5px 0 0;color:#d2deed;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}.interaction-note{color:#71849c;font-size:.76rem;line-height:1.5;margin-top:12px}
 .photo-post{max-width:760px;margin:18px auto 0;overflow:hidden;border:1px solid #263d59;border-radius:18px;background:linear-gradient(145deg,#0d1420,#080c13);box-shadow:0 16px 45px #0005}.photo-post>img{display:block;width:100%;max-height:620px;aspect-ratio:4/3;object-fit:cover;background:#050609}.post-content{padding:18px}.post-title{font-size:1.12rem;color:#edf5ff;margin:0 0 6px}.post-date{color:#8293aa;font-size:.8rem}.post-description{color:#aab8ca;line-height:1.7;margin:12px 0}.post-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:12px 0;border-top:1px solid #223148;border-bottom:1px solid #223148}.reaction-button{border:1px solid #2b405b;background:#101b2a;color:#dceaff;border-radius:999px;padding:8px 13px;cursor:pointer;font:inherit;font-size:.9rem}.reaction-button:hover,.reaction-button.selected{border-color:#4c9cff;background:#102d4d;box-shadow:0 0 14px #168bff25}.reaction-count{color:#8fa4bd;font-size:.85rem;margin-left:auto}.share-media-button{display:inline-flex;align-items:center;gap:7px;border:1px solid #2869a8;background:linear-gradient(110deg,#0c2b50,#10172a);color:#eaf5ff;border-radius:999px;padding:8px 13px;cursor:pointer;font:inherit;font-size:.9rem}.share-media-button:hover{border-color:#55aaff;box-shadow:0 0 14px #168bff35}.share-media-button svg{width:16px;height:16px;flex:none}.comments{padding-top:15px}.comments h3{font-size:1rem;margin:0 0 12px;color:#e8f2ff}.comment-form{display:grid;grid-template-columns:minmax(0,1fr);gap:9px}.comment-form input,.comment-form textarea{width:100%;box-sizing:border-box;background:#080e18;border:1px solid #2a3b53;border-radius:10px;padding:11px 12px;color:#eef6ff;font:inherit}.comment-form textarea{min-height:76px;resize:vertical}.comment-form button{justify-self:start;border:1px solid #347fc5;border-radius:10px;padding:10px 16px;background:linear-gradient(110deg,#123e6b,#14223a);color:#fff;font-weight:750;cursor:pointer}.comment-list{display:grid;gap:10px;margin-top:15px}.comment-item{padding:11px 13px;border:1px solid #202f43;border-radius:11px;background:#0a111b}.comment-item strong{color:#a9d5ff;font-size:.9rem}.comment-item p{margin:5px 0 0;color:#d2deed;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}.interaction-note{color:#71849c;font-size:.76rem;line-height:1.5;margin-top:12px}
 </style>
 </head>
@@ -41,27 +42,24 @@
 </form>
 <div class="comment-list" id="commentList" aria-live="polite"></div>
 </section>
-<p class="interaction-note">Preview mode: likes, reactions and comments are saved only in this browser on this device. A shared online database is needed for visitors to see each other's activity.</p>
+<p class="interaction-note" id="interactionStatus" role="status" aria-live="polite">Friends, Food,travel,love, enjoy forever</p>
 </div>
 </article>
 <div class="media-grid" id="mediaGrid"></div>
 <div class="empty-state" id="emptyState" hidden><div class="empty-icon">✧</div><h3>No more travel memories yet</h3><p>This space is ready for future trips. Photos and videos will appear here when they are uploaded to the GitHub repository.</p></div>
 </section>
-
 </main>
 <footer class="footer"><span>© <span id="year"></span> Lakindu Sathsara</span><span><a href="index.html">BACK TO HOME ↑</a></span></footer>
 <script src="script.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (() => {
-  const storageKey = "apokolips-blog-post-20261016-v1";
+  const SUPABASE_URL = "https://oqyfvvwplvbmmursbpkd.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fA9X_kf1Fz_DNDXa1I97Sg_RKXCojsd";
+  const POST_SLUG = "travel-memory-2026-10-16";
+  const REACTION_TABLE = "apokolips_blog_reactions";
+  const COMMENT_TABLE = "apokolips_blog_comments";
   const reactions = ["like", "love", "wow", "fire"];
-  const defaults = { reactions: {}, comments: [] };
-  let data = defaults;
-  try {
-    const saved = JSON.parse(localStorage.getItem(storageKey) || "null");
-    if (saved && typeof saved === "object") data = { reactions: saved.reactions || {}, comments: Array.isArray(saved.comments) ? saved.comments : [] };
-  } catch (_) {}
-  const save = () => { try { localStorage.setItem(storageKey, JSON.stringify(data)); } catch (_) {} };
   const shareLinks = {
     "travel-photo-20261016": "https://www.apokolips.xyz/blog.html#travel-photo-20261016"
   };
@@ -81,57 +79,171 @@
         if (error && error.name !== "AbortError") window.prompt("Copy this link to share:", url);
       }
     });
+
+  const status = document.getElementById("interactionStatus");
+  const reactionBar = document.getElementById("reactionBar");
+  const commentForm = document.getElementById("commentForm");
+  const submitButton = commentForm.querySelector('button[type="submit"]');
+  const localStateKey = "apokolips-blog-social-v2";
+  const visitorStorageKey = "apokolips-blog-visitor-v1";
+
+  function getVisitorId() {
+    let id = localStorage.getItem(visitorStorageKey);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(visitorStorageKey, id);
+    }
+    return id;
+  }
+
+  const visitorId = getVisitorId();
+  let localState = {};
+  try { localState = JSON.parse(localStorage.getItem(localStateKey) || "{}") || {}; } catch (_) {}
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { "x-blog-visitor": visitorId } }
   });
-  const renderReactions = () => {
+
+  const setStatus = (message, isError = false) => {
+    status.textContent = message;
+    status.style.color = isError ? "#ff9b9b" : "#829bb8";
+  };
+
+  function renderReactions(rows) {
+    const counts = Object.fromEntries(reactions.map(type => [type, 0]));
+    rows.forEach(row => { if (counts[row.reaction] !== undefined) counts[row.reaction]++; });
     let total = 0;
     reactions.forEach(type => {
-      const count = Object.values(data.reactions).filter(value => value === type).length;
+      const count = counts[type];
       total += count;
       document.getElementById("count-" + type).textContent = count;
       const button = document.querySelector('[data-reaction="' + type + '"]');
-      const selected = data.reactions.local === type;
+      const selected = localState.selectedReaction === type;
       button.classList.toggle("selected", selected);
       button.setAttribute("aria-pressed", String(selected));
     });
     document.getElementById("totalReactions").textContent = total + (total === 1 ? " reaction" : " reactions");
-  };
-  document.getElementById("reactionBar").addEventListener("click", event => {
-    const button = event.target.closest("button[data-reaction]");
-    if (!button) return;
-    const type = button.dataset.reaction;
-    data.reactions.local = data.reactions.local === type ? null : type;
-    save();
-    renderReactions();
-  });
-  const renderComments = () => {
+  }
+
+  async function loadReactions() {
+    const { data, error } = await supabaseClient
+      .from(REACTION_TABLE)
+      .select("reaction")
+      .eq("post_slug", POST_SLUG);
+    if (error) throw error;
+    renderReactions(data || []);
+  }
+
+  async function loadComments() {
+    const { data, error } = await supabaseClient
+      .from(COMMENT_TABLE)
+      .select("display_name,body,created_at")
+      .eq("post_slug", POST_SLUG)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw error;
     const list = document.getElementById("commentList");
     list.replaceChildren();
-    data.comments.forEach(comment => {
+    (data || []).slice().reverse().forEach(comment => {
       const item = document.createElement("article");
       item.className = "comment-item";
       const name = document.createElement("strong");
-      name.textContent = comment.name;
+      name.textContent = comment.display_name;
       const message = document.createElement("p");
-      message.textContent = comment.text;
-      item.append(name, message);
+      message.textContent = comment.body;
+      const time = document.createElement("small");
+      time.textContent = new Date(comment.created_at).toLocaleString();
+      time.style.color = "#71849c";
+      item.append(name, message, time);
       list.append(item);
     });
-    document.getElementById("commentCount").textContent = "(" + data.comments.length + ")";
-  };
-  document.getElementById("commentForm").addEventListener("submit", event => {
+    document.getElementById("commentCount").textContent = "(" + (data || []).length + ")";
+  }
+
+  async function refreshAll() {
+    try {
+      await Promise.all([loadReactions(), loadComments()]);
+      setStatus("Live: reactions and comments are shared with other visitors.");
+    } catch (error) {
+      console.error("Blog data load failed:", error);
+      setStatus("Could not load shared interactions. Please refresh the page and try again.", true);
+    }
+  }
+
+  reactionBar.addEventListener("click", async event => {
+    const button = event.target.closest("button[data-reaction]");
+    if (!button || button.disabled) return;
+    const type = button.dataset.reaction;
+    if (localState.selectedReaction === type) return;
+    reactionBar.querySelectorAll("button").forEach(item => item.disabled = true);
+    try {
+      const { data: updated, error: updateError } = await supabaseClient
+        .from(REACTION_TABLE)
+        .update({ reaction: type })
+        .eq("post_slug", POST_SLUG)
+        .select("post_slug");
+      if (updateError) throw updateError;
+
+      if (!updated || updated.length === 0) {
+        const { error: insertError } = await supabaseClient
+          .from(REACTION_TABLE)
+          .insert({ post_slug: POST_SLUG, visitor_id: visitorId, reaction: type });
+        if (insertError && insertError.code === "23505") {
+          const { error: retryError } = await supabaseClient
+            .from(REACTION_TABLE)
+            .update({ reaction: type })
+            .eq("post_slug", POST_SLUG);
+          if (retryError) throw retryError;
+        } else if (insertError) {
+          throw insertError;
+        }
+      }
+      localState.selectedReaction = type;
+      localStorage.setItem(localStateKey, JSON.stringify(localState));
+      await loadReactions();
+      setStatus("Your reaction has been shared.");
+    } catch (error) {
+      console.error("Reaction save failed:", error);
+      setStatus("Your reaction could not be saved. Please try again.", true);
+    } finally {
+      reactionBar.querySelectorAll("button").forEach(item => item.disabled = false);
+    }
+  });
+
+  commentForm.addEventListener("submit", async event => {
     event.preventDefault();
     const nameInput = document.getElementById("commentName");
     const textInput = document.getElementById("commentText");
-    const name = nameInput.value.trim();
-    const text = textInput.value.trim();
-    if (!name || !text) return;
-    data.comments.push({ name: name.slice(0, 40), text: text.slice(0, 500) });
-    save();
-    renderComments();
-    textInput.value = "";
+    const displayName = nameInput.value.trim().slice(0, 40);
+    const body = textInput.value.trim().slice(0, 500);
+    if (!displayName || !body) return;
+    submitButton.disabled = true;
+    submitButton.textContent = "Posting…";
+    try {
+      const { error } = await supabaseClient.from(COMMENT_TABLE).insert({
+        post_slug: POST_SLUG,
+        visitor_id: visitorId,
+        display_name: displayName,
+        body
+      });
+      if (error) throw error;
+      textInput.value = "";
+      await loadComments();
+      setStatus("Your comment has been posted for everyone to see.");
+    } catch (error) {
+      console.error("Comment save failed:", error);
+      setStatus("Your comment could not be posted. Please try again.", true);
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = "Post comment";
+    }
   });
-  renderReactions();
-  renderComments();
+
+  supabaseClient.channel("apokolips-blog-" + POST_SLUG)
+    .on("postgres_changes", { event: "*", schema: "public", table: REACTION_TABLE, filter: "post_slug=eq." + POST_SLUG }, () => loadReactions())
+    .on("postgres_changes", { event: "INSERT", schema: "public", table: COMMENT_TABLE, filter: "post_slug=eq." + POST_SLUG }, () => loadComments())
+    .subscribe();
+
+  refreshAll();
 })();
 </script>
 </body></html>
