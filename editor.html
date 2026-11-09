@@ -58,7 +58,7 @@ select,.toolbtn{border:1px solid #263851;background:#111d2e;color:#dce9fb;border
 <p class="note"><b>Project editing:</b> Choose <b>Open Project Folder</b> to load the HTML, CSS, JavaScript and other supported source files from one folder. Each source file appears in its own tab, so you can switch between files without losing edits. The selected HTML entry page stays in the live preview while linked CSS and JavaScript update as you type. With folder access supported, <b>Save to Device</b> or <b>Ctrl + S</b> writes the active file back to its original relative path. Press <b>L</b> outside the editor to toggle full screen. Drag any output-panel edge or corner to resize it. Python runs with Run; other languages need an external compiler/runtime.</p>
 </main>
 <div class="toast" id="toast"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs/loader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
 <script>
 (function(){
 const starter={
@@ -183,7 +183,7 @@ document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLower
 $('reset').onclick=()=>{if(!monacoReady)return;if(activeProjectPath&&projectModels[activeProjectPath]){if(confirm('Reset '+activeProjectPath+' to the starter example for '+langNames[current]+'?')){projectModels[activeProjectPath].setValue(starter[current]||'');notify('Active project file reset');}return;}if(confirm('Reset all editor starter examples?')){Object.keys(starter).forEach(k=>setCode(k,starter[k]));selectFile(current);notify('Starter code restored');}};
 // Code is intentionally not stored in browser storage. Each new session starts with the clean starter templates.
 if(window.require){
- require.config({paths:{vs:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs'}});
+ require.config({paths:{vs:'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs'}});
  require(['vs/editor/editor.main'],function(){
   Object.keys(starter).forEach(lang=>{models[lang]=monaco.editor.createModel(starter[lang],lang);});
   editor=monaco.editor.create($('editor'),{model:models.html,theme:'vs-dark',automaticLayout:true,fontSize:14,fontFamily:"'Cascadia Code',Consolas,monospace",minimap:{enabled:false},scrollBeyondLastLine:false,wordWrap:'on',tabSize:2,insertSpaces:true,autoClosingBrackets:'always',autoClosingQuotes:'always',autoIndent:'full',formatOnPaste:true,formatOnType:true,suggestOnTriggerCharacters:true,quickSuggestions:{other:true,comments:false,strings:true},parameterHints:{enabled:true},snippetSuggestions:'top',renderValidationDecorations:'on',glyphMargin:false,folding:true,bracketPairColorization:{enabled:true},padding:{top:14,bottom:14}});
