@@ -10,6 +10,7 @@ type Vote = { user_id: string; value: number };
 type Post = {
   id: string;
   space_id: string;
+  author_id: string;
   title: string;
   body: string;
   link_url: string | null;
@@ -336,8 +337,7 @@ function PostCard({
       <div className="post-footer">
         <CommentSection post={post} user={user} onNeedAuth={onNeedAuth} />
         <span className="post-footer-spacer" />
-        {user?.id === one(post.author)?.username && null}
-        {user && <button className="post-action delete-action" type="button" onClick={() => onDelete(post)} title="Delete your post">Delete</button>}
+        {user?.id === post.author_id && <button className="post-action delete-action" type="button" onClick={() => onDelete(post)} title="Delete your post">Delete</button>}
         {!user && <button className="post-action" type="button" onClick={onNeedAuth}>Sign in to vote</button>}
       </div>
     </div>
@@ -377,7 +377,7 @@ function App() {
     setLoading(true);
     const { data, error } = await supabase
       .from('community_posts')
-      .select('id,space_id,title,body,link_url,created_at,space:community_spaces!community_posts_space_id_fkey(id,slug,name,description),author:community_profiles!community_posts_author_id_fkey(username,display_name,avatar_url),votes:community_votes(value,user_id),comment_count:community_comments(count)')
+      .select('id,space_id,author_id,title,body,link_url,created_at,space:community_spaces!community_posts_space_id_fkey(id,slug,name,description),author:community_profiles!community_posts_author_id_fkey(username,display_name,avatar_url),votes:community_votes(value,user_id),comment_count:community_comments(count)')
       .order('created_at', { ascending: false })
       .limit(60);
     if (error) notify('Could not load posts: ' + error.message);
@@ -440,12 +440,15 @@ function App() {
     let result;
     if (existing?.value === value) {
       result = await supabase.from('community_votes').delete().eq('post_id', post.id).eq('user_id', user.id);
+    } else if (existing) {
+      // Only the vote value is updated; the RLS-safe column grant keeps vote ownership immutable.
+      result = await supabase.from('community_votes').update({ value }).eq('post_id', post.id).eq('user_id', user.id);
     } else {
-      result = await supabase.from('community_votes').upsert({
+      result = await supabase.from('community_votes').insert({
         post_id: post.id,
         user_id: user.id,
         value
-      }, { onConflict: 'post_id,user_id' });
+      });
     }
     if (result.error) notify('Vote could not be saved: ' + result.error.message);
     else await loadFeed();
