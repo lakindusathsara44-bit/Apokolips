@@ -79,6 +79,7 @@
         if (error && error.name !== "AbortError") window.prompt("Copy this link to share:", url);
       }
     });
+  });
 
   const status = document.getElementById("interactionStatus");
   const reactionBar = document.getElementById("reactionBar");
@@ -180,6 +181,7 @@
         .from(REACTION_TABLE)
         .update({ reaction: type })
         .eq("post_slug", POST_SLUG)
+        .eq("visitor_id", visitorId)
         .select("post_slug");
       if (updateError) throw updateError;
 
@@ -191,7 +193,8 @@
           const { error: retryError } = await supabaseClient
             .from(REACTION_TABLE)
             .update({ reaction: type })
-            .eq("post_slug", POST_SLUG);
+            .eq("post_slug", POST_SLUG)
+            .eq("visitor_id", visitorId);
           if (retryError) throw retryError;
         } else if (insertError) {
           throw insertError;
