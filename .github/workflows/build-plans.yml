@@ -10,6 +10,15 @@ on:
       - 'package.json'
       - 'vite.config.js'
       - '.github/workflows/build-plans.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'plans.html'
+      - 'plans-app/**'
+      - 'package.json'
+      - 'vite.config.js'
+      - '.github/workflows/build-plans.yml'
   workflow_dispatch:
 
 permissions:
@@ -46,6 +55,7 @@ jobs:
           echo "Verified plans.js and plans.css"
 
       - name: Commit generated assets
+        if: github.event_name == 'push'
         run: |
           git add -f assets/plans/plans.js assets/plans/plans.css
           if git diff --cached --quiet; then
