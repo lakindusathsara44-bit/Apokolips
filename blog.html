@@ -264,6 +264,7 @@
 
     form.addEventListener("submit", async event => {
       event.preventDefault();
+      await restoreDeviceName();
       const displayName = (deviceDisplayName || name.value).trim().slice(0, 40);
       const body = message.value.trim().slice(0, 500);
       if (!displayName || !body) return;
@@ -381,6 +382,7 @@
       });
       replyForm.addEventListener("submit", async event => {
         event.preventDefault();
+        await restoreDeviceName();
         const displayName = deviceDisplayName || state.name.value.trim().slice(0, 40);
         const replyBody = replyText.value.trim().slice(0, 500);
         if (!displayName || !replyBody) {
