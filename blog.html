@@ -13,6 +13,14 @@
 .photo-post{max-width:760px;margin:18px auto 0;overflow:hidden;border:1px solid #263d59;border-radius:18px;background:linear-gradient(145deg,#0d1420,#080c13);box-shadow:0 16px 45px #0005}.photo-post>img{display:block;width:100%;max-height:620px;aspect-ratio:4/3;object-fit:cover;background:#050609}.post-content{padding:18px}.post-title{font-size:1.12rem;color:#edf5ff;margin:0 0 6px}.post-date{color:#8293aa;font-size:.8rem}.post-description{color:#aab8ca;line-height:1.7;margin:12px 0}.post-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:12px 0;border-top:1px solid #223148;border-bottom:1px solid #223148}.reaction-button{border:1px solid #2b405b;background:#101b2a;color:#dceaff;border-radius:999px;padding:8px 13px;cursor:pointer;font:inherit;font-size:.9rem}.reaction-button:hover,.reaction-button.selected{border-color:#4c9cff;background:#102d4d;box-shadow:0 0 14px #168bff25}.reaction-count{color:#8fa4bd;font-size:.85rem;margin-left:auto}.share-media-button{display:inline-flex;align-items:center;gap:7px;border:1px solid #2869a8;background:linear-gradient(110deg,#0c2b50,#10172a);color:#eaf5ff;border-radius:999px;padding:8px 13px;cursor:pointer;font:inherit;font-size:.9rem}.share-media-button:hover{border-color:#55aaff;box-shadow:0 0 14px #168bff35}.share-media-button svg{width:16px;height:16px;flex:none}.comments{padding-top:15px}.comments h3{font-size:1rem;margin:0 0 12px;color:#e8f2ff}.comment-form{display:grid;grid-template-columns:minmax(0,1fr);gap:9px}.comment-form input,.comment-form textarea{width:100%;box-sizing:border-box;background:#080e18;border:1px solid #2a3b53;border-radius:10px;padding:11px 12px;color:#eef6ff;font:inherit}.comment-form textarea{min-height:76px;resize:vertical}.comment-form button{justify-self:start;border:1px solid #347fc5;border-radius:10px;padding:10px 16px;background:linear-gradient(110deg,#123e6b,#14223a);color:#fff;font-weight:750;cursor:pointer}.comment-list{display:grid;gap:10px;margin-top:15px}.comment-item{padding:11px 13px;border:1px solid #202f43;border-radius:11px;background:#0a111b}.comment-item strong{color:#a9d5ff;font-size:.9rem}.comment-item p{margin:5px 0 0;color:#d2deed;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}.interaction-note{color:#71849c;font-size:.76rem;line-height:1.5;margin-top:12px}
 
 .comments{padding-top:15px}.comments-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;border:1px solid #2b405b;border-radius:12px;background:#0c1726;color:#e8f2ff;font:inherit;font-weight:750;text-align:left;cursor:pointer}.comments-toggle:hover{border-color:#4c9cff;background:#10213a}.comments-toggle .comment-toggle-count{color:#8fc7ff;font-size:.88rem}.comments-panel{margin-top:12px;padding:14px;border:1px solid #22364f;border-radius:13px;background:#080e18}.comments-panel[hidden]{display:none}.comments-panel .comment-list{max-height:420px;overflow-y:auto;overscroll-behavior:contain;padding-right:4px}.comments-panel .comment-list::-webkit-scrollbar{width:7px}.comments-panel .comment-list::-webkit-scrollbar-thumb{background:#294565;border-radius:8px}
+.comment-item .comment-reply-button{margin-top:9px;border:1px solid #2b5279;background:#0c1b2c;color:#9fd0ff;border-radius:8px;padding:6px 10px;cursor:pointer;font:inherit;font-size:.8rem}
+.comment-replies{display:grid;gap:8px;margin:10px 0 0 16px;padding-left:12px;border-left:2px solid #294565}
+.comment-item.comment-reply{background:#0b1522;border-color:#263d58}
+.reply-form{display:grid;gap:8px;margin-top:10px}
+.reply-form textarea{width:100%;box-sizing:border-box;min-height:62px;resize:vertical;background:#080e18;border:1px solid #2a3b53;border-radius:9px;padding:10px;color:#eef6ff;font:inherit}
+.reply-form button{justify-self:start;border:1px solid #347fc5;border-radius:9px;padding:8px 12px;background:#123e6b;color:#fff;font-weight:700;cursor:pointer}
+.comment-form input[readonly]{opacity:.8;border-color:#315b80;cursor:not-allowed}
+.device-name-hint{color:#829bb8;font-size:.75rem;line-height:1.5;margin:0}
 </style>
 </head>
 <body>
@@ -88,6 +96,8 @@
     { type: "fire", label: "🔥 Fire" }
   ];
   const visitorStorageKey = "apokolips-blog-visitor-v1";
+  const deviceNameStorageKey = "apokolips-blog-device-name-v1";
+  let deviceDisplayName = localStorage.getItem(deviceNameStorageKey) || "";
   let visitorId = localStorage.getItem(visitorStorageKey);
   if (!visitorId) {
     visitorId = (window.crypto && crypto.randomUUID)
@@ -195,6 +205,11 @@
     name.placeholder = "Your name";
     name.setAttribute("aria-label", "Your name");
     name.required = true;
+    if (deviceDisplayName) {
+      name.value = deviceDisplayName;
+      name.readOnly = true;
+      name.title = "This name is locked on this device";
+    }
     const message = document.createElement("textarea");
     message.maxLength = 500;
     message.placeholder = "Write a comment...";
@@ -213,7 +228,10 @@
     note.setAttribute("role", "status");
     note.setAttribute("aria-live", "polite");
     note.textContent = "Loading shared reactions and comments…";
-    panel.append(form, list, note);
+    const nameHint = document.createElement("p");
+    nameHint.className = "device-name-hint";
+    nameHint.textContent = "Your first comment or reply locks this name on this browser/device.";
+    panel.append(form, nameHint, list, note);
     comments.append(toggle, panel);
     content.append(actions, comments);
 
@@ -246,7 +264,8 @@
 
     form.addEventListener("submit", async event => {
       event.preventDefault();
-      const displayName = name.value.trim().slice(0, 40);
+      await restoreDeviceName();
+      const displayName = (deviceDisplayName || name.value).trim().slice(0, 40);
       const body = message.value.trim().slice(0, 500);
       if (!displayName || !body) return;
       submit.disabled = true;
@@ -256,6 +275,7 @@
           post_slug: slug, visitor_id: visitorId, display_name: displayName, body
         });
         if (error) throw error;
+        lockDeviceName(displayName);
         message.value = "";
         await loadComments(state);
         setNote(state, "Your comment is now visible to other visitors.");
@@ -302,26 +322,124 @@
     return count + (count === 1 ? " comment" : " comments") + (isOpen ? "  ▴" : "  ▾");
   }
 
+  function lockDeviceName(name) {
+    if (!name || deviceDisplayName) return;
+    deviceDisplayName = name.trim().slice(0, 40);
+    if (!deviceDisplayName) return;
+    localStorage.setItem(deviceNameStorageKey, deviceDisplayName);
+    cards.forEach(cardState => {
+      cardState.name.value = deviceDisplayName;
+      cardState.name.readOnly = true;
+      cardState.name.title = "This name is locked on this device";
+    });
+  }
+
+  async function restoreDeviceName() {
+    if (deviceDisplayName) return;
+    try {
+      const { data, error } = await supabaseClient.from(COMMENT_TABLE)
+        .select("display_name").eq("visitor_id", visitorId)
+        .order("created_at", { ascending: true }).limit(1);
+      if (!error && data && data.length) lockDeviceName(data[0].display_name);
+    } catch (error) {
+      console.warn("Could not restore this device's comment name:", error);
+    }
+  }
+
+  function renderComment(comment, replies, state, isReply = false) {
+    const item = document.createElement("article");
+    item.className = "comment-item" + (isReply ? " comment-reply" : "");
+    const author = document.createElement("strong");
+    author.textContent = comment.display_name;
+    const body = document.createElement("p");
+    body.textContent = comment.body;
+    const time = document.createElement("small");
+    time.textContent = new Date(comment.created_at).toLocaleString();
+    time.style.color = "#71849c";
+    item.append(author, body, time);
+
+    if (!isReply) {
+      const replyButton = document.createElement("button");
+      replyButton.type = "button";
+      replyButton.className = "comment-reply-button";
+      replyButton.textContent = "↳ Reply";
+      item.append(replyButton);
+
+      const replyForm = document.createElement("form");
+      replyForm.className = "reply-form";
+      replyForm.hidden = true;
+      const replyText = document.createElement("textarea");
+      replyText.maxLength = 500;
+      replyText.placeholder = "Write a reply…";
+      replyText.required = true;
+      const sendReply = document.createElement("button");
+      sendReply.type = "submit";
+      sendReply.textContent = "Post reply";
+      replyForm.append(replyText, sendReply);
+      replyButton.addEventListener("click", () => {
+        replyForm.hidden = !replyForm.hidden;
+        if (!replyForm.hidden) replyText.focus();
+      });
+      replyForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        await restoreDeviceName();
+        const displayName = deviceDisplayName || state.name.value.trim().slice(0, 40);
+        const replyBody = replyText.value.trim().slice(0, 500);
+        if (!displayName || !replyBody) {
+          setNote(state, "Enter your name in the comment form first.", true);
+          state.name.focus();
+          return;
+        }
+        sendReply.disabled = true;
+        sendReply.textContent = "Posting…";
+        try {
+          const { error } = await supabaseClient.from(COMMENT_TABLE).insert({
+            post_slug: state.slug, visitor_id: visitorId,
+            display_name: displayName, body: replyBody, parent_comment_id: comment.id
+          });
+          if (error) throw error;
+          lockDeviceName(displayName);
+          replyText.value = "";
+          replyForm.hidden = true;
+          await loadComments(state);
+          setNote(state, "Your reply has been shared.");
+        } catch (error) {
+          console.error("Reply save failed:", error);
+          setNote(state, "Reply could not be posted. Please try again.", true);
+        } finally {
+          sendReply.disabled = false;
+          sendReply.textContent = "Post reply";
+        }
+      });
+      item.append(replyForm);
+
+      if (replies.length) {
+        const replyList = document.createElement("div");
+        replyList.className = "comment-replies";
+        replies.forEach(reply => replyList.append(renderComment(reply, [], state, true)));
+        item.append(replyList);
+      }
+    }
+    return item;
+  }
+
   async function loadComments(state) {
     const { data, error } = await supabaseClient
-      .from(COMMENT_TABLE).select("display_name,body,created_at")
-      .eq("post_slug", state.slug).order("created_at", { ascending: true }).limit(100);
+      .from(COMMENT_TABLE).select("id,parent_comment_id,display_name,body,created_at")
+      .eq("post_slug", state.slug).order("created_at", { ascending: true }).limit(200);
     if (error) throw error;
-    state.list.replaceChildren();
-    (data || []).forEach(comment => {
-      const item = document.createElement("article");
-      item.className = "comment-item";
-      const author = document.createElement("strong");
-      author.textContent = comment.display_name;
-      const body = document.createElement("p");
-      body.textContent = comment.body;
-      const time = document.createElement("small");
-      time.textContent = new Date(comment.created_at).toLocaleString();
-      time.style.color = "#71849c";
-      item.append(author, body, time);
-      state.list.append(item);
+    const comments = data || [];
+    const repliesByParent = new Map();
+    comments.filter(comment => comment.parent_comment_id).forEach(reply => {
+      const group = repliesByParent.get(reply.parent_comment_id) || [];
+      group.push(reply);
+      repliesByParent.set(reply.parent_comment_id, group);
     });
-    state.commentTotal = (data || []).length;
+    state.list.replaceChildren();
+    comments.filter(comment => !comment.parent_comment_id).forEach(comment => {
+      state.list.append(renderComment(comment, repliesByParent.get(comment.id) || [], state));
+    });
+    state.commentTotal = comments.length;
     state.commentCount.textContent = stateCountLabel(state.commentTotal, !state.panel.hidden);
   }
 
@@ -370,6 +488,7 @@
   }
 
   enhanceAll();
+  restoreDeviceName();
   const mediaRoot = document.getElementById("memories") || document.body;
   const observer = new MutationObserver(records => {
     records.forEach(record => record.addedNodes.forEach(node => {
