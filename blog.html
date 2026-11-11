@@ -488,6 +488,7 @@
   function renderComment(comment, replies, state, isReply = false) {
     const item = document.createElement("article");
     item.className = "comment-item" + (isReply ? " comment-reply" : "");
+    item.id = "comment-" + comment.id;
     const author = document.createElement("strong");
     author.textContent = comment.display_name;
     const body = document.createElement("p");
