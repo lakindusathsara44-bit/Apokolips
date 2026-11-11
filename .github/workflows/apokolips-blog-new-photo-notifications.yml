@@ -31,7 +31,7 @@ jobs:
           fi
           git show "${BEFORE_SHA}:blog.html" > /tmp/old-blog.html 2>/dev/null || true
           git show "${AFTER_SHA}:blog.html" > /tmp/new-blog.html
-          node <<'NODE'
+          node > /tmp/new-blog-photos.txt <<'NODE'
           const fs = require("fs");
           const imagePattern = /\.(?:jpe?g|png|webp|gif)(?:[?#].*)?$/i;
           const extract = (html) => {
@@ -46,7 +46,6 @@ jobs:
           const after = extract(fs.readFileSync("/tmp/new-blog.html", "utf8"));
           for (const src of after) if (!before.has(src)) console.log(src);
           NODE
-          > /tmp/new-blog-photos.txt
           if [[ ! -s /tmp/new-blog-photos.txt ]]; then
             echo "No newly referenced blog photos found."
             exit 0
