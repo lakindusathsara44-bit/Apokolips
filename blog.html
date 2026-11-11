@@ -25,6 +25,7 @@
 .blog-notification-tools{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:14px}
 .blog-notification-tools button{border:1px solid #2869a8;border-radius:10px;padding:9px 13px;background:#0c1b2c;color:#eaf5ff;font:inherit;font-weight:700;cursor:pointer}
 .blog-notification-tools button:hover{border-color:#55aaff}
+.blog-notification-tools button[hidden]{display:none!important}
 .blog-notification-tools .notification-status{color:#91a8c2;font-size:.8rem}
 .blog-notification-panel{margin-top:10px;padding:12px;border:1px solid #294565;border-radius:12px;background:#08111d;max-width:620px}
 .blog-notification-panel[hidden]{display:none}
@@ -193,13 +194,42 @@
       }, { onConflict: "endpoint" });
       if (error) throw error;
       notificationButton.textContent = "Notifications enabled";
-      setNotificationStatus("This device can now receive blog notifications.");
+      setNotificationStatus("Notifications are enabled on this browser.");
+      hideNotificationButtons();
     } catch (error) {
       console.error("Blog push setup failed:", error);
       notificationButton.textContent = "Enable notifications";
       setNotificationStatus(error.message || "Could not enable notifications.", true);
     } finally {
       notificationButton.disabled = false;
+    }
+  }
+
+  function hideNotificationButtons() {
+    if (notificationButton) notificationButton.hidden = true;
+    if (notificationBell) notificationBell.hidden = true;
+    if (notificationPanel) notificationPanel.hidden = true;
+  }
+
+  async function syncNotificationButtons() {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    try {
+      const registration = await navigator.serviceWorker.getRegistration("/blog-sw.js");
+      const subscription = await registration?.pushManager?.getSubscription();
+      if (!subscription) return;
+      const { data, error } = await supabaseClient.from(PUSH_SUBSCRIPTIONS_TABLE)
+        .select("id")
+        .eq("visitor_id", visitorId)
+        .eq("endpoint", subscription.endpoint)
+        .maybeSingle();
+      if (error) throw error;
+      if (data) {
+        hideNotificationButtons();
+        setNotificationStatus("Notifications are enabled on this browser.");
+      }
+    } catch (error) {
+      console.warn("Could not verify saved blog push permission:", error);
     }
   }
 
@@ -245,6 +275,7 @@
   }
 
   if (notificationButton) notificationButton.addEventListener("click", enableBlogPush);
+  syncNotificationButtons();
   if (notificationBell) notificationBell.addEventListener("click", async () => {
     const opening = notificationPanel.hidden;
     notificationPanel.hidden = !opening;
