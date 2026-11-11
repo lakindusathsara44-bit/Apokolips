@@ -21,13 +21,32 @@
 .reply-form button{justify-self:start;border:1px solid #347fc5;border-radius:9px;padding:8px 12px;background:#123e6b;color:#fff;font-weight:700;cursor:pointer}
 .comment-form input[readonly]{opacity:.8;border-color:#315b80;cursor:not-allowed}
 .device-name-hint{color:#829bb8;font-size:.75rem;line-height:1.5;margin:0}
+
+.blog-notification-tools{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:14px}
+.blog-notification-tools button{border:1px solid #2869a8;border-radius:10px;padding:9px 13px;background:#0c1b2c;color:#eaf5ff;font:inherit;font-weight:700;cursor:pointer}
+.blog-notification-tools button:hover{border-color:#55aaff}
+.blog-notification-tools .notification-status{color:#91a8c2;font-size:.8rem}
+.blog-notification-panel{margin-top:10px;padding:12px;border:1px solid #294565;border-radius:12px;background:#08111d;max-width:620px}
+.blog-notification-panel[hidden]{display:none}
+.blog-notification-list{display:grid;gap:8px}
+.blog-notification-item{display:block;width:100%;padding:10px;border:1px solid #22364f;border-radius:9px;background:#0b1726;color:#e8f2ff;text-align:left;cursor:pointer}
+.blog-notification-item small{display:block;color:#829bb8;margin-top:4px}
+
 </style>
 </head>
 <body>
 <canvas id="rain" aria-hidden="true"></canvas>
 <header class="topbar"><a class="brand" href="index.html"><span class="brand-mark"><img src="file_00000000a7ec820890154ca6ed49b608.png" alt="Apokolips logo"></span><span>APOKOLIPS</span></a><button class="menu-toggle" aria-label="Toggle navigation">☰</button><nav class="nav"><a href="index.html">Home</a><a href="info.html">About Me</a><a href="project.gallery.html">Community Gallery</a><a href="My-project.html">My Projects</a></nav></header>
 <main class="page-shell">
-<section class="blog-hero"><div class="blog-kicker">PERSONAL TRAVEL JOURNAL / 01</div><h1 class="blog-title">Places I've <span>explored.</span></h1><p class="blog-intro">A collection of travel moments, photographs, and videos. Every journey has a story — this is where I keep mine.</p><div class="blog-actions"><a href="info.html">← Back to About Me</a><a href="#memories">Explore memories ↓</a></div></section>
+<section class="blog-hero"><div class="blog-kicker">PERSONAL TRAVEL JOURNAL / 01</div><h1 class="blog-title">Places I've <span>explored.</span></h1><p class="blog-intro">A collection of travel moments, photographs, and videos. Every journey has a story — this is where I keep mine.</p><div class="blog-actions"><a href="info.html">← Back to About Me</a><a href="#memories">Explore memories ↓</a></div>
+<div class="blog-notification-tools">
+  <button id="enableBlogNotifications" type="button">Enable notifications</button>
+  <button id="blogNotificationBell" type="button" aria-expanded="false">Notifications <span id="blogUnreadCount">0</span></button>
+  <span class="notification-status" id="blogNotificationStatus" role="status" aria-live="polite">Get alerts for replies and new photos.</span>
+</div>
+<div class="blog-notification-panel" id="blogNotificationPanel" hidden>
+  <div class="blog-notification-list" id="blogNotificationList"></div>
+</div></section>
 <section class="blog-section" id="memories"><div class="small-label">MY TRIPS</div><h2>Photo & Video Memories</h2>
 <article class="photo-post" id="travel-photo-20261016" data-post-slug="travel-memory-2026-10-16" aria-label="Travel photo post">
 <img src="https://raw.githubusercontent.com/lakindusathsara44-bit/Apokolips/main/IMG-20261016-WA0139.jpg" alt="Travel memory shared by Lakindu Sathsara" loading="lazy">
@@ -89,6 +108,9 @@
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fA9X_kf1Fz_DNDXa1I97Sg_RKXCojsd";
   const REACTION_TABLE = "apokolips_blog_reactions";
   const COMMENT_TABLE = "apokolips_blog_comments";
+  const NOTIFICATIONS_TABLE = "apokolips_blog_notifications";
+  const PUSH_SUBSCRIPTIONS_TABLE = "apokolips_blog_push_subscriptions";
+  const PUSH_FUNCTION_URL = SUPABASE_URL + "/functions/v1/apokolips-blog-push";
   const REACTIONS = [
     { type: "like", label: "👍 Like" },
     { type: "love", label: "❤️ Love" },
@@ -113,6 +135,123 @@
     global: { headers: { "x-blog-visitor": visitorId } }
   });
   const cards = new Map();
+  const notificationButton = document.getElementById("enableBlogNotifications");
+  const notificationBell = document.getElementById("blogNotificationBell");
+  const notificationPanel = document.getElementById("blogNotificationPanel");
+  const notificationList = document.getElementById("blogNotificationList");
+  const notificationStatus = document.getElementById("blogNotificationStatus");
+  const unreadCount = document.getElementById("blogUnreadCount");
+
+  function setNotificationStatus(message, isError = false) {
+    if (!notificationStatus) return;
+    notificationStatus.textContent = message;
+    notificationStatus.style.color = isError ? "#ff9b9b" : "#91a8c2";
+  }
+
+  function decodeVapidKey(value) {
+    const padding = "=".repeat((4 - value.length % 4) % 4);
+    const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const raw = atob(base64);
+    return Uint8Array.from(raw, char => char.charCodeAt(0));
+  }
+
+  async function enableBlogPush() {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+      setNotificationStatus("This browser does not support web push notifications.", true);
+      return;
+    }
+    notificationButton.disabled = true;
+    notificationButton.textContent = "Setting up…";
+    try {
+      const permission = Notification.permission === "default"
+        ? await Notification.requestPermission()
+        : Notification.permission;
+      if (permission !== "granted") throw new Error("Notification permission was not granted.");
+      const configResponse = await fetch(PUSH_FUNCTION_URL, {
+        method: "GET",
+        headers: { apikey: SUPABASE_PUBLISHABLE_KEY }
+      });
+      const config = await configResponse.json();
+      if (!configResponse.ok || !config.publicKey) throw new Error(config.error || "Push service is not configured yet.");
+      const registration = await navigator.serviceWorker.register("/blog-sw.js");
+      const readyRegistration = await navigator.serviceWorker.ready;
+      const pushManager = readyRegistration.pushManager || registration.pushManager;
+      let subscription = await pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: decodeVapidKey(config.publicKey)
+        });
+      }
+      const details = subscription.toJSON();
+      const { error } = await supabaseClient.from(PUSH_SUBSCRIPTIONS_TABLE).upsert({
+        visitor_id: visitorId,
+        endpoint: subscription.endpoint,
+        p256dh: details.keys?.p256dh,
+        auth: details.keys?.auth,
+        user_agent: navigator.userAgent
+      }, { onConflict: "endpoint" });
+      if (error) throw error;
+      notificationButton.textContent = "Notifications enabled";
+      setNotificationStatus("This device can now receive blog notifications.");
+    } catch (error) {
+      console.error("Blog push setup failed:", error);
+      notificationButton.textContent = "Enable notifications";
+      setNotificationStatus(error.message || "Could not enable notifications.", true);
+    } finally {
+      notificationButton.disabled = false;
+    }
+  }
+
+  async function loadBlogNotifications() {
+    const { data, error } = await supabaseClient.from(NOTIFICATIONS_TABLE)
+      .select("id,title,body,target_url,created_at,read_at")
+      .eq("recipient_visitor_id", visitorId)
+      .order("created_at", { ascending: false }).limit(30);
+    if (error) {
+      console.warn("Could not load blog notifications:", error);
+      return;
+    }
+    const notifications = data || [];
+    const unread = notifications.filter(item => !item.read_at).length;
+    unreadCount.textContent = String(unread);
+    notificationList.replaceChildren();
+    if (!notifications.length) {
+      const empty = document.createElement("p");
+      empty.className = "interaction-note";
+      empty.textContent = "No notifications yet.";
+      notificationList.append(empty);
+      return;
+    }
+    notifications.forEach(item => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "blog-notification-item";
+      button.textContent = item.title;
+      const body = document.createElement("span");
+      body.textContent = item.body;
+      const time = document.createElement("small");
+      time.textContent = new Date(item.created_at).toLocaleString() + (item.read_at ? "" : " · New");
+      button.append(body, time);
+      button.addEventListener("click", async () => {
+        if (!item.read_at) {
+          await supabaseClient.from(NOTIFICATIONS_TABLE)
+            .update({ read_at: new Date().toISOString() }).eq("id", item.id);
+        }
+        window.location.href = item.target_url || "/blog.html#memories";
+      });
+      notificationList.append(button);
+    });
+  }
+
+  if (notificationButton) notificationButton.addEventListener("click", enableBlogPush);
+  if (notificationBell) notificationBell.addEventListener("click", async () => {
+    const opening = notificationPanel.hidden;
+    notificationPanel.hidden = !opening;
+    notificationBell.setAttribute("aria-expanded", String(opening));
+    if (opening) await loadBlogNotifications();
+  });
+
 
   function slugify(value) {
     return String(value || "").toLowerCase()
@@ -349,6 +488,7 @@
   function renderComment(comment, replies, state, isReply = false) {
     const item = document.createElement("article");
     item.className = "comment-item" + (isReply ? " comment-reply" : "");
+    item.id = "comment-" + comment.id;
     const author = document.createElement("strong");
     author.textContent = comment.display_name;
     const body = document.createElement("p");
@@ -489,6 +629,16 @@
 
   enhanceAll();
   restoreDeviceName();
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/blog-sw.js").catch(error => console.warn("Blog service worker registration failed:", error));
+  }
+  loadBlogNotifications();
+  supabaseClient.channel("apokolips-blog-notifications-" + visitorId)
+    .on("postgres_changes", {
+      event: "INSERT", schema: "public", table: NOTIFICATIONS_TABLE,
+      filter: "recipient_visitor_id=eq." + visitorId
+    }, () => loadBlogNotifications())
+    .subscribe();
   const mediaRoot = document.getElementById("memories") || document.body;
   const observer = new MutationObserver(records => {
     records.forEach(record => record.addedNodes.forEach(node => {
