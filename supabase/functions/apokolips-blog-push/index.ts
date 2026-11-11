@@ -43,11 +43,13 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Invalid JSON payload." }, 400);
   }
 
-  // GitHub Actions calls this when a genuinely new image file is added to the repository.
+  // GitHub Actions calls this only when a new image is referenced by blog.html.
   if (payload.event === "media_added") {
     const filePath = String(payload.file_path || "");
-    if (!/^[\w./ -]{1,240}\.(jpe?g|png|webp|gif)$/i.test(filePath) || filePath.includes("..")) {
-      return json({ error: "Invalid media path." }, 400);
+    const allowedRawUrl = /^https:\/\/raw\.githubusercontent\.com\/lakindusathsara44-bit\/Apokolips\/[\w./% -]+\.(jpe?g|png|webp|gif)(?:[?#].*)?$/i.test(filePath);
+    const allowedRelativePath = /^[\w./% -]{1,500}\.(jpe?g|png|webp|gif)$/i.test(filePath);
+    if ((!allowedRawUrl && !allowedRelativePath) || filePath.includes("..")) {
+      return json({ error: "Invalid blog photo reference." }, 400);
     }
     const { error } = await admin.from("apokolips_blog_media_events")
       .upsert({ file_path: filePath }, { onConflict: "file_path", ignoreDuplicates: true });
