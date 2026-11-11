@@ -1,0 +1,52 @@
+name: Notify Apokolips Blog readers about new photos
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.jpg'
+      - '**/*.jpeg'
+      - '**/*.png'
+      - '**/*.webp'
+      - '**/*.gif'
+
+permissions:
+  contents: read
+
+jobs:
+  notify-readers:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Notify previous blog commenters about newly added photos
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+          SUPABASE_FUNCTION_URL: ${{ secrets.APOKOLIPS_BLOG_PUSH_FUNCTION_URL }}
+          WEBHOOK_SECRET: ${{ secrets.APOKOLIPS_BLOG_WEBHOOK_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${SUPABASE_FUNCTION_URL}" || -z "${WEBHOOK_SECRET}" ]]; then
+            echo "Missing APOKOLIPS_BLOG_PUSH_FUNCTION_URL or APOKOLIPS_BLOG_WEBHOOK_SECRET repository secret."
+            exit 1
+          fi
+          if [[ "${BEFORE_SHA}" =~ ^0+$ ]]; then
+            echo "Initial commit detected; skipping historical image notifications."
+            exit 0
+          fi
+          git diff --diff-filter=A --name-only "${BEFORE_SHA}" "${AFTER_SHA}" -- '*.jpg' '*.jpeg' '*.png' '*.webp' '*.gif' > /tmp/new-photos.txt
+          while IFS= read -r file; do
+            [[ -z "${file}" ]] && continue
+            payload=$(jq -n --arg path "${file}" '{event:"media_added",file_path:$path}')
+            curl --fail-with-body --silent --show-error \
+              -X POST "${SUPABASE_FUNCTION_URL}" \
+              -H "Content-Type: application/json" \
+              -H "x-blog-webhook-secret: ${WEBHOOK_SECRET}" \
+              --data "${payload}"
+            echo "Queued new photo notification for ${file}"
+          done < /tmp/new-photos.txt
