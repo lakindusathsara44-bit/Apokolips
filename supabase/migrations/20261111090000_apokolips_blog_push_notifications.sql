@@ -78,7 +78,7 @@ create or replace function public.apokolips_blog_create_reply_notification()
 returns trigger
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 declare
   recipient_id uuid;
@@ -98,7 +98,7 @@ begin
     values
       (recipient_id, 'reply', 'New reply to your comment',
        left(new.display_name || ': ' || new.body, 300),
-       '/blog.html#' || replace(new.post_slug, ' ', '-'), new.id);
+       '/blog.html#comment-' || new.parent_comment_id::text, new.id);
   end if;
 
   return new;
@@ -114,7 +114,7 @@ create or replace function public.apokolips_blog_notify_commenters_of_new_photo(
 returns trigger
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 declare
   recipient record;
