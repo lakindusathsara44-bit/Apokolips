@@ -9,12 +9,6 @@ const skills = [
   { name: 'Electronics & Arduino', group: 'Technology', level: 'Hands-on projects', icon: '⌁' }
 ];
 
-const milestones = [
-  { year: '2026', title: 'Started building Apokolips', text: 'Created an independent digital space to bring personal projects, learning resources, and ideas together.' },
-  { year: '2026', title: 'HNDIT studies', text: 'Continuing higher studies in Information Technology at SLIATE.' },
-  { year: 'Ongoing', title: 'Learn, experiment, improve', text: 'Exploring web development, programming, AI, and practical technology projects.' }
-];
-
 const contactDetails = [
   { label: 'PERSONAL WEBSITE', value: 'www.apokolips.xyz', href: 'https://www.apokolips.xyz', icon: '◎', copy: 'https://www.apokolips.xyz' },
   { label: 'EMAIL', value: 'lakindusathsara65@gmail.com', href: 'mailto:lakindusathsara65@gmail.com', icon: '✉', copy: 'lakindusathsara65@gmail.com' },
@@ -81,7 +75,6 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [skillFilter, setSkillFilter] = useState('All');
   const [copied, setCopied] = useState('');
-  const [showAll, setShowAll] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showTop, setShowTop] = useState(false);
 
@@ -117,7 +110,7 @@ function App() {
     }, { threshold: 0.12, rootMargin: '0px 0px -35px 0px' });
     nodes.forEach(node => observer.observe(node));
     return () => observer.disconnect();
-  }, [skillFilter, showAll]);
+  }, [skillFilter]);
 
   const copyText = async (label, value) => {
     try {
@@ -250,16 +243,6 @@ function App() {
             <span className="info-skill-icon">{skill.icon}</span><div><h3>{skill.name}</h3><p>{skill.level}</p></div><span className="info-skill-arrow">↗</span>
           </article>)}
         </div>
-      </section>
-
-      <section className="info-journey-section info-reveal">
-        <div className="info-section-heading"><div><div className="small-label">THE JOURNEY</div><h2>Small steps. Real progress<span>.</span></h2></div><p>A short look at the learning and building journey behind this profile.</p></div>
-        <div className="info-timeline">
-          {milestones.slice(0, showAll ? milestones.length : 2).map((item, index) => <article className="info-timeline-item" key={item.title}>
-            <span className="info-timeline-dot" /><span className="info-timeline-year">{item.year}</span><div><h3>{item.title}</h3><p>{item.text}</p></div><span className="info-timeline-number">{String(index + 1).padStart(2, '0')}</span>
-          </article>)}
-        </div>
-        <button type="button" className="info-more-button" onClick={() => setShowAll(value => !value)}>{showAll ? 'Show less' : 'Show full journey'} <span>{showAll ? '↑' : '↓'}</span></button>
       </section>
 
       <section className="panel idea-panel travel-portal info-travel-panel info-reveal">
