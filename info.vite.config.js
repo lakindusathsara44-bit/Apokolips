@@ -11,19 +11,23 @@ export default defineConfig({
   publicDir: false,
   plugins: [react()],
   build: {
-    outDir: repoRoot,
-    emptyOutDir: false,
+    // Keep generated files inside the dedicated info asset directory.
+    // This avoids Vite treating the repository root as its output directory.
+    outDir: resolve(repoRoot, 'assets/info'),
+    emptyOutDir: true,
     copyPublicDir: false,
     cssCodeSplit: false,
     sourcemap: false,
     rollupOptions: {
-      input: resolve(repoRoot, 'info.html'),
+      // Build the React entry directly. info.html is a static shell and
+      // already references the generated files, so it must not be a Vite input.
+      input: resolve(repoRoot, 'info-app/src/main.jsx'),
       output: {
-        entryFileNames: 'assets/info/info.js',
-        chunkFileNames: 'assets/info/chunk-[name].js',
+        entryFileNames: 'info.js',
+        chunkFileNames: 'chunk-[name].js',
         assetFileNames: (asset) => asset.name?.endsWith('.css')
-          ? 'assets/info/info.css'
-          : 'assets/info/[name]-[hash][extname]'
+          ? 'info.css'
+          : '[name]-[hash][extname]'
       }
     }
   }
