@@ -1,10 +1,10 @@
 {
-  "name": "apokolips-plans-frontend",
+  "name": "apokolips-frontend",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "vite build && vite build --config info.vite.config.js",
+    "build": "vite build --config info.vite.config.js",
     "build:info": "vite build --config info.vite.config.js",
     "build:community": "vite build --config community-app/vite.config.ts && tsc -p community-app/tsconfig.json --noEmit"
   },

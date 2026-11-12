@@ -1,39 +1,33 @@
-name: Build Apokolips Frontend (Vite)
+name: Build Apokolips About Page (Vite)
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'plans.html'
-      - 'plans-app/**'
       - 'info.html'
       - 'info-app/**'
       - 'info.vite.config.js'
       - 'package.json'
       - 'package-lock.json'
-      - 'vite.config.js'
-      - '.github/workflows/build-plans.yml'
+      - '.github/workflows/build-info.yml'
   pull_request:
     branches:
       - main
     paths:
-      - 'plans.html'
-      - 'plans-app/**'
       - 'info.html'
       - 'info-app/**'
       - 'info.vite.config.js'
       - 'package.json'
       - 'package-lock.json'
-      - 'vite.config.js'
-      - '.github/workflows/build-plans.yml'
+      - '.github/workflows/build-info.yml'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: apokolips-frontend-build
+  group: apokolips-info-build
   cancel-in-progress: false
 
 jobs:
@@ -53,26 +47,24 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Build React + Vite pages
+      - name: Build React + Vite About page
         run: npm run build
 
       - name: Verify generated files
         run: |
-          test -s assets/plans/plans.js
-          test -s assets/plans/plans.css
           test -s assets/info/info.js
           test -s assets/info/info.css
-          echo "Verified Plans and About page bundles."
+          echo "Verified About page bundles."
 
       - name: Commit generated assets
         if: github.event_name == 'push'
         run: |
-          git add -f assets/plans/plans.js assets/plans/plans.css assets/info/info.js assets/info/info.css
+          git add -f assets/info/info.js assets/info/info.css
           if git diff --cached --quiet; then
-            echo "Generated frontend assets are already up to date."
+            echo "Generated About page assets are already up to date."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Build React Vite frontend assets"
+          git commit -m "Build React Vite About page assets"
           git push origin HEAD:main

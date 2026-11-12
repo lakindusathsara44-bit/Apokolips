@@ -162,7 +162,6 @@ function App() {
     ['About Me', './info.html'],
     ['Community Gallery', './project.gallery.html'],
     ['My Projects', './My-project.html'],
-    ['Subdomain Plans', './plans.html']
   ];
 
   return <div className="info-app">
