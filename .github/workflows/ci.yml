@@ -35,7 +35,10 @@ jobs:
           node-version: "22"
 
       - name: Install frontend dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
+
+      - name: Build React + Vite pages
+        run: npm run build
 
       - name: Build Community static assets
         run: npm run build:community
