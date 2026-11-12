@@ -157,7 +157,7 @@ function SocialCard({ post }) {
   };
 
   const share = async () => {
-    const url = window.location.origin + window.location.pathname + '#' + post.id;
+    const url = new URL('./share/' + post.slug + '.html', window.location.href).href;
     try {
       if (navigator.share) await navigator.share({ title: post.title + ' | Apokolips', text: 'Check out this travel memory on Apokolips.', url });
       else { await navigator.clipboard.writeText(url); setStatus('Link copied. Share it with your friends.'); }
