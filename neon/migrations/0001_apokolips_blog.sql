@@ -5,7 +5,7 @@ create extension if not exists pgcrypto;
 create table if not exists public.apokolips_blog_comments (
   id uuid primary key default gen_random_uuid(),
   parent_comment_id uuid references public.apokolips_blog_comments(id) on delete cascade,
-  visitor_id uuid not null,
+  visitor_id text not null,
   display_name varchar(40) not null check (char_length(trim(display_name)) between 1 and 40),
   body varchar(500) not null check (char_length(trim(body)) between 1 and 500),
   created_at timestamptz not null default now(),
@@ -27,7 +27,7 @@ create index if not exists apokolips_blog_reactions_post_idx on public.apokolips
 
 create table if not exists public.apokolips_blog_notifications (
   id uuid primary key default gen_random_uuid(),
-  recipient_visitor_id uuid not null,
+  recipient_visitor_id text not null,
   notification_type varchar(20) not null check (notification_type in ('reply','new_photo')),
   title varchar(120) not null check (char_length(title) between 1 and 120),
   body varchar(300) not null check (char_length(body) between 1 and 300),
@@ -67,7 +67,7 @@ create table if not exists public.apokolips_blog_rate_limits (
 create or replace function public.apokolips_blog_create_reply_notification()
 returns trigger language plpgsql security definer set search_path = ''
 as $$
-declare recipient_id uuid;
+declare recipient_id text;
 begin
   if new.parent_comment_id is null then return new; end if;
   select visitor_id into recipient_id from public.apokolips_blog_comments
