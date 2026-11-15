@@ -203,7 +203,6 @@ function App() {
           <h2>Lakindu Sathsara</h2>
           <p className="muted-text">Student of SLIATE HNDIT · Technology Enthusiast · Project Creator</p>
           <div className="detail-list">
-            <div><span>NAME</span><strong>Lakindu Sathsara</strong></div>
             <div><span>EDUCATION</span><strong>Student of SLIATE HNDIT</strong></div>
             <div><span>HOMETOWN</span><strong>Rambukkana</strong></div>
             <div><span>COUNTRY</span><strong>Sri Lanka</strong></div>
