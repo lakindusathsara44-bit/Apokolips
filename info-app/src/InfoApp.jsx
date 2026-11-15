@@ -193,7 +193,10 @@ function App() {
       <section className="content-grid info-content-grid">
         <article className="panel profile-panel info-profile-card info-reveal">
           <div className="info-profile-top">
-            <div className="avatar info-avatar">LS</div>
+            <div className="avatar info-avatar" tabIndex={0} aria-label="Profile photo with animated blue bubbles">
+              {Array.from({ length: 8 }, (_, index) => <span className={`info-avatar-bubble info-avatar-bubble-${index + 1}`} aria-hidden="true" key={index} />)}
+              <img className="info-avatar-photo" src="https://raw.githubusercontent.com/lakindusathsara44-bit/Apokolips/main/IMG-20261112-WA0017.jpg" alt="Lakindu Sathsara" />
+            </div>
             <span className="info-availability"><i /> INDEPENDENT CREATOR</span>
           </div>
           <div className="small-label">PERSONAL DETAILS</div>
