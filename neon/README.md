@@ -34,7 +34,7 @@ RLS uses the Managed Auth JWT subject (`auth.user_id()`). Visitors can read publ
 
 The GitHub Actions workflow inserts a media event into Neon when `blog-app/src/BlogApp.js` adds a new photo to the `POSTS` list. The database trigger creates in-app notifications for previous commenters.
 
-To enable the optional workflow, create a login role in Neon and grant it membership in `apokolips_blog_media_notifier` (the group role created by migration 0004). The login role only needs permission to execute the validated media-event function; it does not need direct table access. Add its direct/unpooled connection string as the GitHub Actions repository secret `NEON_DATABASE_URL`. Never use the `apokolips_owner` connection string or commit credentials. The workflow skips with a warning until the secret is configured.
+To enable the optional workflow, create a dedicated login role in Neon and grant it membership in `apokolips_blog_media_notifier` (the group role created by migration 0004). For example, in the Neon SQL editor run `CREATE ROLE blog_media_writer LOGIN PASSWORD '<strong-new-password>'; GRANT apokolips_blog_media_notifier TO blog_media_writer; GRANT CONNECT ON DATABASE apokolips_blog TO blog_media_writer;`. Use a newly generated password and keep it private. This login role can execute only the validated media-event function; it has no direct table-write permission. Add its direct/unpooled connection string as the GitHub Actions repository secret `NEON_DATABASE_URL`. Never use the `apokolips_owner` connection string or commit credentials. The workflow skips with a warning until the secret is configured.
 
 
 
