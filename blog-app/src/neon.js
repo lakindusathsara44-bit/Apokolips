@@ -1,8 +1,15 @@
-import { createClient } from '@neon/neon-js';
+import { createClient } from '@neondatabase/neon-js';
 
-export const BLOG_DATABASE_URL = 'https://ep-icy-shadow-b3q76our.c-4.ap-southeast-1.aws.neon.tech/apokolips_blog';
-const neon = createClient(BLOG_DATABASE_URL, {
-  auth: { allowAnonymous: true }
+export const BLOG_AUTH_URL = 'https://ep-icy-shadow-b3q76our.neonauth.c-4.ap-southeast-1.aws.neon.tech/apokolips_blog/auth';
+export const BLOG_DATA_API_URL = 'https://ep-icy-shadow-b3q76our.apirest.c-4.ap-southeast-1.aws.neon.tech/apokolips_blog/rest/v1';
+const neon = createClient({
+  auth: {
+    url: BLOG_AUTH_URL,
+    allowAnonymous: true
+  },
+  dataApi: {
+    url: BLOG_DATA_API_URL
+  }
 });
 
 export let visitorId = null;
