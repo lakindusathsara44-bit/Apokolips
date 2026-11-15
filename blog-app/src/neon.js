@@ -25,7 +25,7 @@ class BlogQuery {
     this.maxRows = null;
     this.single = false;
   }
-  select(columns) { this.columns = columns; return this; }
+  select(columns, options = {}) { this.columns = columns; this.count = options.count || null; this.head = options.head === true; return this; }
   eq(column, value) { this.filters.push([column, value]); return this; }
   order(column, options = {}) { this.sort = [column, options.ascending !== false]; return this; }
   limit(value) { this.maxRows = value; return this; }
@@ -38,7 +38,7 @@ class BlogQuery {
     const filter = Object.fromEntries(this.filters);
     const visitorId = visitorIdForRequest();
     let payload;
-    if (this.action === 'select') {
+    if (this.action === 'select' && this.count === 'exact' && this.head && ['apokolips_blog_comments','apokolips_blog_reactions'].includes(this.table)) {\n      const stats = await request('/stats');\n      return { data: null, error: null, count: Number(stats[this.table === 'apokolips_blog_comments' ? 'comments' : 'reactions'] || 0) };\n    }\n    if (this.action === 'select') {
       const map = {
         apokolips_blog_comments: '/comments',
         apokolips_blog_reactions: '/reactions',
