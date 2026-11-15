@@ -10,8 +10,10 @@ declare
 begin
   if tg_table_name = 'apokolips_blog_comments' then
     action_name := 'comment'; max_requests := 5; window_minutes := 10;
-  else
+  elsif tg_table_name = 'apokolips_blog_reactions' then
     action_name := 'reaction'; max_requests := 30; window_minutes := 10;
+  else
+    action_name := 'subscription'; max_requests := 5; window_minutes := 60;
   end if;
   insert into public.apokolips_blog_rate_limits(visitor_id, action, window_started_at, request_count)
   values (new.visitor_id, action_name, now(), 1)
@@ -38,4 +40,9 @@ for each row execute function public.apokolips_blog_enforce_rate_limit();
 
 drop trigger if exists apokolips_blog_reaction_rate_limit on public.apokolips_blog_reactions;
 create trigger apokolips_blog_reaction_rate_limit before insert on public.apokolips_blog_reactions
+for each row execute function public.apokolips_blog_enforce_rate_limit();
+
+
+drop trigger if exists apokolips_blog_subscription_rate_limit on public.apokolips_blog_push_subscriptions;
+create trigger apokolips_blog_subscription_rate_limit before insert on public.apokolips_blog_push_subscriptions
 for each row execute function public.apokolips_blog_enforce_rate_limit();
