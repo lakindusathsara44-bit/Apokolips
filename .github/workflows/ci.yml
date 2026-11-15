@@ -37,6 +37,11 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Verify Neon Auth and Data API
+        run: |
+          npm install --no-save --ignore-scripts @neon/neon-js
+          node neon/tests/data-api-smoke.mjs
+
       - name: Build React + Vite pages
         run: npm run build
 
