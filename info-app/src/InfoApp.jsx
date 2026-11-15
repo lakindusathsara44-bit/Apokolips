@@ -197,10 +197,9 @@ function App() {
               {Array.from({ length: 8 }, (_, index) => <span className={`info-avatar-bubble info-avatar-bubble-${index + 1}`} aria-hidden="true" key={index} />)}
               <img className="info-avatar-photo" src="https://raw.githubusercontent.com/lakindusathsara44-bit/Apokolips/main/IMG-20261112-WA0017.jpg" alt="Lakindu Sathsara" />
             </div>
-            <span className="info-availability"><i /> INDEPENDENT CREATOR</span>
           </div>
           <div className="small-label">PERSONAL DETAILS</div>
-          <h2>Lakindu Sathsara</h2>
+          <h2>Lakindu Sathsara <span className="info-availability"><i /> INDEPENDENT CREATOR</span></h2>
           <p className="muted-text">Student of SLIATE HNDIT · Technology Enthusiast · Project Creator</p>
           <div className="detail-list">
             <div><span>EDUCATION</span><strong>Student of SLIATE HNDIT</strong></div>
