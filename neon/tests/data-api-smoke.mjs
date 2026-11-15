@@ -1,7 +1,14 @@
-import { createClient } from '@neon/neon-js';
+import { createClient } from '@neondatabase/neon-js';
 
-const databaseUrl = 'https://ep-icy-shadow-b3q76our.c-4.ap-southeast-1.aws.neon.tech/apokolips_blog';
-const client = createClient(databaseUrl, { auth: { allowAnonymous: true } });
+const client = createClient({
+  auth: {
+    url: 'https://ep-icy-shadow-b3q76our.neonauth.c-4.ap-southeast-1.aws.neon.tech/apokolips_blog/auth',
+    allowAnonymous: true
+  },
+  dataApi: {
+    url: 'https://ep-icy-shadow-b3q76our.apirest.c-4.ap-southeast-1.aws.neon.tech/apokolips_blog/rest/v1'
+  }
+});
 
 const { data: authData, error: authError } = await client.auth.getAnonymousToken();
 if (authError) throw new Error(`Neon anonymous auth failed: ${authError.message || authError}`);
