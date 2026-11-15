@@ -19,6 +19,12 @@ const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
 const claims = JSON.parse(atob(normalized + '='.repeat((4 - normalized.length % 4) % 4)));
 if (typeof claims.sub !== 'string' || !claims.sub) throw new Error('Anonymous JWT has no subject claim.');
 
+const { data: databaseSubject, error: subjectError } = await client.rpc('apokolips_blog_current_user_id');
+if (subjectError) throw new Error(`Neon RLS subject helper failed: ${subjectError.message}`);
+if (databaseSubject !== claims.sub) {
+  throw new Error('The Neon Data API did not pass the anonymous JWT subject into PostgreSQL.');
+}
+
 for (const table of ['apokolips_blog_comments', 'apokolips_blog_reactions']) {
   const { error } = await client.from(table).select('id').limit(1);
   if (error) throw new Error(`Neon Data API read failed for ${table}: ${error.message}`);
