@@ -1,0 +1,8 @@
+{
+  "name": "apokolips-blog-neon-function",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "pg": "^8.16.3"
+  }
+}
