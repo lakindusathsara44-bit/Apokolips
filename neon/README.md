@@ -29,7 +29,7 @@ RLS uses the Managed Auth JWT subject (`auth.user_id()`). Visitors can read publ
 
 ## New-photo notification workflow
 
-The GitHub Actions workflow inserts a media event into Neon when `blog.html` starts referencing a new photo. The database trigger creates in-app notifications for previous commenters.
+The GitHub Actions workflow inserts a media event into Neon when `blog-app/src/BlogApp.js` adds a new photo to the `POSTS` list. The database trigger creates in-app notifications for previous commenters.
 
 After merging, add the GitHub Actions repository secret `NEON_DATABASE_URL` containing the **direct/unpooled** connection string for the `apokolips_blog` database. Do not commit the connection string. The workflow will fail safely with a clear message until this secret is configured.
 
