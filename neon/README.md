@@ -35,6 +35,26 @@ The GitHub Actions workflow inserts a media event into Neon when `blog-app/src/B
 
 After merging, add the GitHub Actions repository secret `NEON_DATABASE_URL` using a dedicated, least-privilege Neon role for media-event insertion; do not use the `apokolips_owner` connection string. Do not commit the connection string. The workflow skips with a warning until this secret is configured.
 
+
+
+## Secure GitHub Actions database access
+
+Do **not** put the `apokolips_owner` connection string in GitHub. Before enabling the optional new-photo workflow, run the following once in the Neon SQL Editor as the database owner, replacing the password placeholder with a long random password:
+
+```sql
+create role apokolips_blog_ci login password 'REPLACE_WITH_A_LONG_RANDOM_PASSWORD';
+grant connect on database apokolips_blog to apokolips_blog_ci;
+grant usage on schema public to apokolips_blog_ci;
+grant insert on public.apokolips_blog_media_events to apokolips_blog_ci;
+grant select (file_path) on public.apokolips_blog_media_events to apokolips_blog_ci;
+create policy apokolips_blog_ci_media_insert
+  on public.apokolips_blog_media_events
+  for insert to apokolips_blog_ci
+  with check (true);
+```
+
+Use the connection string for this restricted role as the GitHub Actions secret `NEON_DATABASE_URL`. It can insert media events only; PostgreSQL's security-definer trigger creates the in-page notifications. Keep the password and connection string out of Git.
+
 ## Verification checklist
 
 - Confirm the Neon Data API is active and its CORS origins include `https://www.apokolips.xyz` and `https://apokolips.xyz`.
