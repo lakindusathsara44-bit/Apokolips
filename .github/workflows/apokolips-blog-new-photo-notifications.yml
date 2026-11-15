@@ -65,7 +65,10 @@ jobs:
           sudo apt-get install -y postgresql-client
           while IFS= read -r image_src; do
             [[ -z "${image_src}" ]] && continue
-            psql "${NEON_DATABASE_URL}" -v ON_ERROR_STOP=1 -v file_path="${image_src}" \
-              -c "INSERT INTO public.apokolips_blog_media_events(file_path) VALUES (:'file_path') ON CONFLICT (file_path) DO NOTHING;"
+            psql "${NEON_DATABASE_URL}" -v ON_ERROR_STOP=1 -v file_path="${image_src}" <<'SQL'
+            INSERT INTO public.apokolips_blog_media_events(file_path)
+            VALUES (:'file_path')
+            ON CONFLICT (file_path) DO NOTHING;
+            SQL
             echo "Created new-photo notification event for ${image_src}"
           done < /tmp/new-blog-photos.txt
