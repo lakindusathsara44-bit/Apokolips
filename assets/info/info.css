@@ -24,3 +24,29 @@
 .info-avatar:is(:hover,:focus-visible,:focus-within,:active) .info-avatar-main{box-shadow:0 0 22px #70a9ff66}
 @media(max-width:700px){.info-avatar .info-avatar-orbit{transition-duration:.52s}.info-avatar .info-orbit-1{--orbit-x:-68px}.info-avatar .info-orbit-2{--orbit-x:-126px}.info-avatar .info-orbit-3{--orbit-x:-184px}.info-avatar .info-orbit-4{--orbit-x:-242px}.info-avatar .info-orbit-5{--orbit-x:68px}.info-avatar .info-orbit-6{--orbit-x:126px}.info-avatar .info-orbit-7{--orbit-x:184px}.info-avatar .info-orbit-8{--orbit-x:242px}}
 @media(prefers-reduced-motion:reduce){.info-avatar .info-avatar-orbit{transition:none!important}}
+
+
+/* Profile card layout: keep Personal Details and Contact as full-width stacked panels. */
+.info-content-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-items:stretch!important;gap:15px!important}
+.info-content-grid>.info-profile-card,.info-content-grid>.info-contact-card{grid-column:1/-1!important;width:100%!important;max-width:none!important;min-width:0!important}
+.info-profile-top{justify-content:flex-start!important;align-items:center!important;min-height:76px}
+.info-avatar{flex:0 0 64px!important;margin-right:0!important}
+
+/* Blue glass-like bubbles replace the duplicate profile photos. They travel in one straight horizontal row. */
+.info-avatar .info-avatar-orbit{position:absolute!important;top:50%!important;left:50%!important;width:20px!important;height:20px!important;min-width:20px!important;min-height:20px!important;max-width:20px!important;max-height:20px!important;border-radius:50%!important;display:block!important;object-fit:initial!important;background:radial-gradient(circle at 32% 28%,#e8f8ff 0%,#9be4ff 15%,#42bfff 38%,#1478d4 67%,#073a78 100%)!important;border:1px solid rgba(174,231,255,.9)!important;box-shadow:0 0 7px #48bdff,0 0 18px #168fffaa,inset 0 0 7px #e2f8ff!important;opacity:0!important;pointer-events:none!important;transform:translate(-50%,-50%) scale(.25)!important;transition:transform .62s cubic-bezier(.2,.8,.2,1),opacity .22s ease!important;will-change:transform,opacity}
+.info-avatar .info-orbit-1{--bubble-x:-52px;transition-delay:0ms!important}
+.info-avatar .info-orbit-2{--bubble-x:-104px;transition-delay:35ms!important}
+.info-avatar .info-orbit-3{--bubble-x:-156px;transition-delay:70ms!important}
+.info-avatar .info-orbit-4{--bubble-x:-208px;transition-delay:105ms!important}
+.info-avatar .info-orbit-5{--bubble-x:52px;transition-delay:0ms!important}
+.info-avatar .info-orbit-6{--bubble-x:104px;transition-delay:35ms!important}
+.info-avatar .info-orbit-7{--bubble-x:156px;transition-delay:70ms!important}
+.info-avatar .info-orbit-8{--bubble-x:208px;transition-delay:105ms!important}
+.info-avatar:is(:hover,:focus-visible,:focus-within,:active) .info-avatar-orbit{opacity:1!important;transform:translate(calc(-50% + var(--bubble-x)), -50%) scale(1)!important}
+.info-avatar:is(:hover,:focus-visible,:focus-within,:active) .info-avatar-main{box-shadow:0 0 22px #70a9ff66}
+@media(max-width:700px){
+ .info-avatar .info-avatar-orbit{width:16px!important;height:16px!important;min-width:16px!important;min-height:16px!important;max-width:16px!important;max-height:16px!important}
+ .info-avatar .info-orbit-1{--bubble-x:-42px}.info-avatar .info-orbit-2{--bubble-x:-84px}.info-avatar .info-orbit-3{--bubble-x:-126px}.info-avatar .info-orbit-4{--bubble-x:-168px}
+ .info-avatar .info-orbit-5{--bubble-x:42px}.info-avatar .info-orbit-6{--bubble-x:84px}.info-avatar .info-orbit-7{--bubble-x:126px}.info-avatar .info-orbit-8{--bubble-x:168px}
+}
+@media(prefers-reduced-motion:reduce){.info-avatar .info-avatar-orbit{transition:none!important}}
