@@ -59,8 +59,8 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -z "${NEON_BLOG_API_URL}" || -z "${WEBHOOK_SECRET}" ]]; then
-            echo "Missing APOKOLIPS_BLOG_PUSH_FUNCTION_URL or APOKOLIPS_BLOG_WEBHOOK_SECRET repository secret."
-            exit 1
+            echo "::warning::Missing APOKOLIPS_BLOG_PUSH_FUNCTION_URL or APOKOLIPS_BLOG_WEBHOOK_SECRET; skipping push notifications until configured."
+            exit 0
           fi
           while IFS= read -r image_src; do
             [[ -z "${image_src}" ]] && continue
