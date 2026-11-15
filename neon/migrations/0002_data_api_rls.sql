@@ -22,7 +22,7 @@ create policy blog_comments_public_read on public.apokolips_blog_comments
 drop policy if exists blog_comments_insert_own on public.apokolips_blog_comments;
 create policy blog_comments_insert_own on public.apokolips_blog_comments
   for insert to anonymous, authenticated
-  with check (visitor_id::text = (select auth.user_id()));
+  with check (visitor_id = (select auth.user_id()));
 
 drop policy if exists blog_reactions_public_read on public.apokolips_blog_reactions;
 create policy blog_reactions_public_read on public.apokolips_blog_reactions
@@ -30,37 +30,37 @@ create policy blog_reactions_public_read on public.apokolips_blog_reactions
 drop policy if exists blog_reactions_insert_own on public.apokolips_blog_reactions;
 create policy blog_reactions_insert_own on public.apokolips_blog_reactions
   for insert to anonymous, authenticated
-  with check (visitor_id::text = (select auth.user_id()));
+  with check (visitor_id = (select auth.user_id()));
 drop policy if exists blog_reactions_update_own on public.apokolips_blog_reactions;
 create policy blog_reactions_update_own on public.apokolips_blog_reactions
   for update to anonymous, authenticated
-  using (visitor_id::text = (select auth.user_id()))
-  with check (visitor_id::text = (select auth.user_id()));
+  using (visitor_id = (select auth.user_id()))
+  with check (visitor_id = (select auth.user_id()));
 
 drop policy if exists blog_notifications_read_own on public.apokolips_blog_notifications;
 create policy blog_notifications_read_own on public.apokolips_blog_notifications
   for select to anonymous, authenticated
-  using (recipient_visitor_id::text = (select auth.user_id()));
+  using (recipient_visitor_id = (select auth.user_id()));
 drop policy if exists blog_notifications_mark_own on public.apokolips_blog_notifications;
 create policy blog_notifications_mark_own on public.apokolips_blog_notifications
   for update to anonymous, authenticated
-  using (recipient_visitor_id::text = (select auth.user_id()))
-  with check (recipient_visitor_id::text = (select auth.user_id()));
+  using (recipient_visitor_id = (select auth.user_id()))
+  with check (recipient_visitor_id = (select auth.user_id()));
 
 drop policy if exists blog_push_subscriptions_read_own on public.apokolips_blog_push_subscriptions;
 create policy blog_push_subscriptions_read_own on public.apokolips_blog_push_subscriptions
   for select to anonymous, authenticated
-  using (visitor_id::text = (select auth.user_id()));
+  using (visitor_id = (select auth.user_id()));
 drop policy if exists blog_push_subscriptions_insert_own on public.apokolips_blog_push_subscriptions;
 create policy blog_push_subscriptions_insert_own on public.apokolips_blog_push_subscriptions
   for insert to anonymous, authenticated
-  with check (visitor_id::text = (select auth.user_id()));
+  with check (visitor_id = (select auth.user_id()));
 drop policy if exists blog_push_subscriptions_update_own on public.apokolips_blog_push_subscriptions;
 create policy blog_push_subscriptions_update_own on public.apokolips_blog_push_subscriptions
   for update to anonymous, authenticated
-  using (visitor_id::text = (select auth.user_id()))
-  with check (visitor_id::text = (select auth.user_id()));
+  using (visitor_id = (select auth.user_id()))
+  with check (visitor_id = (select auth.user_id()));
 drop policy if exists blog_push_subscriptions_delete_own on public.apokolips_blog_push_subscriptions;
 create policy blog_push_subscriptions_delete_own on public.apokolips_blog_push_subscriptions
   for delete to anonymous, authenticated
-  using (visitor_id::text = (select auth.user_id()));
+  using (visitor_id = (select auth.user_id()));
