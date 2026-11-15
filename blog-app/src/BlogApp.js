@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { supabaseClient, visitorId, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from './neon.js';
+import { blogClient, visitorId, BLOG_API_URL } from './neon.js';
 
 const h = React.createElement;
 const REACTIONS = [
@@ -78,7 +78,7 @@ function SocialCard({ post }) {
   const [busy, setBusy] = useState(false);
 
   const loadReactions = async () => {
-    const { data, error } = await supabaseClient.from('apokolips_blog_reactions')
+    const { data, error } = await blogClient.from('apokolips_blog_reactions')
       .select('reaction,visitor_id').eq('post_slug', post.slug);
     if (error) throw error;
     const next = { like: 0, love: 0, wow: 0, fire: 0 };
@@ -90,7 +90,7 @@ function SocialCard({ post }) {
     setCounts(next); setSelected(mine);
   };
   const loadComments = async () => {
-    const { data, error } = await supabaseClient.from('apokolips_blog_comments')
+    const { data, error } = await blogClient.from('apokolips_blog_comments')
       .select('id,parent_comment_id,visitor_id,display_name,body,created_at')
       .eq('post_slug', post.slug).order('created_at', { ascending: true }).limit(200);
     if (error) throw error;
@@ -107,25 +107,25 @@ function SocialCard({ post }) {
   };
   useEffect(() => {
     refresh();
-    const channel = supabaseClient.channel('blog-social-' + post.slug)
+    const channel = blogClient.channel('blog-social-' + post.slug)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'apokolips_blog_reactions', filter: 'post_slug=eq.' + post.slug }, loadReactions)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'apokolips_blog_comments', filter: 'post_slug=eq.' + post.slug }, loadComments)
       .subscribe();
-    return () => { supabaseClient.removeChannel(channel); };
+    return () => { blogClient.removeChannel(channel); };
   }, [post.slug]);
 
   const reactToPost = async type => {
     if (busy || selected === type) return;
     setBusy(true);
     try {
-      const { data: updated, error: updateError } = await supabaseClient.from('apokolips_blog_reactions')
+      const { data: updated, error: updateError } = await blogClient.from('apokolips_blog_reactions')
         .update({ reaction: type }).eq('post_slug', post.slug).eq('visitor_id', visitorId).select('id');
       if (updateError) throw updateError;
       if (!updated?.length) {
-        const { error } = await supabaseClient.from('apokolips_blog_reactions')
+        const { error } = await blogClient.from('apokolips_blog_reactions')
           .insert({ post_slug: post.slug, visitor_id: visitorId, reaction: type });
         if (error && error.code === '23505') {
-          const retry = await supabaseClient.from('apokolips_blog_reactions')
+          const retry = await blogClient.from('apokolips_blog_reactions')
             .update({ reaction: type }).eq('post_slug', post.slug).eq('visitor_id', visitorId);
           if (retry.error) throw retry.error;
         } else if (error) throw error;
@@ -142,7 +142,7 @@ function SocialCard({ post }) {
     if (!displayName || !message || busy) return;
     setBusy(true);
     try {
-      const { error } = await supabaseClient.from('apokolips_blog_comments').insert({
+      const { error } = await blogClient.from('apokolips_blog_comments').insert({
         post_slug: post.slug, visitor_id: visitorId, display_name: displayName,
         body: message, ...(parentId ? { parent_comment_id: parentId } : {})
       });
@@ -221,7 +221,7 @@ function NotificationCenter() {
   const unread = items.filter(item => !item.read_at).length;
 
   const load = async () => {
-    const { data, error } = await supabaseClient.from('apokolips_blog_notifications')
+    const { data, error } = await blogClient.from('apokolips_blog_notifications')
       .select('id,title,body,target_url,created_at,read_at')
       .eq('recipient_visitor_id', visitorId).order('created_at', { ascending: false }).limit(30);
     if (error) { console.warn('Could not load notifications:', error); return; }
@@ -231,7 +231,7 @@ function NotificationCenter() {
     load();
     const swUrl = new URL('../../blog-sw.js', import.meta.url);
     if ('serviceWorker' in navigator) navigator.serviceWorker.register(swUrl).catch(error => console.warn('Blog service worker registration failed:', error));
-    const channel = supabaseClient.channel('apokolips-blog-notifications-' + visitorId)
+    const channel = blogClient.channel('apokolips-blog-notifications-' + visitorId)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'apokolips_blog_notifications', filter: 'recipient_visitor_id=eq.' + visitorId }, load)
       .subscribe();
     (async () => {
@@ -240,12 +240,12 @@ function NotificationCenter() {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration?.pushManager?.getSubscription();
         if (!subscription) return;
-        const { data } = await supabaseClient.from('apokolips_blog_push_subscriptions')
+        const { data } = await blogClient.from('apokolips_blog_push_subscriptions')
           .select('id').eq('visitor_id', visitorId).eq('endpoint', subscription.endpoint).maybeSingle();
         if (data) { setEnabled(true); setStatus('Notifications are enabled on this browser.'); }
       } catch (error) { console.warn(error); }
     })();
-    return () => { supabaseClient.removeChannel(channel); };
+    return () => { blogClient.removeChannel(channel); };
   }, []);
 
   const enable = async () => {
@@ -255,7 +255,7 @@ function NotificationCenter() {
       if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) throw new Error('This browser does not support web push notifications.');
       const permission = Notification.permission === 'default' ? await Notification.requestPermission() : Notification.permission;
       if (permission !== 'granted') throw new Error('Notification permission was not granted.');
-      const configResponse = await fetch(SUPABASE_URL + '/push/config');
+      const configResponse = await fetch(BLOG_API_URL + '/push/config');
       const config = await configResponse.json();
       if (!configResponse.ok || !config.publicKey) throw new Error(config.error || 'Push service is not configured yet.');
       const swUrl = new URL('../../blog-sw.js', import.meta.url);
@@ -264,7 +264,7 @@ function NotificationCenter() {
       let subscription = await (ready.pushManager || registration.pushManager).getSubscription();
       if (!subscription) subscription = await (ready.pushManager || registration.pushManager).subscribe({ userVisibleOnly: true, applicationServerKey: decodeVapidKey(config.publicKey) });
       const keys = subscription.toJSON().keys || {};
-      const { error } = await supabaseClient.from('apokolips_blog_push_subscriptions').upsert({
+      const { error } = await blogClient.from('apokolips_blog_push_subscriptions').upsert({
         visitor_id: visitorId, endpoint: subscription.endpoint, p256dh: keys.p256dh,
         auth: keys.auth, user_agent: navigator.userAgent
       }, { onConflict: 'endpoint' });
@@ -276,7 +276,7 @@ function NotificationCenter() {
 
   const openNotification = async item => {
     if (!item.read_at) {
-      await supabaseClient.from('apokolips_blog_notifications').update({ read_at: new Date().toISOString() }).eq('id', item.id);
+      await blogClient.from('apokolips_blog_notifications').update({ read_at: new Date().toISOString() }).eq('id', item.id);
     }
     window.location.href = item.target_url || './blog.html#memories';
   };
@@ -364,18 +364,18 @@ function App() {
     let alive = true;
     const loadStats = async () => {
       const [reactions, comments] = await Promise.all([
-        supabaseClient.from('apokolips_blog_reactions').select('id', { count: 'exact', head: true }),
-        supabaseClient.from('apokolips_blog_comments').select('id', { count: 'exact', head: true })
+        blogClient.from('apokolips_blog_reactions').select('id', { count: 'exact', head: true }),
+        blogClient.from('apokolips_blog_comments').select('id', { count: 'exact', head: true })
       ]);
       if (!alive) return;
       setStats({ reactions: reactions.error ? '—' : Number(reactions.count || 0).toLocaleString(), comments: comments.error ? '—' : Number(comments.count || 0).toLocaleString() });
     };
     loadStats();
-    const channel = supabaseClient.channel('apokolips-blog-react-stats')
+    const channel = blogClient.channel('apokolips-blog-react-stats')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'apokolips_blog_reactions' }, loadStats)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'apokolips_blog_comments' }, loadStats)
       .subscribe();
-    return () => { alive = false; supabaseClient.removeChannel(channel); };
+    return () => { alive = false; blogClient.removeChannel(channel); };
   }, []);
 
   useEffect(() => {
