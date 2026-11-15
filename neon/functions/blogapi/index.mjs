@@ -124,7 +124,9 @@ export default {
    if (req.method==="POST" && path.endsWith("/media-event")) {
      if(!process.env.APOKOLIPS_BLOG_WEBHOOK_SECRET || req.headers.get("x-blog-webhook-secret")!==process.env.APOKOLIPS_BLOG_WEBHOOK_SECRET)return json({error:"Unauthorized"},401,origin);
      const b=await req.json(), file=String(b.file_path||"");
-     if(!/^[\w./% -]{1,500}\.(jpe?g|png|webp|gif)$/i.test(file)||file.includes(".."))return json({error:"Invalid media path"},400,origin);
+     let mediaUrl;
+     try { mediaUrl = new URL(file, "https://www.apokolips.xyz"); } catch { return json({error:"Invalid media path"},400,origin); }
+     if(file.length>500||mediaUrl.protocol!=="https:"||mediaUrl.pathname.includes("..")||! /\.(jpe?g|png|webp|gif)$/i.test(mediaUrl.pathname))return json({error:"Invalid media path"},400,origin);
      const event = await pool.query("insert into public.apokolips_blog_media_events(file_path) values($1) on conflict(file_path) do nothing returning id",[file]);
      if (event.rows[0]) {
        const notifications = await pool.query("select id,recipient_visitor_id,title,body,target_url from public.apokolips_blog_notifications where source_id=$1 and notification_type='new_photo'", [event.rows[0].id]);
