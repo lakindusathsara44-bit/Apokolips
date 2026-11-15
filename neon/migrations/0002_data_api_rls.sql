@@ -10,7 +10,7 @@ LANGUAGE sql
 STABLE
 SECURITY DEFINER
 SET search_path = ''
-AS $ SELECT public.apokolips_blog_current_user_id() $;
+AS $function$ SELECT auth.user_id() $function$;
 REVOKE ALL ON FUNCTION public.apokolips_blog_current_user_id() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.apokolips_blog_current_user_id() TO anonymous, authenticated;
 grant select on public.apokolips_blog_comments, public.apokolips_blog_reactions to anonymous, authenticated;
