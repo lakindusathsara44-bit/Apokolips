@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { supabaseClient, visitorId, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from './supabase.js';
+import { supabaseClient, visitorId, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from './neon.js';
 
 const h = React.createElement;
 const REACTIONS = [
@@ -255,7 +255,7 @@ function NotificationCenter() {
       if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) throw new Error('This browser does not support web push notifications.');
       const permission = Notification.permission === 'default' ? await Notification.requestPermission() : Notification.permission;
       if (permission !== 'granted') throw new Error('Notification permission was not granted.');
-      const configResponse = await fetch(SUPABASE_URL + '/functions/v1/apokolips-blog-push', { headers: { apikey: SUPABASE_PUBLISHABLE_KEY } });
+      const configResponse = await fetch(SUPABASE_URL + '/push/config');
       const config = await configResponse.json();
       if (!configResponse.ok || !config.publicKey) throw new Error(config.error || 'Push service is not configured yet.');
       const swUrl = new URL('../../blog-sw.js', import.meta.url);
