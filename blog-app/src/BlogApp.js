@@ -206,12 +206,6 @@ function SocialCard({ post }) {
   );
 }
 
-function decodeVapidKey(value) {
-  const padding = '='.repeat((4 - value.length % 4) % 4);
-  const raw = atob((value + padding).replace(/-/g, '+').replace(/_/g, '/'));
-  return Uint8Array.from(raw, char => char.charCodeAt(0));
-}
-
 function NotificationCenter() {
   const [status, setStatus] = useState('In-page notifications are active. Browser push alerts are being prepared.');
   const [items, setItems] = useState([]);
@@ -227,8 +221,6 @@ function NotificationCenter() {
   };
   useEffect(() => {
     load();
-    const swUrl = new URL('../../blog-sw.js', import.meta.url);
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register(swUrl).catch(error => console.warn('Blog service worker registration failed:', error));
     const channel = blogClient.channel('apokolips-blog-notifications-' + visitorId)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'apokolips_blog_notifications', filter: 'recipient_visitor_id=eq.' + visitorId }, load)
       .subscribe();
