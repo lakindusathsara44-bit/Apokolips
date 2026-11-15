@@ -63,7 +63,11 @@ export default {
      if (!process.env.VAPID_PUBLIC_KEY) return json({error:"Push notifications need new VAPID keys to be configured."},503,origin);
      return json({publicKey:process.env.VAPID_PUBLIC_KEY},200,origin);
    }
-   if (req.method==="GET" && path.endsWith("/stats")) {\n     const {rows}=await pool.query("select (select count(*)::int from public.apokolips_blog_reactions) as reactions, (select count(*)::int from public.apokolips_blog_comments) as comments");\n     return json(rows[0],200,origin);\n   }\n   if (req.method==="GET" && path.endsWith("/comments")) {
+   if (req.method==="GET" && path.endsWith("/stats")) {
+     const {rows}=await pool.query("select (select count(*)::int from public.apokolips_blog_reactions) as reactions, (select count(*)::int from public.apokolips_blog_comments) as comments");
+     return json(rows[0],200,origin);
+   }
+   if (req.method==="GET" && path.endsWith("/comments")) {
      const slug=url.searchParams.get("post_slug");
      if(!slugOk(slug)) return json({error:"Invalid post slug"},400,origin);
      const {rows}=await pool.query("select id,parent_comment_id,visitor_id,display_name,body,created_at,post_slug from public.apokolips_blog_comments where post_slug=$1 order by created_at asc limit 200",[slug]);
