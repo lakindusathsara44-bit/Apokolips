@@ -108,11 +108,10 @@ export const visitorId = (() => {
   return value;
 })();
 
-export const SUPABASE_URL = API_BASE;
-export const SUPABASE_PUBLISHABLE_KEY = '';
+export const BLOG_API_URL = API_BASE;
 
 const channels = new Set();
-export const supabaseClient = {
+export const blogClient = {
   from(table) { return new BlogQuery(table); },
   channel(name) {
     const handlers = [];
