@@ -41,7 +41,7 @@ jobs:
           const imagePattern = /\.(?:jpe?g|png|webp|gif)(?:[?#].*)?$/i;
           const extract = (html) => {
             const found = new Set();
-            for (const match of html.matchAll(/(?:\\bsrc\\s*=|\\bsrc\\s*:)[\\s]*["']([^"']+)["']/gi)) {
+            for (const match of html.matchAll(/(?:\bsrc\s*=|\bsrc\s*:)[\s]*["']([^"']+)["']/gi)) {
               const src = match[1].trim();
               if (imagePattern.test(src)) found.add(src);
             }
