@@ -20,8 +20,9 @@ The Blog's social features use a new, empty Neon PostgreSQL database. No histori
 - `neon/migrations/0003_write_rate_limits.sql` — server-side PostgreSQL rate limits for comments and reactions.
 - `neon/migrations/0003_rate_limits.sql` — server-side rate limits enforced by PostgreSQL triggers (5 comments/10 minutes, 30 reactions/10 minutes, 5 push subscriptions/hour per anonymous visitor).
 - `neon/migrations/0004_media_notifier_role.sql` — a restricted database role and SECURITY DEFINER function for GitHub Actions media-event writes.
+- `neon/migrations/0005_reload_data_api_schema_cache.sql` — notifies the Neon Data API/PostgREST layer to reload its schema cache after the helper function and RLS migrations.
 
-RLS uses the Managed Auth JWT subject (`auth.user_id()`). Visitors can read public comments/reactions, create comments and reactions only for their own anonymous identity, read only their own notifications, and mark only their own notifications as read. Media-event and rate-limit tables are not exposed to the browser.
+After applying the migrations, run them in order and apply `0005_reload_data_api_schema_cache.sql` so the Data API sees newly-created RPCs. RLS uses the Managed Auth JWT subject (`auth.user_id()`). Visitors can read public comments/reactions, create comments and reactions only for their own anonymous identity, read only their own notifications, and mark only their own notifications as read. Media-event and rate-limit tables are not exposed to the browser.
 
 ## Frontend
 
@@ -31,6 +32,8 @@ RLS uses the Managed Auth JWT subject (`auth.user_id()`). Visitors can read publ
 - The old Blog-specific Supabase client was removed. Other independent apps in this repository may still use Supabase and are outside this Blog migration.
 
 ## New-photo notification workflow
+
+The GitHub Actions smoke test performs bounded retries only for its read-only identity probe, to tolerate the intermittent Neon Data API session-context/schema-cache issue tracked upstream in [Neon issue #12985](https://github.com/neondatabase/neon/issues/12985). Writes are not retried and RLS checks are not weakened.
 
 The GitHub Actions workflow inserts a media event into Neon when `blog-app/src/BlogApp.js` adds a new photo to the `POSTS` list. The database trigger creates in-app notifications for previous commenters.
 
