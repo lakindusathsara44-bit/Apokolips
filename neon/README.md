@@ -21,7 +21,7 @@ The Blog's social features use a new, empty Neon PostgreSQL database. No histori
 - `neon/migrations/0003_rate_limits.sql` — server-side rate limits enforced by PostgreSQL triggers (5 comments/10 minutes, 30 reactions/10 minutes, 5 push subscriptions/hour per anonymous visitor).
 - `neon/migrations/0004_media_notifier_role.sql` — a restricted database role and SECURITY DEFINER function for GitHub Actions media-event writes.
 
-RLS uses the Managed Auth JWT subject (`auth.user_id()`). Visitors can read public comments/reactions, create comments and reactions only for their own anonymous identity, read only their own notifications, and mark only their own notifications as read. Media-event and rate-limit tables are not exposed to the browser.
+The Neon Data API maintains a managed schema cache. After applying migrations that add or change public RPCs (including the identity helper in migration 0002), refresh the Data API configuration from the Neon control plane so the cache is rebuilt. Preserve the existing settings (`db_schemas: ["public"]`, `db_anon_role: "anonymous"`, the current row limit, JWT role claim, and CORS origins); do not expose extra schemas or weaken grants/RLS to work around a `PGRST202` schema-cache error. In this project, reapplying the existing Data API settings without changing them refreshed the stale cache. A SQL `NOTIFY pgrst` alone did not resolve this deployment's stale managed cache. RLS uses the Managed Auth JWT subject (`auth.user_id()`). Visitors can read public comments/reactions, create comments and reactions only for their own anonymous identity, read only their own notifications, and mark only their own notifications as read. Media-event and rate-limit tables are not exposed to the browser.
 
 ## Frontend
 
@@ -31,6 +31,8 @@ RLS uses the Managed Auth JWT subject (`auth.user_id()`). Visitors can read publ
 - The old Blog-specific Supabase client was removed. Other independent apps in this repository may still use Supabase and are outside this Blog migration.
 
 ## New-photo notification workflow
+
+The GitHub Actions smoke test performs up to six bounded retries only for its read-only identity probe when the Data API returns a schema-cache miss or a missing/mismatched JWT subject. A persistent mismatch still fails CI. Writes and mutations are never retried, and RLS checks are not weakened.
 
 The GitHub Actions workflow inserts a media event into Neon when `blog-app/src/BlogApp.js` adds a new photo to the `POSTS` list. The database trigger creates in-app notifications for previous commenters.
 
