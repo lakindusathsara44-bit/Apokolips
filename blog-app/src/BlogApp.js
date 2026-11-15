@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { blogClient, visitorId, BLOG_API_URL } from './neon.js';
+import { blogClient, visitorId } from './neon.js';
 
 const h = React.createElement;
 const REACTIONS = [
@@ -213,11 +213,9 @@ function decodeVapidKey(value) {
 }
 
 function NotificationCenter() {
-  const [status, setStatus] = useState('Get alerts for replies and new photos.');
+  const [status, setStatus] = useState('In-page notifications are active. Browser push alerts are being prepared.');
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
-  const [enabled, setEnabled] = useState(false);
-  const [busy, setBusy] = useState(false);
   const unread = items.filter(item => !item.read_at).length;
 
   const load = async () => {
@@ -234,45 +232,8 @@ function NotificationCenter() {
     const channel = blogClient.channel('apokolips-blog-notifications-' + visitorId)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'apokolips_blog_notifications', filter: 'recipient_visitor_id=eq.' + visitorId }, load)
       .subscribe();
-    (async () => {
-      if (!('Notification' in window) || Notification.permission !== 'granted' || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
-      try {
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration?.pushManager?.getSubscription();
-        if (!subscription) return;
-        const { data } = await blogClient.from('apokolips_blog_push_subscriptions')
-          .select('id').eq('visitor_id', visitorId).eq('endpoint', subscription.endpoint).maybeSingle();
-        if (data) { setEnabled(true); setStatus('Notifications are enabled on this browser.'); }
-      } catch (error) { console.warn(error); }
-    })();
     return () => { blogClient.removeChannel(channel); };
   }, []);
-
-  const enable = async () => {
-    if (busy) return;
-    setBusy(true);
-    try {
-      if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) throw new Error('This browser does not support web push notifications.');
-      const permission = Notification.permission === 'default' ? await Notification.requestPermission() : Notification.permission;
-      if (permission !== 'granted') throw new Error('Notification permission was not granted.');
-      const configResponse = await fetch(BLOG_API_URL + '/push/config');
-      const config = await configResponse.json();
-      if (!configResponse.ok || !config.publicKey) throw new Error(config.error || 'Push service is not configured yet.');
-      const swUrl = new URL('../../blog-sw.js', import.meta.url);
-      const registration = await navigator.serviceWorker.register(swUrl);
-      const ready = await navigator.serviceWorker.ready;
-      let subscription = await (ready.pushManager || registration.pushManager).getSubscription();
-      if (!subscription) subscription = await (ready.pushManager || registration.pushManager).subscribe({ userVisibleOnly: true, applicationServerKey: decodeVapidKey(config.publicKey) });
-      const keys = subscription.toJSON().keys || {};
-      const { error } = await blogClient.from('apokolips_blog_push_subscriptions').upsert({
-        visitor_id: visitorId, endpoint: subscription.endpoint, p256dh: keys.p256dh,
-        auth: keys.auth, user_agent: navigator.userAgent
-      }, { onConflict: 'endpoint' });
-      if (error) throw error;
-      setEnabled(true); setStatus('Notifications are enabled on this browser.');
-    } catch (error) { console.error('Blog push setup failed:', error); setStatus(error.message || 'Could not enable notifications.'); }
-    finally { setBusy(false); }
-  };
 
   const openNotification = async item => {
     if (!item.read_at) {
@@ -282,7 +243,6 @@ function NotificationCenter() {
   };
 
   return h('div', { className: 'blog-notification-area' },
-    !enabled ? h('button', { type: 'button', disabled: busy, onClick: enable }, busy ? 'Setting up…' : 'Enable notifications') : null,
     h('button', { type: 'button', 'aria-expanded': open, onClick: () => { setOpen(v => !v); if (!open) load(); } }, 'Notifications ', h('span', { className: 'notification-badge' }, unread)),
     h('span', { className: 'notification-status', role: 'status', 'aria-live': 'polite' }, status),
     open ? h('div', { className: 'blog-notification-panel' },
