@@ -1,40 +1,46 @@
-# Apokolips Blog — Neon backend
+# Apokolips Blog — Neon PostgreSQL
 
-The Blog social layer now uses Neon PostgreSQL through the `blogapi` Neon Function. The frontend does not contain a database password or privileged connection string.
+The Blog's social features use a new, empty Neon PostgreSQL database. No historical Supabase rows are imported.
 
-## Resources
+## Neon resources
 
-- Neon project: `apokolips-blog`
-- Database: `apokolips_blog`
+- Project: `apokolips-blog`
+- Project ID: `frosty-mouse-83735944`
+- Region: AWS Singapore (`aws-ap-southeast-1`)
 - Branch: `production`
-- Function slug: `blogapi`
-- Function URL: https://br-silent-frost-b3chnc64-blogapi.compute.c-4.ap-southeast-1.aws.neon.tech/
-- Schema migration: `neon/migrations/0001_apokolips_blog.sql`
-- Function source: `neon/functions/blogapi/index.mjs`
+- Database: `apokolips_blog`
+- Managed Auth: Neon Auth (Better Auth), anonymous JWTs enabled by the browser SDK
+- Data API: enabled for the `public` schema
+- Data API URL: `https://ep-icy-shadow-b3q76our.apirest.c-4.ap-southeast-1.aws.neon.tech/apokolips_blog/rest/v1`
 
-## Fresh database
+## Schema
 
-This migration creates an empty Blog activity database. It intentionally imports no historical Supabase rows. It creates comments, replies, reactions, notifications, web-push subscriptions, media events, and rate-limit tables. Reply and new-photo notification rows are created by PostgreSQL triggers.
+- `neon/migrations/0001_apokolips_blog.sql` — comments, replies, reactions, notifications, push subscription storage, media events, rate limits, and notification triggers.
+- `neon/migrations/0002_data_api_rls.sql` — Data API grants and row-level security policies.
 
-## Frontend API
+RLS uses the Managed Auth JWT subject (`auth.user_id()`). Visitors can read public comments/reactions, create comments and reactions only for their own anonymous identity, read only their own notifications, and mark only their own notifications as read. Media-event and rate-limit tables are not exposed to the browser.
 
-The client uses `blog-app/src/neon.js`. Live activity is refreshed by lightweight polling because the React app no longer uses Supabase Realtime. The API validates payloads, limits comment/reaction/subscription rates per visitor, and only accepts the Apokolips website origins.
+## Frontend
 
-## Function environment
+- `blog-app/src/neon.js` initializes Neon Auth anonymous access and wraps the Neon Data API client with polling subscriptions.
+- `blog-app/src/BlogApp.js` uses the Neon client for comments, replies, reactions, and in-app notifications.
+- `blog.html` loads `@neon/neon-js` through the import map.
+- The old Blog-specific Supabase client was removed. Other independent apps in this repository may still use Supabase and are outside this Blog migration.
 
-The Neon Function is deployed (Node.js 24). Neon injects `DATABASE_URL` for the branch. **Web Push delivery is not yet configured**: add `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` as private Function environment variables before enabling browser push. The media webhook also needs `APOKOLIPS_BLOG_WEBHOOK_SECRET`. Never commit these values.
+## New-photo notification workflow
 
-## GitHub Actions secret
+The GitHub Actions workflow inserts a media event into Neon when `blog.html` starts referencing a new photo. The database trigger creates in-app notifications for previous commenters.
 
-To enable new-photo webhook delivery, set the repository Actions secrets `APOKOLIPS_BLOG_PUSH_FUNCTION_URL` to the Function URL above and `APOKOLIPS_BLOG_WEBHOOK_SECRET` to the same secret configured on the Neon Function. Until both are present, the workflow skips safely. The workflow appends `/media-event` and posts newly referenced images to Neon.
+After merging, add the GitHub Actions repository secret `NEON_DATABASE_URL` containing the **direct/unpooled** connection string for the `apokolips_blog` database. Do not commit the connection string. The workflow will fail safely with a clear message until this secret is configured.
 
-## Deployment and verification
+## Verification checklist
 
-Deploy the Function from `neon/functions/blogapi` using the Neon Functions deployment workflow. Verify:
+- Confirm the Neon Data API is active and its CORS origins include `https://www.apokolips.xyz` and `https://apokolips.xyz`.
+- Test the anonymous token flow from the live Blog page.
+- Post a comment, then verify it appears for other visitors.
+- Reply to a comment and verify the parent visitor receives an in-app notification.
+- Change a reaction and verify only one reaction per visitor/post is retained.
+- Mark a notification as read and verify it remains read after refresh.
+- Add a new photo to `blog.html` and verify the GitHub workflow creates new-photo notifications.
 
-- `GET /health` returns `{ "ok": true }`.
-- `GET /comments?post_slug=travel-memory-2026-10-16` returns an empty `data` array on a fresh database.
-- A comment can be created and then appears in the comments list.
-- A reply creates a notification for the parent comment's visitor.
-- Reaction updates are unique per visitor and post.
-- Push subscriptions are saved. Actual browser push delivery is verified only after VAPID keys and the webhook secret are configured.
+Browser push delivery is not enabled in this cutover; the Blog's in-page notification center remains available. No Supabase project is deleted or paused.
