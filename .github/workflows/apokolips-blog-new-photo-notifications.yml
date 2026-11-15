@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'blog.html'
       - 'blog-app/src/BlogApp.js'
 
 permissions:
@@ -18,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Detect newly published blog photos
+      - name: Detect newly published Blog photos
         env:
           BEFORE_SHA: ${{ github.event.before }}
           AFTER_SHA: ${{ github.sha }}
@@ -29,46 +30,48 @@ jobs:
             echo "Initial commit detected; skipping historical photo notifications."
             exit 0
           fi
-          git show "${BEFORE_SHA}:blog-app/src/BlogApp.js" > /tmp/old-blog.js 2>/dev/null || true
-          git show "${AFTER_SHA}:blog-app/src/BlogApp.js" > /tmp/new-blog.js
+          : > /tmp/old-blog-source.txt
+          : > /tmp/new-blog-source.txt
+          for file in blog.html blog-app/src/BlogApp.js; do
+            git show "${BEFORE_SHA}:${file}" >> /tmp/old-blog-source.txt 2>/dev/null || true
+            git show "${AFTER_SHA}:${file}" >> /tmp/new-blog-source.txt
+          done
           node > /tmp/new-blog-photos.txt <<'NODE'
           const fs = require("fs");
           const imagePattern = /\.(?:jpe?g|png|webp|gif)(?:[?#].*)?$/i;
           const extract = (source) => {
             const found = new Set();
-            for (const match of source.matchAll(/\bsrc\s*:\s*["']([^"']+)["']/gi)) {
+            const pattern = /(?:\bsrc\s*=|\bsrc\s*:)[\s]*["']([^"']+)["']/gi;
+            for (const match of source.matchAll(pattern)) {
               const src = match[1].trim();
               if (imagePattern.test(src)) found.add(src);
             }
             return found;
           };
-          const before = extract(fs.readFileSync("/tmp/old-blog.js", "utf8"));
-          const after = extract(fs.readFileSync("/tmp/new-blog.js", "utf8"));
+          const before = extract(fs.readFileSync("/tmp/old-blog-source.txt", "utf8"));
+          const after = extract(fs.readFileSync("/tmp/new-blog-source.txt", "utf8"));
           for (const src of after) if (!before.has(src)) console.log(src);
           NODE
           if [[ ! -s /tmp/new-blog-photos.txt ]]; then
-            echo "No newly referenced blog photos found."
+            echo "No newly referenced Blog photos found."
             exit 0
           fi
 
-      - name: Create new-photo notifications in Neon
+      - name: Create new-photo notification events in Neon
         env:
           NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
         shell: bash
         run: |
           set -euo pipefail
           if [[ -z "${NEON_DATABASE_URL}" ]]; then
-            echo "Missing NEON_DATABASE_URL repository secret."
-            exit 1
+            echo "::warning::NEON_DATABASE_URL is not configured; skipping new-photo notifications."
+            exit 0
           fi
           sudo apt-get update -y
           sudo apt-get install -y postgresql-client
           while IFS= read -r image_src; do
             [[ -z "${image_src}" ]] && continue
-            psql "${NEON_DATABASE_URL}" -v ON_ERROR_STOP=1 -v file_path="${image_src}" <<'SQL'
-            INSERT INTO public.apokolips_blog_media_events(file_path)
-            VALUES (:'file_path')
-            ON CONFLICT (file_path) DO NOTHING;
-          SQL
+            psql "${NEON_DATABASE_URL}" -v ON_ERROR_STOP=1 -v file_path="${image_src}" \
+              -c "INSERT INTO public.apokolips_blog_media_events(file_path) VALUES (:'file_path') ON CONFLICT (file_path) DO NOTHING;"
             echo "Created new-photo notification event for ${image_src}"
           done < /tmp/new-blog-photos.txt
