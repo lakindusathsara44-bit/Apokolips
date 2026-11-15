@@ -1,4 +1,5 @@
 import pg from "pg";
+import webpush from "web-push";
 const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
 const allowedOrigins = new Set(["https://www.apokolips.xyz", "https://apokolips.xyz"]);
@@ -24,6 +25,24 @@ async function rateLimit(visitorId, action, max, windowMinutes) {
     [visitorId, action, max, windowMinutes]
   );
   return q.rowCount > 0;
+}
+async function sendNotificationPush(notification) {
+  if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) return;
+  webpush.setVapidDetails(process.env.VAPID_SUBJECT || "https://www.apokolips.xyz", process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
+  const { rows } = await pool.query("select id,endpoint,p256dh,auth from public.apokolips_blog_push_subscriptions where visitor_id=$1", [notification.recipient_visitor_id]);
+  await Promise.all(rows.map(async subscription => {
+    try {
+      await webpush.sendNotification({ endpoint: subscription.endpoint, keys: { p256dh: subscription.p256dh, auth: subscription.auth } }, JSON.stringify({
+        title: notification.title, body: notification.body, url: notification.target_url, notificationId: notification.id
+      }));
+    } catch (error) {
+      if (error?.statusCode === 404 || error?.statusCode === 410) {
+        await pool.query("delete from public.apokolips_blog_push_subscriptions where id=$1", [subscription.id]);
+      } else {
+        console.warn("web-push-delivery-failed", error?.statusCode || error?.message);
+      }
+    }
+  }));
 }
 export default {
  async fetch(req) {
@@ -74,6 +93,8 @@ export default {
      if(!await rateLimit(visitorId,"comment",5,10)) return json({error:"Please wait before posting another comment."},429,origin);
      if(parent){const p=await pool.query("select id from public.apokolips_blog_comments where id=$1 and post_slug=$2",[parent,slug]); if(!p.rowCount)return json({error:"Reply target not found"},404,origin);}
      const q=await pool.query("insert into public.apokolips_blog_comments(post_slug,visitor_id,display_name,body,parent_comment_id) values($1,$2,$3,$4,$5) returning id,parent_comment_id,visitor_id,display_name,body,created_at,post_slug",[slug,visitorId,name,body,parent]);
+     const notifications = await pool.query("select id,recipient_visitor_id,title,body,target_url from public.apokolips_blog_notifications where source_id=$1 and notification_type='reply'", [q.rows[0].id]);
+     await Promise.all(notifications.rows.map(sendNotificationPush));
      return json({data:q.rows[0]},201,origin);
    }
    if (req.method==="POST" && path.endsWith("/reactions")) {
@@ -99,8 +120,12 @@ export default {
    if (req.method==="POST" && path.endsWith("/media-event")) {
      if(!process.env.APOKOLIPS_BLOG_WEBHOOK_SECRET || req.headers.get("x-blog-webhook-secret")!==process.env.APOKOLIPS_BLOG_WEBHOOK_SECRET)return json({error:"Unauthorized"},401,origin);
      const b=await req.json(), file=String(b.file_path||"");
-     if(!/^[\\w./% -]{1,500}\\.(jpe?g|png|webp|gif)$/i.test(file)||file.includes(".."))return json({error:"Invalid media path"},400,origin);
-     await pool.query("insert into public.apokolips_blog_media_events(file_path) values($1) on conflict(file_path) do nothing",[file]);
+     if(!/^[\w./% -]{1,500}\.(jpe?g|png|webp|gif)$/i.test(file)||file.includes(".."))return json({error:"Invalid media path"},400,origin);
+     const event = await pool.query("insert into public.apokolips_blog_media_events(file_path) values($1) on conflict(file_path) do nothing returning id",[file]);
+     if (event.rows[0]) {
+       const notifications = await pool.query("select id,recipient_visitor_id,title,body,target_url from public.apokolips_blog_notifications where source_id=$1 and notification_type='new_photo'", [event.rows[0].id]);
+       await Promise.all(notifications.rows.map(sendNotificationPush));
+     }
      return json({ok:true},200,origin);
    }
    return json({error:"Not found"},404,origin);
