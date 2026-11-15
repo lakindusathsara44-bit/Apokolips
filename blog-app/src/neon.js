@@ -1,132 +1,56 @@
-const API_BASE = 'https://br-silent-frost-b3chnc64-blogapi.compute.c-4.ap-southeast-1.aws.neon.tech';
-function request(path, options = {}) {
-  return fetch(API_BASE + path, {
-    ...options,
-    headers: { 'content-type': 'application/json', ...(options.headers || {}) },
-    credentials: 'omit'
-  }).then(async response => {
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      const error = new Error(payload.error || 'Blog API request failed.');
-      error.status = response.status;
-      throw error;
-    }
-    return payload;
-  });
+import { createClient } from '@neon/neon-js';
+
+export const BLOG_DATABASE_URL = 'https://ep-icy-shadow-b3q76our.c-4.ap-southeast-1.aws.neon.tech/apokolips_blog';
+const neon = createClient(BLOG_DATABASE_URL, {
+  auth: { allowAnonymous: true }
+});
+
+export let visitorId = null;
+
+function decodeJwtSubject(token) {
+  const payload = token.split('.')[1];
+  if (!payload) throw new Error('Neon Auth returned an invalid anonymous token.');
+  const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+  const decoded = atob(normalized + '='.repeat((4 - normalized.length % 4) % 4));
+  const claims = JSON.parse(decoded);
+  if (typeof claims.sub !== 'string' || !claims.sub) {
+    throw new Error('The anonymous token does not contain a subject identifier.');
+  }
+  return claims.sub;
 }
 
-class BlogQuery {
-  constructor(table) {
-    this.table = table;
-    this.action = 'select';
-    this.values = null;
-    this.filters = [];
-    this.sort = null;
-    this.maxRows = null;
-    this.single = false;
-  }
-  select(columns, options = {}) { this.columns = columns; this.count = options.count || null; this.head = options.head === true; return this; }
-  eq(column, value) { this.filters.push([column, value]); return this; }
-  order(column, options = {}) { this.sort = [column, options.ascending !== false]; return this; }
-  limit(value) { this.maxRows = value; return this; }
-  maybeSingle() { this.single = true; return this; }
-  insert(values) { this.action = 'insert'; this.values = values; return this; }
-  upsert(values) { this.action = 'upsert'; this.values = values; return this; }
-  update(values) { this.action = 'update'; this.values = values; return this; }
-  delete() { this.action = 'delete'; return this; }
-  async execute() {
-    const filter = Object.fromEntries(this.filters);
-    const visitorId = visitorIdForRequest();
-    let payload;
-    if (this.action === 'select' && this.count === 'exact' && this.head && ['apokolips_blog_comments','apokolips_blog_reactions'].includes(this.table)) {
-      const stats = await request('/stats');
-      return { data: null, error: null, count: Number(stats[this.table === 'apokolips_blog_comments' ? 'comments' : 'reactions'] || 0) };
-    }
-    if (this.action === 'select') {
-      const map = {
-        apokolips_blog_comments: '/comments',
-        apokolips_blog_reactions: '/reactions',
-        apokolips_blog_notifications: '/notifications',
-        apokolips_blog_push_subscriptions: '/subscriptions'
-      };
-      const endpoint = map[this.table];
-      if (!endpoint) throw new Error('Unsupported blog data collection.');
-      const params = new URLSearchParams();
-      if (filter.post_slug) params.set('post_slug', filter.post_slug);
-      if (filter.recipient_visitor_id || filter.visitor_id) params.set('visitor_id', filter.recipient_visitor_id || filter.visitor_id);
-      if (filter.endpoint) params.set('endpoint', filter.endpoint);
-      payload = await request(endpoint + '?' + params.toString());
-      let data = payload.data;
-      if (this.sort && Array.isArray(data)) {
-        const [key, ascending] = this.sort;
-        data = [...data].sort((a,b) => (new Date(a[key]).getTime() - new Date(b[key]).getTime()) * (ascending ? 1 : -1));
-      }
-      if (this.maxRows && Array.isArray(data)) data = data.slice(0, this.maxRows);
-      if (this.single) data = Array.isArray(data) ? (data[0] || null) : data;
-      return { data, error: null };
-    }
-    if (this.table === 'apokolips_blog_comments' && this.action === 'insert') {
-      payload = await request('/comments', { method: 'POST', body: JSON.stringify(this.values) });
-      return { data: payload.data || null, error: null };
-    }
-    if (this.table === 'apokolips_blog_reactions' && this.action === 'update') {
-      payload = await request('/reactions', { method: 'POST', body: JSON.stringify({
-        post_slug: filter.post_slug, visitor_id: filter.visitor_id, reaction: this.values.reaction
-      }) });
-      return { data: payload.data || [], error: null };
-    }
-    if (this.table === 'apokolips_blog_notifications' && this.action === 'update') {
-      await request('/notifications', { method: 'PATCH', body: JSON.stringify({
-        id: filter.id, visitor_id: visitorId, read_at: this.values.read_at
-      }) });
-      return { data: null, error: null };
-    }
-    if (this.table === 'apokolips_blog_push_subscriptions' && this.action === 'upsert') {
-      payload = await request('/subscriptions', { method: 'POST', body: JSON.stringify(this.values) });
-      return { data: payload.data || null, error: null };
-    }
-    throw new Error('Unsupported blog data operation.');
-  }
-  then(resolve, reject) {
-    return this.execute().then(resolve, error => {
-      const result = { data: null, error: { message: error.message, code: String(error.status || 'API_ERROR') } };
-      return reject ? reject(error) : resolve(result);
-    });
-  }
+export async function initializeNeonBlog() {
+  const { data, error } = await neon.auth.getAnonymousToken();
+  if (error) throw error;
+  const token = data?.token;
+  if (!token) throw new Error('Could not obtain a Neon anonymous access token.');
+  visitorId = decodeJwtSubject(token);
 }
-
-function visitorIdForRequest() {
-  try { return localStorage.getItem('apokolips-blog-visitor-v1') || ''; } catch (_) { return ''; }
-}
-
-export const visitorId = (() => {
-  try {
-    const saved = localStorage.getItem('apokolips-blog-visitor-v1');
-    if (saved) return saved;
-  } catch (_) {}
-  const value = globalThis.crypto?.randomUUID?.() || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    const r = Math.random() * 16 | 0;
-    return (c === 'x' ? r : (r & 3 | 8)).toString(16);
-  });
-  try { localStorage.setItem('apokolips-blog-visitor-v1', value); } catch (_) {}
-  return value;
-})();
-
-export const BLOG_API_URL = API_BASE;
 
 const channels = new Set();
 export const blogClient = {
-  from(table) { return new BlogQuery(table); },
+  from(table) {
+    return neon.from(table);
+  },
   channel(name) {
-    const handlers = [];
+    const callbacks = [];
     const channel = {
       name,
       timer: null,
-      on(_event, _filter, callback) { handlers.push(callback); return channel; },
+      on(_event, _filter, callback) {
+        callbacks.push(callback);
+        return channel;
+      },
       subscribe() {
-        channel.timer = window.setInterval(() => handlers.forEach(callback => {
-          try { Promise.resolve(callback()).catch(error => console.warn('Blog refresh failed:', error)); } catch (error) { console.warn(error); }
-        }), 10000);
+        channel.timer = window.setInterval(() => {
+          callbacks.forEach(callback => {
+            try {
+              Promise.resolve(callback()).catch(error => console.warn('Blog live refresh failed:', error));
+            } catch (error) {
+              console.warn('Blog live refresh failed:', error);
+            }
+          });
+        }, 10000);
         channels.add(channel);
         return channel;
       }
