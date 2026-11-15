@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './BlogApp.js';
+import { initializeNeonBlog } from './neon.js';
 
 const root = document.getElementById('blog-root');
 if (!root) throw new Error('Apokolips blog root was not found.');
@@ -20,4 +21,9 @@ class BlogErrorBoundary extends React.Component {
   }
 }
 
-createRoot(root).render(React.createElement(BlogErrorBoundary, null, React.createElement(App)));
+initializeNeonBlog()
+  .then(() => createRoot(root).render(React.createElement(BlogErrorBoundary, null, React.createElement(App))))
+  .catch(error => {
+    console.error('Neon Blog initialization failed:', error);
+    root.textContent = 'The blog service is temporarily unavailable. Please refresh in a moment.';
+  });
