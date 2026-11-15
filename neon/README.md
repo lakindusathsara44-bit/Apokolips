@@ -22,11 +22,11 @@ The client uses `blog-app/src/neon.js`. Live activity is refreshed by lightweigh
 
 ## Function environment
 
-The deployed Function has the VAPID key pair and `APOKOLIPS_BLOG_WEBHOOK_SECRET` configured as private Function environment variables. Never commit these values.
+The Neon Function is deployed (Node.js 24). Neon injects `DATABASE_URL` for the branch. **Web Push delivery is not yet configured**: add `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` as private Function environment variables before enabling browser push. The media webhook also needs `APOKOLIPS_BLOG_WEBHOOK_SECRET`. Never commit these values.
 
 ## GitHub Actions secret
 
-Set the repository Actions secret `APOKOLIPS_BLOG_PUSH_FUNCTION_URL` to the Function URL above. Set `APOKOLIPS_BLOG_WEBHOOK_SECRET` to the shared webhook secret supplied separately to the project owner. The workflow appends `/media-event` and posts newly referenced images to Neon.
+To enable new-photo webhook delivery, set the repository Actions secrets `APOKOLIPS_BLOG_PUSH_FUNCTION_URL` to the Function URL above and `APOKOLIPS_BLOG_WEBHOOK_SECRET` to the same secret configured on the Neon Function. Until both are present, the workflow skips safely. The workflow appends `/media-event` and posts newly referenced images to Neon.
 
 ## Deployment and verification
 
@@ -37,4 +37,4 @@ Deploy the Function from `neon/functions/blogapi` using the Neon Functions deplo
 - A comment can be created and then appears in the comments list.
 - A reply creates a notification for the parent comment's visitor.
 - Reaction updates are unique per visitor and post.
-- Push subscriptions are saved and push notifications are sent when a reply/new-photo notification is created.
+- Push subscriptions are saved. Actual browser push delivery is verified only after VAPID keys and the webhook secret are configured.
