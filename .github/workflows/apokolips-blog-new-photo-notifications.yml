@@ -69,6 +69,6 @@ jobs:
             INSERT INTO public.apokolips_blog_media_events(file_path)
             VALUES (:'file_path')
             ON CONFLICT (file_path) DO NOTHING;
-            SQL
+          SQL
             echo "Created new-photo notification event for ${image_src}"
           done < /tmp/new-blog-photos.txt
