@@ -5,7 +5,6 @@ on:
     branches: [main]
     paths:
       - 'blog.html'
-      - 'blog-app/src/BlogApp.js'
 
 permissions:
   contents: read
@@ -30,18 +29,14 @@ jobs:
             echo "Initial commit detected; skipping historical photo notifications."
             exit 0
           fi
-          : > /tmp/old-blog.html
-          : > /tmp/new-blog.html
-          for file in blog.html blog-app/src/BlogApp.js; do
-            git show "${BEFORE_SHA}:${file}" >> /tmp/old-blog.html 2>/dev/null || true
-            git show "${AFTER_SHA}:${file}" >> /tmp/new-blog.html
-          done
+          git show "${BEFORE_SHA}:blog.html" > /tmp/old-blog.html 2>/dev/null || true
+          git show "${AFTER_SHA}:blog.html" > /tmp/new-blog.html
           node > /tmp/new-blog-photos.txt <<'NODE'
           const fs = require("fs");
           const imagePattern = /\.(?:jpe?g|png|webp|gif)(?:[?#].*)?$/i;
           const extract = (html) => {
             const found = new Set();
-            for (const match of html.matchAll(/(?:\bsrc\s*=|\bsrc\s*:)[\s]*["']([^"']+)["']/gi)) {
+            for (const match of html.matchAll(/<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["']/gi)) {
               const src = match[1].trim();
               if (imagePattern.test(src)) found.add(src);
             }
@@ -56,24 +51,21 @@ jobs:
             exit 0
           fi
 
-      - name: Notify previous blog commenters about each new photo
+      - name: Create new-photo notifications in Neon
         env:
-          NEON_BLOG_API_URL: ${{ secrets.APOKOLIPS_BLOG_PUSH_FUNCTION_URL }}
-          WEBHOOK_SECRET: ${{ secrets.APOKOLIPS_BLOG_WEBHOOK_SECRET }}
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -z "${NEON_BLOG_API_URL}" || -z "${WEBHOOK_SECRET}" ]]; then
-            echo "::warning::Missing APOKOLIPS_BLOG_PUSH_FUNCTION_URL or APOKOLIPS_BLOG_WEBHOOK_SECRET; skipping push notifications until configured."
-            exit 0
+          if [[ -z "${NEON_DATABASE_URL}" ]]; then
+            echo "Missing NEON_DATABASE_URL repository secret."
+            exit 1
           fi
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql-client
           while IFS= read -r image_src; do
             [[ -z "${image_src}" ]] && continue
-            payload=$(jq -n --arg src "${image_src}" '{event:"media_added",file_path:$src}')
-            curl --fail-with-body --silent --show-error \
-              -X POST "${NEON_BLOG_API_URL%/}/media-event" \
-              -H "Content-Type: application/json" \
-              -H "x-blog-webhook-secret: ${WEBHOOK_SECRET}" \
-              --data "${payload}"
-            echo "Queued new blog photo notification for ${image_src}"
+            psql "${NEON_DATABASE_URL}" -v ON_ERROR_STOP=1 -v file_path="${image_src}" \
+              -c "INSERT INTO public.apokolips_blog_media_events(file_path) VALUES (:'file_path') ON CONFLICT (file_path) DO NOTHING;"
+            echo "Created new-photo notification event for ${image_src}"
           done < /tmp/new-blog-photos.txt
