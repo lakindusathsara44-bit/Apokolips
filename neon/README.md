@@ -17,6 +17,7 @@ The Blog's social features use a new, empty Neon PostgreSQL database. No histori
 
 - `neon/migrations/0001_apokolips_blog.sql` — comments, replies, reactions, notifications, push subscription storage, media events, rate limits, and notification triggers.
 - `neon/migrations/0002_data_api_rls.sql` — Data API grants and row-level security policies.
+- `neon/migrations/0003_write_rate_limits.sql` — server-side PostgreSQL rate limits for comments and reactions.
 - `neon/migrations/0003_rate_limits.sql` — server-side rate limits enforced by PostgreSQL triggers (5 comments/10 minutes, 30 reactions/10 minutes, 5 push subscriptions/hour per anonymous visitor).
 
 RLS uses the Managed Auth JWT subject (`auth.user_id()`). Visitors can read public comments/reactions, create comments and reactions only for their own anonymous identity, read only their own notifications, and mark only their own notifications as read. Media-event and rate-limit tables are not exposed to the browser.
