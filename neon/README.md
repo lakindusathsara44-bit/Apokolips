@@ -19,6 +19,7 @@ The Blog's social features use a new, empty Neon PostgreSQL database. No histori
 - `neon/migrations/0002_data_api_rls.sql` — Data API grants and row-level security policies.
 - `neon/migrations/0003_write_rate_limits.sql` — server-side PostgreSQL rate limits for comments and reactions.
 - `neon/migrations/0003_rate_limits.sql` — server-side rate limits enforced by PostgreSQL triggers (5 comments/10 minutes, 30 reactions/10 minutes, 5 push subscriptions/hour per anonymous visitor).
+- `neon/migrations/0004_media_notifier_role.sql` — a restricted database role and SECURITY DEFINER function for GitHub Actions media-event writes.
 
 RLS uses the Managed Auth JWT subject (`auth.user_id()`). Visitors can read public comments/reactions, create comments and reactions only for their own anonymous identity, read only their own notifications, and mark only their own notifications as read. Media-event and rate-limit tables are not exposed to the browser.
 
@@ -33,7 +34,7 @@ RLS uses the Managed Auth JWT subject (`auth.user_id()`). Visitors can read publ
 
 The GitHub Actions workflow inserts a media event into Neon when `blog-app/src/BlogApp.js` adds a new photo to the `POSTS` list. The database trigger creates in-app notifications for previous commenters.
 
-After merging, add the GitHub Actions repository secret `NEON_DATABASE_URL` using a dedicated, least-privilege Neon role for media-event insertion; do not use the `apokolips_owner` connection string. Do not commit the connection string. The workflow skips with a warning until this secret is configured.
+To enable the optional workflow, create a login role in Neon and grant it membership in `apokolips_blog_media_notifier` (the group role created by migration 0004). The login role only needs permission to execute the validated media-event function; it does not need direct table access. Add its direct/unpooled connection string as the GitHub Actions repository secret `NEON_DATABASE_URL`. Never use the `apokolips_owner` connection string or commit credentials. The workflow skips with a warning until the secret is configured.
 
 
 
