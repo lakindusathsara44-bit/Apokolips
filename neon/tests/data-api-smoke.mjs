@@ -38,22 +38,27 @@ client = createClient({
   }
 });
 
+console.log('Neon smoke: requesting anonymous JWT');
 const jwt = await getAnonymousJwt();
+console.log('Neon smoke: anonymous JWT acquired');
 const payload = jwt.split('.')[1];
 const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
 const claims = JSON.parse(atob(normalized + '='.repeat((4 - normalized.length % 4) % 4)));
 if (typeof claims.sub !== 'string' || !claims.sub) throw new Error('Anonymous JWT has no subject claim.');
 
 for (const table of ['apokolips_blog_comments', 'apokolips_blog_reactions']) {
+  console.log('Neon smoke: checking public read for ' + table);
   const { data, error } = await client.from(table).select('id').limit(1);
   if (error) throw new Error(`Neon Data API read failed for ${table}: ${error.message}`);
 }
 
+console.log('Neon smoke: checking notification RPC');
 const { error: notificationError } = await client.rpc('apokolips_blog_get_notifications', {
   p_visitor_id: '11111111-1111-4111-8111-111111111111'
 });
 if (notificationError) throw new Error(`Neon notification RPC check failed: ${notificationError.message}`);
 
+console.log('Neon smoke: checking reaction identity RPC');
 const { error: reactionIdentityError } = await client.rpc('apokolips_blog_get_my_reaction', {
   p_post_slug: 'smoke-test-post',
   p_visitor_id: '11111111-1111-4111-8111-111111111111'
