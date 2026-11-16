@@ -57,4 +57,5 @@ jobs:
           node --check visitor-counter.js
           node --check blog-app/src/BlogApp.js
           node --check blog-app/src/neon.js
+          node --check blog-app/src/ShareFolder.js
           node --check blog-app/src/main.js
