@@ -1,3 +1,5 @@
+import { getOrCreateVisitorId } from './visitor-id.js';
+
 import { createClient } from '@neondatabase/neon-js';
 
 export const BLOG_AUTH_URL = 'https://ep-icy-shadow-b3q76our.neonauth.c-4.ap-southeast-1.aws.neon.tech/apokolips_blog/auth';
@@ -56,9 +58,8 @@ neon = createClient({
   },
   dataApi: {
     url: BLOG_DATA_API_URL,
-    // Explicitly attach the same anonymous JWT used for visitorId to every
-    // Data API request. This keeps the database auth.user_id() value aligned
-    // with the visitor_id sent by comment/reaction writes.
+    // Neon Auth authorizes the Data API. A separate random browser UUID is
+    // used only by the narrow visitor-scoped Blog RPCs.
     getToken: getAnonymousJwt
   }
 });
@@ -66,18 +67,22 @@ neon = createClient({
 export let visitorId = null;
 
 export async function initializeNeonBlog() {
-  const token = await getAnonymousJwt();
-  const claims = decodeJwtClaims(token);
-  if (typeof claims.sub !== 'string' || !claims.sub) {
-    throw new Error('The anonymous token does not contain a subject identifier.');
-  }
-  visitorId = claims.sub;
+  // Keep Neon Auth for Data API authorization, but do not use its shared
+  // anonymous subject as the Blog visitor identity.
+  await getAnonymousJwt();
+
+  let storage = null;
+  try { storage = window.localStorage; } catch (_) {}
+  visitorId = getOrCreateVisitorId(storage, globalThis.crypto);
 }
 
 const channels = new Set();
 export const blogClient = {
   from(table) {
     return neon.from(table);
+  },
+  rpc(functionName, args) {
+    return neon.rpc(functionName, args);
   },
   channel(name) {
     const callbacks = [];
