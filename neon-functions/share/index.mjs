@@ -39,9 +39,13 @@ function awsEncode(value) {
   return encodeURIComponent(value).replace(/[!'()*]/g, char => '%' + char.charCodeAt(0).toString(16).toUpperCase());
 }
 function canonicalQuery(queryPairs) {
+  // AWS SigV4 requires bytewise (ASCII/UTF-8 encoded) ordering, not locale-aware
+  // ordering. localeCompare can put lowercase response-* parameters before the
+  // uppercase X-Amz-* parameters and produce SignatureDoesNotMatch.
+  const compareBytes = (left, right) => left < right ? -1 : left > right ? 1 : 0;
   return queryPairs
     .map(([name, value]) => [awsEncode(name), awsEncode(value)])
-    .sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))
+    .sort((a, b) => compareBytes(a[0], b[0]) || compareBytes(a[1], b[1]))
     .map(([name, value]) => name + '=' + value).join('&');
 }
 function objectUri(key = '') {
