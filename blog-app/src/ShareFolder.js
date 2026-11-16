@@ -257,7 +257,7 @@ export default function ShareFolder() {
         h('div', { className: 'temporary-share-icon', 'aria-hidden': 'true' }, '↗'),
         h('div', { className: 'temporary-share-title-wrap' },
           h('div', { className: 'small-label' }, 'PRIVATE FILE DROP / 10 MINUTES'),
-          h('h2', null, 'Temporary Share Folder'),
+          h('h2', null, 'Network Folder'),
           h('p', null, 'Share files and media securely. Each upload is available for 10 minutes.')
         ),
         unlocked ? h('button', { type: 'button', className: 'temporary-share-lock', onClick: lock, disabled: busy }, 'Lock folder') : null
