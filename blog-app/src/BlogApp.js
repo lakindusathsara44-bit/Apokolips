@@ -214,7 +214,7 @@ function NotificationCenter() {
       p_visitor_id: visitorId
     });
     if (error) { console.warn('Could not load notifications:', error); return; }
-    setItems(data || []);
+    setItems((data || []).map(item => ({ ...item, read_at: item.read_at || null })));
   };
   useEffect(() => {
     load();
