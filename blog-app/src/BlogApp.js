@@ -78,15 +78,20 @@ function SocialCard({ post }) {
   const [busy, setBusy] = useState(false);
 
   const loadReactions = async () => {
-    const { data, error } = await blogClient.from('apokolips_blog_reactions')
-      .select('reaction').eq('post_slug', post.slug);
+    const [{ data, error }, { data: mine, error: mineError }] = await Promise.all([
+      blogClient.from('apokolips_blog_reactions').select('reaction').eq('post_slug', post.slug),
+      blogClient.rpc('apokolips_blog_get_my_reaction', {
+        p_post_slug: post.slug,
+        p_visitor_id: visitorId
+      })
+    ]);
     if (error) throw error;
+    if (mineError) throw mineError;
     const next = { like: 0, love: 0, wow: 0, fire: 0 };
-    let mine = null;
     (data || []).forEach(row => {
       if (next[row.reaction] !== undefined) next[row.reaction] += 1;
     });
-    setCounts(next); setSelected(mine);
+    setCounts(next); setSelected(mine || null);
   };
   const loadComments = async () => {
     const { data, error } = await blogClient.from('apokolips_blog_comments')
