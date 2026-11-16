@@ -187,23 +187,23 @@ $function$;
 -- fields the site actually displays. Writes are routed through the RPCs above.
 
 REVOKE ALL PRIVILEGES ON TABLE public.apokolips_blog_comments FROM anonymous;
-REVOKE SELECT, INSERT, UPDATE ON TABLE public.apokolips_blog_comments
+REVOKE ALL PRIVILEGES
   (id, parent_comment_id, visitor_id, display_name, body, created_at, post_slug)
-  FROM anonymous;
+  ON TABLE public.apokolips_blog_comments FROM anonymous;
 GRANT SELECT (id, parent_comment_id, display_name, body, created_at, post_slug)
   ON TABLE public.apokolips_blog_comments TO anonymous;
 
 REVOKE ALL PRIVILEGES ON TABLE public.apokolips_blog_reactions FROM anonymous;
-REVOKE SELECT, INSERT, UPDATE ON TABLE public.apokolips_blog_reactions
+REVOKE ALL PRIVILEGES
   (id, post_slug, visitor_id, reaction, created_at, updated_at)
-  FROM anonymous;
+  ON TABLE public.apokolips_blog_reactions FROM anonymous;
 GRANT SELECT (id, post_slug, reaction, created_at, updated_at)
   ON TABLE public.apokolips_blog_reactions TO anonymous;
 
 REVOKE ALL PRIVILEGES ON TABLE public.apokolips_blog_notifications FROM anonymous;
-REVOKE SELECT, INSERT, UPDATE ON TABLE public.apokolips_blog_notifications
+REVOKE ALL PRIVILEGES
   (id, recipient_visitor_id, notification_type, title, body, target_url, source_id, created_at, read_at)
-  FROM anonymous;
+  ON TABLE public.apokolips_blog_notifications FROM anonymous;
 
 REVOKE ALL PRIVILEGES ON FUNCTION public.apokolips_blog_get_my_reaction(text, text) FROM PUBLIC;
 REVOKE ALL PRIVILEGES ON FUNCTION public.apokolips_blog_set_reaction(text, text, text) FROM PUBLIC;
