@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { blogClient, visitorId } from './neon.js';
-import ShareFolder from './ShareFolder.js';
 
 const h = React.createElement;
 const REACTIONS = [
@@ -382,7 +381,7 @@ function App() {
         h('button', { className: 'menu-toggle', type: 'button', onClick: () => setMenuOpen(v => !v), 'aria-expanded': menuOpen, 'aria-label': 'Toggle navigation' }, '☰')
       ),
       h('nav', { className: 'nav' + (menuOpen ? ' open' : ''), 'aria-label': 'Main navigation' },
-        [['Home', 'index.html'], ['About Me', 'info.html'], ['Community Gallery', 'project.gallery.html'], ['My Projects', 'My-project.html'], ['Share Folder', '#share-folder']].map(([label, href]) =>
+        [['Home', 'index.html'], ['About Me', 'info.html'], ['Community Gallery', 'project.gallery.html'], ['My Projects', 'My-project.html'], ['Network Folder', 'network-folder.html']].map(([label, href]) =>
           h('a', { key: href, href, onClick: () => setMenuOpen(false) }, label)
         )
       )
@@ -404,7 +403,6 @@ function App() {
         h('div', null, h('span', null, 'COMMUNITY REACTIONS'), h('strong', null, stats.reactions)),
         h('div', null, h('span', null, 'COMMENTS & REPLIES'), h('strong', null, stats.comments))
       ),
-      h(ShareFolder),
       h('section', { className: 'blog-section', id: 'memories' },
         h('div', { className: 'blog-section-heading blog-reveal' },
           h('div', null, h('div', { className: 'small-label' }, 'MY TRIPS'), h('h2', null, 'Photo & Video Memories')),
