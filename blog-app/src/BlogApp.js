@@ -181,7 +181,7 @@ function SocialCard({ post }) {
   return h('div', { className: 'social-card' },
     h('div', { className: 'post-actions', 'aria-label': 'React to this memory' },
       REACTIONS.map(item => h('button', { key: item.type, className: 'reaction-button' + (selected === item.type ? ' selected' : ''), type: 'button', disabled: busy, 'aria-pressed': selected === item.type, onClick: () => reactToPost(item.type) },
-        item.label, ' ', h('span', { className: 'reaction-number' }, counts[item.type])
+        item.label, ' ', h('span', { className: 'reaction-number', 'aria-label': counts[item.type] + ' ' + item.type + ' reactions' }, counts[item.type].toLocaleString())
       )),
       h('span', { className: 'reaction-count' }, total + (total === 1 ? ' reaction' : ' reactions')),
       h('button', { className: 'share-media-button', type: 'button', onClick: share }, '↗ Share')
@@ -193,11 +193,11 @@ function SocialCard({ post }) {
       ),
       expanded ? h('div', { className: 'comments-panel' },
         h('form', { className: 'comment-form', onSubmit: event => submitComment(event) },
-          h('input', { value: name, onChange: e => setName(e.target.value.slice(0, 40)), maxLength: 40, placeholder: 'Your name', required: true, readOnly: Boolean(getSavedName()), title: getSavedName() ? 'This name is locked on this device' : undefined }),
+          h('input', { value: name, onChange: e => setName(e.target.value.slice(0, 40)), maxLength: 40, placeholder: 'Your name', autoComplete: 'nickname', required: true, 'aria-label': 'Your display name' }),
           h('textarea', { value: body, onChange: e => setBody(e.target.value), maxLength: 500, placeholder: 'Write a comment…', required: true }),
           h('button', { type: 'submit', disabled: busy }, busy ? 'Posting…' : 'Post comment')
         ),
-        h('p', { className: 'device-name-hint' }, 'Your first comment locks this name on this browser/device.'),
+        h('p', { className: 'device-name-hint' }, 'You can change your display name at any time. Your latest name is saved on this device.'),
         h('div', { className: 'comment-list', 'aria-live': 'polite' }, comments.map(comment => renderComment(comment))),
         !comments.length ? h('p', { className: 'interaction-note' }, 'Be the first to leave a comment.') : null
       ) : null
