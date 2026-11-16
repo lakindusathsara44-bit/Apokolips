@@ -466,6 +466,32 @@ async function handleDownload(request) {
   if (!head.ok) return errorResponse(request, 'Could not verify the file in storage.', 502);
   const uploadedAt = Date.parse(head.headers.get('last-modified') || '');
   if (!Number.isFinite(uploadedAt)) return errorResponse(request, 'The file expiry could not be verified.', 502);
+  if (uploadedAt + TTL_MS <= Date.now()) {
+    await deleteObject(body.key);
+    return errorResponse(request, 'This file has expired and was deleted.', 410);
+  }
+
+  const response = await s3Request('GET', body.key);
+  if (!response.ok) return errorResponse(request, 'The file could not be downloaded.', response.status === 404 ? 404 : 502);
+  const name = decodeObjectName(body.key);
+  const headers = corsHeaders(request);
+  headers.set('Content-Type', response.headers.get('content-type') || 'application/octet-stream');
+  headers.set('Content-Disposition', contentDisposition(name));
+  const length = response.headers.get('content-length');
+  if (length) headers.set('Content-Length', length);
+  return new Response(response.body, { status: 200, headers });
+}
+async function handleDownloadUrl(request) {
+  const body = await request.json().catch(() => ({}));
+  const passwordError = authorized(request, body.password);
+  if (passwordError) return passwordError;
+  if (!validKey(body.key)) return errorResponse(request, 'Invalid file reference.', 400);
+
+  const head = await s3Request('HEAD', body.key);
+  if (head.status === 404) return errorResponse(request, 'This file has already been removed.', 404);
+  if (!head.ok) return errorResponse(request, 'Could not verify the file in storage.', 502);
+  const uploadedAt = Date.parse(head.headers.get('last-modified') || '');
+  if (!Number.isFinite(uploadedAt)) return errorResponse(request, 'The file expiry could not be verified.', 502);
   const expiresAt = uploadedAt + TTL_MS;
   const remainingSeconds = Math.floor((expiresAt - Date.now()) / 1000);
   if (remainingSeconds <= 0) {
@@ -517,6 +543,7 @@ export default {
       if (request.method === 'POST' && url.pathname === '/api/upload/complete') return await handleMultipartComplete(request);
       if (request.method === 'POST' && url.pathname === '/api/upload/abort') return await handleMultipartAbort(request);
       if (request.method === 'POST' && url.pathname === '/api/download') return await handleDownload(request);
+      if (request.method === 'POST' && url.pathname === '/api/download-url') return await handleDownloadUrl(request);
       if (request.method === 'POST' && url.pathname === '/cleanup') return await handleCleanup(request);
       return errorResponse(request, 'Endpoint not found.', 404);
     } catch (error) {
