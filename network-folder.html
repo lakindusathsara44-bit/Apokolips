@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050609">
+<meta name="description" content="Private temporary file sharing on Apokolips Network Folder. Upload and download files up to 1 GB.">
+<link rel="canonical" href="https://www.apokolips.xyz/network-folder.html">
+<title>Network Folder | Apokolips</title>
+<link rel="icon" href="./file_00000000a7ec820890154ca6ed49b608.ico">
+<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./assets/blog/blog.css">
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.1.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.1.0/client?external=react"
+  }
+}
+</script>
+<style>
+.network-folder-main{position:relative;z-index:3;max-width:1120px;margin:0 auto;padding:58px 28px 80px;min-height:calc(100vh - 155px)}
+.network-folder-main .blog-hero{padding-bottom:24px}
+.network-folder-main .blog-title{max-width:850px}
+.network-folder-main .temporary-share-section.blog-reveal{opacity:1;transform:none}
+.network-folder-nav-active{color:#fff!important}
+.network-folder-nav-active:after{content:"";display:block;height:2px;background:#70a9ff;margin-top:8px;border-radius:4px}
+@media(max-width:760px){.network-folder-main{padding:42px 18px 55px}.blog-topbar .nav{display:none}.blog-topbar .nav.open{display:flex}.network-folder-nav-active:after{display:none}}
+</style>
+</head>
+<body>
+<header class="topbar blog-topbar">
+  <a class="brand" href="./index.html">
+    <span class="brand-mark"><img src="https://raw.githubusercontent.com/lakindusathsara44-bit/Apokolips/main/file_00000000a7ec820890154ca6ed49b608.png" alt="Apokolips logo"></span>
+    <span>APOKOLIPS</span>
+  </a>
+  <div class="blog-topbar-right">
+    <span class="blog-live-indicator"><i></i> NETWORK ONLINE</span>
+    <button class="menu-toggle" id="networkMenuToggle" type="button" aria-expanded="false" aria-label="Toggle navigation">☰</button>
+  </div>
+  <nav class="nav" id="networkNav" aria-label="Main navigation">
+    <a href="./index.html">Home</a>
+    <a href="./info.html">About Me</a>
+    <a href="./project.gallery.html">Community Gallery</a>
+    <a href="./My-project.html">My Projects</a>
+    <a href="./blog.html">Blog</a>
+    <a href="./network-folder.html" class="network-folder-nav-active" aria-current="page">Network Folder</a>
+  </nav>
+</header>
+<main class="network-folder-main">
+  <section class="blog-hero blog-reveal is-visible">
+    <div class="blog-kicker">APOKOLIPS / PRIVATE FILE NETWORK</div>
+    <h1 class="blog-title">Network <span>Folder.</span></h1>
+    <p class="blog-intro">A private temporary space to upload and download files. Share photos, videos, documents, archives, and other file types with password-protected access.</p>
+  </section>
+  <div id="network-folder-root" aria-live="polite"></div>
+</main>
+<footer class="footer blog-footer">
+  <span>© <span id="networkYear"></span> Lakindu Sathsara</span>
+  <span><a href="./blog.html">BACK TO BLOG ↑</a></span>
+</footer>
+<script>
+(() => {
+  const toggle = document.getElementById('networkMenuToggle');
+  const nav = document.getElementById('networkNav');
+  toggle?.addEventListener('click', () => {
+    const open = nav.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+  nav?.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+    nav.classList.remove('open');
+    toggle?.setAttribute('aria-expanded', 'false');
+  }));
+  document.getElementById('networkYear').textContent = new Date().getFullYear();
+})();
+</script>
+<script type="module" src="./assets/blog/network-folder.js"></script>
+</body>
+</html>
