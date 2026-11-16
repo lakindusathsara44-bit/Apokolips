@@ -55,11 +55,15 @@ for (const table of ['apokolips_blog_comments', 'apokolips_blog_reactions']) {
   if (error) throw new Error(`Neon Data API read failed for ${table}: ${error.message}`);
 }
 
-const { error: notificationError } = await client
-  .from('apokolips_blog_notifications')
-  .select('id')
-  .eq('recipient_visitor_id', claims.sub)
-  .limit(1);
-if (notificationError) throw new Error(`Neon notification RLS check failed: ${notificationError.message}`);
+const { error: notificationError } = await client.rpc('apokolips_blog_get_notifications', {
+  p_visitor_id: '11111111-1111-4111-8111-111111111111'
+});
+if (notificationError) throw new Error(`Neon notification RPC check failed: ${notificationError.message}`);
+
+const { error: reactionIdentityError } = await client.rpc('apokolips_blog_get_my_reaction', {
+  p_post_slug: 'smoke-test-post',
+  p_visitor_id: '11111111-1111-4111-8111-111111111111'
+});
+if (reactionIdentityError) throw new Error(`Neon reaction identity RPC check failed: ${reactionIdentityError.message}`);
 
 console.log('Neon anonymous JWT forwarding, Data API reads, and RLS identity checks passed.');
