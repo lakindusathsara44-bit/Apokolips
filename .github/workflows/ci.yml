@@ -58,4 +58,7 @@ jobs:
           node --check blog-app/src/BlogApp.js
           node --check blog-app/src/neon.js
           node --check blog-app/src/ShareFolder.js
+          base64 -d neon-functions/share/function.zip.b64 > /tmp/aposhare-function.zip
+          unzip -p /tmp/aposhare-function.zip index.mjs > /tmp/aposhare-index.mjs
+          node --check /tmp/aposhare-index.mjs
           node --check blog-app/src/main.js
