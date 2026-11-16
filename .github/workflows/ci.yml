@@ -40,7 +40,7 @@ jobs:
       - name: Verify Neon Auth and Data API
         run: |
           npm install --no-save --ignore-scripts @neondatabase/neon-js
-          node neon/tests/data-api-smoke.mjs
+          timeout 90s node neon/tests/data-api-smoke.mjs
 
       - name: Test persistent Blog visitor identity
         run: node --test blog-app/tests/*.test.mjs
