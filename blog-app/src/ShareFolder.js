@@ -216,7 +216,7 @@ export default function ShareFolder() {
     setBusy(true);
     setStatus('Preparing protected download...');
     try {
-      const data = await postJson('api/download', { password, key: file.key });
+      const data = await postJson('api/download-url', { password, key: file.key });
       const anchor = document.createElement('a');
       anchor.href = data.url;
       anchor.rel = 'noopener';
