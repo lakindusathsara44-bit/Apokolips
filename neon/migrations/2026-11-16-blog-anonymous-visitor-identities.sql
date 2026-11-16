@@ -52,7 +52,7 @@ BEGIN
     RAISE EXCEPTION 'Invalid visitor identifier.' USING ERRCODE = '22023';
   END IF;
 
-  IF p_reaction NOT IN ('like', 'love', 'wow', 'fire') THEN
+  IF coalesce(p_reaction, '') NOT IN ('like', 'love', 'wow', 'fire') THEN
     RAISE EXCEPTION 'Invalid reaction.' USING ERRCODE = '22023';
   END IF;
 
