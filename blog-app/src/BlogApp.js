@@ -79,27 +79,22 @@ function SocialCard({ post }) {
 
   const loadReactions = async () => {
     const { data, error } = await blogClient.from('apokolips_blog_reactions')
-      .select('reaction,visitor_id').eq('post_slug', post.slug);
+      .select('reaction').eq('post_slug', post.slug);
     if (error) throw error;
     const next = { like: 0, love: 0, wow: 0, fire: 0 };
     let mine = null;
     (data || []).forEach(row => {
       if (next[row.reaction] !== undefined) next[row.reaction] += 1;
-      if (row.visitor_id === visitorId) mine = row.reaction;
     });
     setCounts(next); setSelected(mine);
   };
   const loadComments = async () => {
     const { data, error } = await blogClient.from('apokolips_blog_comments')
-      .select('id,parent_comment_id,visitor_id,display_name,body,created_at')
+      .select('id,parent_comment_id,display_name,body,created_at')
       .eq('post_slug', post.slug).order('created_at', { ascending: true }).limit(200);
     if (error) throw error;
     const rows = data || [];
     setComments(setCommentTree(rows));
-    if (!name && rows.length) {
-      const own = rows.find(item => item.visitor_id === visitorId);
-      if (own?.display_name) { setName(own.display_name); saveDeviceName(own.display_name); }
-    }
   };
   const refresh = async () => {
     try { await Promise.all([loadReactions(), loadComments()]); setStatus('Live · Shared with everyone'); }
@@ -118,18 +113,12 @@ function SocialCard({ post }) {
     if (busy || selected === type) return;
     setBusy(true);
     try {
-      const { data: updated, error: updateError } = await blogClient.from('apokolips_blog_reactions')
-        .update({ reaction: type }).eq('post_slug', post.slug).eq('visitor_id', visitorId).select('id');
-      if (updateError) throw updateError;
-      if (!updated?.length) {
-        const { error } = await blogClient.from('apokolips_blog_reactions')
-          .insert({ post_slug: post.slug, visitor_id: visitorId, reaction: type });
-        if (error && error.code === '23505') {
-          const retry = await blogClient.from('apokolips_blog_reactions')
-            .update({ reaction: type }).eq('post_slug', post.slug).eq('visitor_id', visitorId);
-          if (retry.error) throw retry.error;
-        } else if (error) throw error;
-      }
+      const { error } = await blogClient.rpc('apokolips_blog_set_reaction', {
+        p_post_slug: post.slug,
+        p_visitor_id: visitorId,
+        p_reaction: type
+      });
+      if (error) throw error;
       await loadReactions(); setStatus('Your reaction has been shared.');
     } catch (error) { console.error(error); setStatus('Reaction could not be saved. Please try again.'); }
     finally { setBusy(false); }
@@ -142,9 +131,12 @@ function SocialCard({ post }) {
     if (!displayName || !message || busy) return;
     setBusy(true);
     try {
-      const { error } = await blogClient.from('apokolips_blog_comments').insert({
-        post_slug: post.slug, visitor_id: visitorId, display_name: displayName,
-        body: message, ...(parentId ? { parent_comment_id: parentId } : {})
+      const { error } = await blogClient.rpc('apokolips_blog_add_comment', {
+        p_post_slug: post.slug,
+        p_visitor_id: visitorId,
+        p_display_name: displayName,
+        p_body: message,
+        p_parent_comment_id: parentId
       });
       if (error) throw error;
       saveDeviceName(displayName);
@@ -213,23 +205,26 @@ function NotificationCenter() {
   const unread = items.filter(item => !item.read_at).length;
 
   const load = async () => {
-    const { data, error } = await blogClient.from('apokolips_blog_notifications')
-      .select('id,title,body,target_url,created_at,read_at')
-      .eq('recipient_visitor_id', visitorId).order('created_at', { ascending: false }).limit(30);
+    const { data, error } = await blogClient.rpc('apokolips_blog_get_notifications', {
+      p_visitor_id: visitorId
+    });
     if (error) { console.warn('Could not load notifications:', error); return; }
     setItems(data || []);
   };
   useEffect(() => {
     load();
-    const channel = blogClient.channel('apokolips-blog-notifications-' + visitorId)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'apokolips_blog_notifications', filter: 'recipient_visitor_id=eq.' + visitorId }, load)
+    const channel = blogClient.channel('apokolips-blog-notifications')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'apokolips_blog_notifications' }, load)
       .subscribe();
     return () => { blogClient.removeChannel(channel); };
   }, []);
 
   const openNotification = async item => {
     if (!item.read_at) {
-      await blogClient.from('apokolips_blog_notifications').update({ read_at: new Date().toISOString() }).eq('id', item.id);
+      await blogClient.rpc('apokolips_blog_mark_notification_read', {
+        p_visitor_id: visitorId,
+        p_notification_id: item.id
+      });
     }
     window.location.href = item.target_url || './blog.html#memories';
   };
