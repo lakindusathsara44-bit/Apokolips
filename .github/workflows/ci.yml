@@ -42,6 +42,9 @@ jobs:
           npm install --no-save --ignore-scripts @neondatabase/neon-js
           node neon/tests/data-api-smoke.mjs
 
+      - name: Test persistent Blog visitor identity
+        run: node --test blog-app/tests/*.test.mjs
+
       - name: Build React + Vite pages
         run: npm run build
 
