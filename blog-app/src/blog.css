@@ -73,3 +73,12 @@
 .temporary-share-footnote{position:relative;z-index:1;display:flex;align-items:center;gap:8px 18px;flex-wrap:wrap;margin-top:16px;padding-top:13px;border-top:1px solid #1d3046;color:#718ba8;font:8px 'DM Mono',monospace;letter-spacing:1px}
 .temporary-share-footnote span:before{content:"";display:inline-block;width:5px;height:5px;margin:0 7px 1px 0;border-radius:50%;background:#579edc;box-shadow:0 0 8px #328eea}
 @media(max-width:620px){.temporary-share-section{margin:30px 0 42px}.temporary-share-card{padding:18px}.temporary-share-heading{align-items:flex-start;gap:10px}.temporary-share-icon{flex-basis:40px;height:40px;font-size:22px}.temporary-share-lock{padding:8px 9px;font-size:10px}.temporary-share-password-row{flex-direction:column}.temporary-share-password-row button{min-height:42px}.temporary-share-upload{display:grid}.temporary-share-upload-button{min-height:46px}.temporary-share-file{align-items:flex-start;flex-direction:column}.temporary-share-download{align-self:stretch}.temporary-share-file-copy strong{white-space:normal;overflow-wrap:anywhere}}
+
+
+/* Large-file upload progress */
+.temporary-share-progress-wrap{position:relative;z-index:1;display:grid;gap:8px;margin-top:13px;padding:13px;border:1px solid #254361;border-radius:11px;background:#07111fbb}
+.temporary-share-progress-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#86add7;font:9px 'DM Mono',monospace;letter-spacing:1px}
+.temporary-share-progress-meta strong{color:#d9ecff;font-size:11px}
+.temporary-share-progress-track{height:8px;overflow:hidden;border-radius:999px;background:#17283b}
+.temporary-share-progress-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,#287bff,#8bd8ed);box-shadow:0 0 14px #268bff66;transition:width .2s ease}
+.temporary-share-progress-wrap>small{color:#8198b4;font-size:9px;line-height:1.5}

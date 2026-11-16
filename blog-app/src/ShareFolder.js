@@ -2,7 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 
 const h = React.createElement;
 const API_BASE = 'https://br-silent-frost-b3chnc64-aposhare.compute.c-4.ap-southeast-1.aws.neon.tech/';
-const MAX_BYTES = 100 * 1024 * 1024;
+const MAX_BYTES = 1024 * 1024 * 1024;
+const PART_BYTES = 8 * 1024 * 1024;
+const RESUME_KEY = 'apokolips-share-upload-v1';
 
 function sizeLabel(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
@@ -17,6 +19,35 @@ function countdown(value, now) {
 async function readJson(response) {
   return response.json().catch(() => ({}));
 }
+async function postJson(path, body) {
+  const response = await fetch(API_BASE + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const data = await readJson(response);
+  if (!response.ok) throw new Error(data.error || 'The share service could not complete this request.');
+  return data;
+}
+function readResume() {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(RESUME_KEY) || 'null');
+    return value && typeof value.token === 'string' ? value : null;
+  } catch {
+    return null;
+  }
+}
+function saveResume(value) {
+  try {
+    if (value) sessionStorage.setItem(RESUME_KEY, JSON.stringify(value));
+    else sessionStorage.removeItem(RESUME_KEY);
+  } catch {
+    // The upload still works when browser session storage is unavailable.
+  }
+}
+function sameFile(resume, file) {
+  return Boolean(resume && file && resume.name === file.name && resume.size === file.size && resume.lastModified === file.lastModified);
+}
 
 export default function ShareFolder() {
   const [password, setPassword] = useState('');
@@ -26,16 +57,11 @@ export default function ShareFolder() {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('Enter the password to open the temporary file area.');
   const [now, setNow] = useState(Date.now());
+  const [uploadProgress, setUploadProgress] = useState(null);
   const fileInput = useRef(null);
 
   async function refresh(pass = password) {
-    const response = await fetch(API_BASE + 'api/files', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pass })
-    });
-    const data = await readJson(response);
-    if (!response.ok) throw new Error(data.error || 'Could not load shared files.');
+    const data = await postJson('api/files', { password: pass });
     setFiles(Array.isArray(data.files) ? data.files : []);
   }
 
@@ -61,6 +87,7 @@ export default function ShareFolder() {
     setPassword('');
     setFiles([]);
     setSelected(null);
+    setUploadProgress(null);
     if (fileInput.current) fileInput.current.value = '';
     setStatus('Folder locked. Enter the password to continue.');
   }
@@ -69,24 +96,117 @@ export default function ShareFolder() {
     event.preventDefault();
     if (!selected) return;
     if (selected.size > MAX_BYTES) {
-      setStatus('The maximum file size is 100 MB.');
+      setStatus('The maximum file size is 1 GB (1024 MB).');
       return;
     }
+    if (selected.size <= 0) {
+      setStatus('Empty files cannot be uploaded.');
+      return;
+    }
+
     setBusy(true);
-    setStatus('Uploading securely...');
+    setUploadProgress(0);
+    let token = '';
     try {
-      const form = new FormData();
-      form.append('password', password);
-      form.append('file', selected, selected.name);
-      const response = await fetch(API_BASE + 'api/upload', { method: 'POST', body: form });
-      const data = await readJson(response);
-      if (!response.ok) throw new Error(data.error || 'Upload failed.');
+      let resume = readResume();
+      if (sameFile(resume, selected)) {
+        token = resume.token;
+        setStatus('Checking the previous upload so it can resume...');
+      } else {
+        if (resume && resume.token) {
+          try {
+            await postJson('api/upload/abort', { password, token: resume.token });
+          } catch (_) {
+            // It may already have expired or been cleaned up.
+          }
+          saveResume(null);
+        }
+        setStatus('Preparing secure upload...');
+        const started = await postJson('api/upload/start', {
+          password,
+          name: selected.name,
+          size: selected.size,
+          contentType: selected.type || 'application/octet-stream'
+        });
+        token = started.token;
+        resume = {
+          token,
+          name: selected.name,
+          size: selected.size,
+          lastModified: selected.lastModified
+        };
+        saveResume(resume);
+      }
+
+      const statusData = await postJson('api/upload/status', { password, token });
+      const completed = new Map(statusData.parts.map(part => [part.partNumber, part]));
+      const totalParts = Math.ceil(selected.size / PART_BYTES);
+      const missing = [];
+      let uploadedBytes = 0;
+      for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
+        const existing = completed.get(partNumber);
+        const expectedSize = Math.min(PART_BYTES, selected.size - ((partNumber - 1) * PART_BYTES));
+        if (existing && existing.size === expectedSize) uploadedBytes += expectedSize;
+        else missing.push(partNumber);
+      }
+      setUploadProgress(Math.min(100, (uploadedBytes / selected.size) * 100));
+      if (missing.length) {
+        setStatus('Uploading ' + (totalParts - missing.length) + ' of ' + totalParts + ' parts already complete...');
+      } else {
+        setStatus('All parts are present. Verifying the completed file...');
+      }
+
+      let cursor = 0;
+      let fatalError = null;
+      async function worker() {
+        while (cursor < missing.length && !fatalError) {
+          const partNumber = missing[cursor++];
+          const start = (partNumber - 1) * PART_BYTES;
+          const chunk = selected.slice(start, Math.min(selected.size, start + PART_BYTES));
+          let sent = false;
+          for (let attempt = 1; attempt <= 3 && !sent; attempt++) {
+            try {
+              const response = await fetch(API_BASE + 'api/upload/part', {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/octet-stream',
+                  'X-Share-Password': password,
+                  'X-Share-Upload-Token': token,
+                  'X-Share-Part-Number': String(partNumber)
+                },
+                body: chunk
+              });
+              const data = await readJson(response);
+              if (!response.ok) throw new Error(data.error || 'Part ' + partNumber + ' failed.');
+              sent = true;
+              uploadedBytes += chunk.size;
+              setUploadProgress(Math.min(100, (uploadedBytes / selected.size) * 100));
+              setStatus('Uploading part ' + partNumber + ' of ' + totalParts + ' • ' + sizeLabel(uploadedBytes) + ' / ' + sizeLabel(selected.size));
+            } catch (error) {
+              if (attempt === 3) fatalError = error;
+              else {
+                setStatus('Retrying part ' + partNumber + ' (' + (attempt + 1) + '/3)...');
+                await new Promise(resolve => window.setTimeout(resolve, attempt * 700));
+              }
+            }
+          }
+        }
+      }
+      await Promise.all(Array.from({ length: Math.min(3, missing.length) }, () => worker()));
+      if (fatalError) throw fatalError;
+
+      setStatus('All chunks uploaded. Assembling and verifying the file...');
+      const finished = await postJson('api/upload/complete', { password, token });
+      saveResume(null);
       await refresh(password);
       setSelected(null);
       if (fileInput.current) fileInput.current.value = '';
-      setStatus('Upload complete. The file expires automatically after 10 minutes.');
+      setUploadProgress(null);
+      setStatus('Upload complete. The file is available for 10 minutes.');
+      return finished.file;
     } catch (error) {
-      setStatus(error.message || 'Upload failed.');
+      if (/invalid or has expired|expired/i.test(error.message || '')) saveResume(null);
+      setStatus((error.message || 'Upload failed.') + ' Select the same file and retry to resume completed chunks.');
     } finally {
       setBusy(false);
     }
@@ -96,25 +216,15 @@ export default function ShareFolder() {
     setBusy(true);
     setStatus('Preparing protected download...');
     try {
-      const response = await fetch(API_BASE + 'api/download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, key: file.key })
-      });
-      if (!response.ok) {
-        const data = await readJson(response);
-        throw new Error(data.error || 'Download failed.');
-      }
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+      const data = await postJson('api/download-url', { password, key: file.key });
       const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = file.name || 'shared-file';
+      anchor.href = data.url;
+      anchor.rel = 'noopener';
+      anchor.style.display = 'none';
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 30000);
-      setStatus('Download started.');
+      setStatus('Download started. The private storage link expires shortly.');
       await refresh(password);
     } catch (error) {
       setStatus(error.message || 'Download failed.');
@@ -138,6 +248,8 @@ export default function ShareFolder() {
   }, [unlocked, password]);
 
   const activeFiles = files.filter(file => new Date(file.expiresAt).getTime() > now);
+  const resume = readResume();
+  const canResume = sameFile(resume, selected);
 
   return h('section', { className: 'temporary-share-section blog-reveal', id: 'share-folder' },
     h('div', { className: 'temporary-share-card' },
@@ -148,7 +260,7 @@ export default function ShareFolder() {
           h('h2', null, 'Temporary Share Folder'),
           h('p', null, 'Share files and media securely. Each upload is available for 10 minutes.')
         ),
-        unlocked ? h('button', { type: 'button', className: 'temporary-share-lock', onClick: lock }, 'Lock folder') : null
+        unlocked ? h('button', { type: 'button', className: 'temporary-share-lock', onClick: lock, disabled: busy }, 'Lock folder') : null
       ),
       unlocked ? h(React.Fragment, null,
         h('form', { className: 'temporary-share-upload', onSubmit: upload },
@@ -156,17 +268,27 @@ export default function ShareFolder() {
             h('span', { className: 'temporary-share-upload-symbol', 'aria-hidden': 'true' }, '+'),
             h('span', null,
               h('strong', null, selected ? selected.name : 'Choose any file or media'),
-              h('small', null, selected ? sizeLabel(selected.size) : 'Photos / Videos / Documents / ZIP / Any format / Up to 100 MB')
+              h('small', null, selected ? sizeLabel(selected.size) + ' / ' + (selected.size > MAX_BYTES ? 'File is larger than 1 GB' : canResume ? 'Previous upload found / ready to resume' : 'Ready to upload') : 'Photos / Videos / Documents / ZIP / Any format / Up to 1 GB')
             )
           ),
           h('input', {
             ref: fileInput, id: 'temporaryShareFile', className: 'temporary-share-file-input', type: 'file',
             onChange: event => setSelected(event.target.files && event.target.files[0] || null)
           }),
-          h('button', { type: 'submit', className: 'temporary-share-upload-button', disabled: busy || !selected },
-            busy ? 'Uploading...' : 'Upload for 10 minutes'
+          h('button', { type: 'submit', className: 'temporary-share-upload-button', disabled: busy || !selected || selected.size > MAX_BYTES },
+            busy ? 'Uploading...' : canResume ? 'Resume upload' : 'Upload for 10 minutes'
           )
         ),
+        uploadProgress !== null ? h('div', { className: 'temporary-share-progress-wrap', 'aria-live': 'polite' },
+          h('div', { className: 'temporary-share-progress-meta' },
+            h('span', null, 'UPLOAD PROGRESS'),
+            h('strong', null, Math.round(uploadProgress) + '%')
+          ),
+          h('div', { className: 'temporary-share-progress-track' },
+            h('div', { className: 'temporary-share-progress-fill', style: { width: uploadProgress + '%' } })
+          ),
+          h('small', null, '8 MB chunks / automatic retry / reselect the same file to resume after refreshing this page')
+        ) : null,
         h('div', { className: 'temporary-share-list-heading' },
           h('strong', null, 'Available files'),
           h('span', null, activeFiles.length + ' FILE' + (activeFiles.length === 1 ? '' : 'S'))
@@ -202,7 +324,8 @@ export default function ShareFolder() {
       h('div', { className: 'temporary-share-footnote' },
         h('span', null, 'PASSWORD REQUIRED'),
         h('span', null, 'AUTO DELETE / 10:00'),
-        h('span', null, 'PRIVATE STORAGE')
+        h('span', null, 'PRIVATE STORAGE'),
+        h('span', null, 'MAX FILE / 1 GB')
       )
     )
   );
