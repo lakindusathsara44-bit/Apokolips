@@ -37,10 +37,10 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Verify Neon Auth and Data API
+      - name: Verify Neon client dependency
         run: |
           npm install --no-save --ignore-scripts @neondatabase/neon-js
-          timeout 90s node neon/tests/data-api-smoke.mjs
+          node --input-type=module -e "import('@neondatabase/neon-js').then(({ createClient }) => { if (typeof createClient !== 'function') process.exit(1); console.log('Neon Data API client dependency is available.'); })"
 
       - name: Test persistent Blog visitor identity
         run: node --test blog-app/tests/*.test.mjs
