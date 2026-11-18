@@ -115,4 +115,4 @@ Run a feature-parity comparison against an independent conventional Python imple
 python -m benchmarks.equivalent_workload --sizes 100,1000 --rounds 5
 ```
 
-The runner compares normalised semantic summaries before accepting timings. Read [BENCHMARK_PROTOCOL.md](research/BENCHMARK_PROTOCOL.md) before interpreting results. It is exploratory evidence, not a proof of novelty or general performance superiority.
+The runner compares normalised semantic summaries before accepting timings. Read [BENCHMARK_PROTOCOL.md](research/BENCHMARK_PROTOCOL.md) before interpreting results and [BENCHMARK_RESULTS.md](research/BENCHMARK_RESULTS.md) for the first successful CI measurements. The initial CI run found no speed advantage for NEXIST; this is exploratory evidence, not a proof of novelty or general performance superiority.
