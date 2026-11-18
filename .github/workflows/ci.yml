@@ -61,6 +61,30 @@ jobs:
         working-directory: nexist-core
         run: python -m examples.evidence_lifecycle
 
+      - name: Smoke-test NEXIST Q-Intelligence example
+        working-directory: nexist-core
+        run: python -m examples.q_intelligence
+
+      - name: Check inline NEXIST demo JavaScript
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          for page in ("nexist-evidence.html", "nexist-qintelligence.html"):
+              source = Path(page).read_text(encoding="utf-8")
+              scripts = re.findall(r"<script>(.*?)</script>", source, re.DOTALL)
+              if not scripts:
+                  raise SystemExit(f"No inline demo script found in {page}.")
+              output = Path("/tmp") / (page + ".inline.js")
+              output.write_text("\n".join(scripts), encoding="utf-8")
+              print(f"Extracted inline script from {page}")
+          PY
+          node --check /tmp/nexist-evidence.html.inline.js
+          node --check /tmp/nexist-qintelligence.html.inline.js
+
+      - name: Check NEXIST Q-Intelligence server adapter
+        run: node --check neon-functions/nxqai/index.mjs
+
       - name: Check inline NEXIST evidence page JavaScript
         run: |
           python - <<'PY'
