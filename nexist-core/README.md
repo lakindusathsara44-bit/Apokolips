@@ -14,7 +14,7 @@ NEXIST is an experimental data-model prototype for representing **potential digi
 From this directory:
 
 ```bash
-python -m unittest discover -s tests -v
+python -m unittest discover -s tests -t . -v
 ```
 
 ## Quick example
