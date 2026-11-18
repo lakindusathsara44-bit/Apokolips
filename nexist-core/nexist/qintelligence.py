@@ -113,6 +113,25 @@ def _prepare_problem(
 
     deps = validate_pairs(dependencies, "dependency")
     conflict_pairs = validate_pairs(conflicts, "conflict")
+    dependency_graph = {item_id: set() for item_id in ids}
+    for child_id, parent_id in deps:
+        dependency_graph[child_id].add(parent_id)
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(node: str) -> None:
+        if node in visiting:
+            raise NXValidationError("Selection dependencies must be acyclic.")
+        if node in visited:
+            return
+        visiting.add(node)
+        for parent_id in dependency_graph[node]:
+            visit(parent_id)
+        visiting.remove(node)
+        visited.add(node)
+
+    for node in dependency_graph:
+        visit(node)
     benefit_total = sum(float(item.benefit) for item in items)
     penalty = max(1.0, benefit_total + 1.0)
     scores, costs, benefits, feasible = [], [], [], []
