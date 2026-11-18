@@ -177,11 +177,11 @@ export default {
     if (!origin || !ALLOWED_ORIGINS.has(origin)) {
       return response({ error: "A permitted browser Origin header is required." }, 403);
     }
-    if (!hasValidAccessCode(request)) {
-      return response({ error: "Project access code required.", code: "ACCESS_DENIED" }, 401, origin);
-    }
     if (!allowRequest(request)) {
       return response({ error: "Rate limit reached. Try again later.", code: "RATE_LIMIT" }, 429, origin);
+    }
+    if (!hasValidAccessCode(request)) {
+      return response({ error: "Project access code required.", code: "ACCESS_DENIED" }, 401, origin);
     }
     if (!gatewayBase() || !gatewayToken()) {
       return response({ error: "Neon AI Gateway credentials are not available in this function deployment.", code: "AI_NOT_CONFIGURED" }, 503, origin);
