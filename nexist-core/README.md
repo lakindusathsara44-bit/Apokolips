@@ -134,3 +134,38 @@ Key behaviours:
 - Evidence snapshots use their own nexist-evidence-0.1 JSON format.
 
 The source labels and timestamps are caller-supplied metadata; they do not authenticate the source. The engine has no identity system, access controls, signature verification, multi-user concurrency, or tamper-proof storage. Do not use it to protect confidential data. Read research/EVIDENCE_LIFECYCLE.md for its related-work boundary and limitations.
+
+
+## NEXIST Q-Intelligence (experimental v0.4)
+
+Q-Intelligence combines the evidence-aware lifecycle with a small p=1 QAOA-style binary selection experiment.
+
+- Candidate decisions are represented by qubits in a local state-vector simulation.
+- A diagonal phase separator encodes candidate benefit, resource budget, dependencies, and conflicts.
+- An RX mixer explores superpositions; a simple grid search selects gamma and beta.
+- The result reports sampled selections, feasibility probability, an exhaustive classical optimum, and the evidence-evaluation IDs that admitted the candidate units.
+- The optimization method never changes NEXIST lifecycle states, issues approval, or realizes a unit.
+
+Run the example from this directory:
+
+    python -m examples.q_intelligence
+
+The standard engine uses only the Python standard library and is limited to 12 qubits (2^n state-vector amplitudes). This is intentionally small and runs on ordinary computers. It is a simulator, not a physical quantum processor and not proof of quantum advantage.
+
+For an optional Qiskit Aer circuit sampler, install:
+
+    pip install -r requirements-quantum.txt
+
+The optional adapter samples a QAOA circuit in Qiskit Aer. It still uses a local simulator; a real quantum hardware backend is a separate future integration.
+
+## Hybrid AI boundary
+
+The hosted AI advisor is a separate server-side adapter using Hugging Face Inference Providers and the open-weight model openai/gpt-oss-120b. The server credential is kept in the Neon Function environment. The AI may structure a user goal into candidate proposals, but AI output is never evidence. Each candidate remains POTENTIAL until a human supplies evidence and the evidence-aware engine records a current passing evaluation.
+
+The full workflow is:
+
+    User goal -> AI proposal -> NEXIST evidence gate
+              -> QAOA selection -> classical validation
+              -> human approval -> explicit realization
+
+The browser page is a demonstration UI. Its local demo records are not the persistent Python engine. The hosted AI endpoint is not active until the server-side HF_TOKEN with Inference Providers permission is configured. Model availability and provider pricing can change.
