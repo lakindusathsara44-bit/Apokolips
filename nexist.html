@@ -135,7 +135,7 @@
             <div class="nx-field"><label for="nx-label">UNIT LABEL</label><input id="nx-label" maxlength="70" required placeholder="e.g. Future Research Lab"></div>
             <div class="nx-field"><label for="nx-kind">UNIT TYPE</label><input id="nx-kind" maxlength="40" required value="concept"></div>
             <div class="nx-field"><label for="nx-requirement-key">REQUIREMENT FIELD</label><input id="nx-requirement-key" maxlength="60" value="resources" placeholder="e.g. resources"><small>Leave blank to create a unit without a requirement.</small></div>
-            <div class="nx-field"><label for="nx-operator">CONDITION</label><select id="nx-operator"><option value="gte">Greater than or equal to (≥)</option><option value="eq">Equal to (=)</option><option value="gt">Greater than (&gt;)</option><option value="lte">Less than or equal to (≤)</option><option value="lt">Less than (&lt;)</option><option value="exists">Field exists</option><option value="contains">Contains value</option></select></div>
+            <div class="nx-field"><label for="nx-operator">CONDITION</label><select id="nx-operator"><option value="gte">Greater than or equal to (≥)</option><option value="eq">Equal to (=)</option><option value="ne">Not equal to (≠)</option><option value="gt">Greater than (&gt;)</option><option value="lte">Less than or equal to (≤)</option><option value="lt">Less than (&lt;)</option><option value="exists">Field exists</option><option value="in">Value is in list</option><option value="contains">Contains value</option></select></div>
             <div class="nx-field"><label for="nx-expected">EXPECTED VALUE</label><input id="nx-expected" value="10" placeholder="e.g. 10"></div>
             <div class="nx-field"><label for="nx-facts">FACTS SNAPSHOT (JSON)</label><textarea id="nx-facts" spellcheck="false">{"resources": 12}</textarea><small>Change the facts before pressing Evaluate.</small></div>
           </div>
@@ -177,6 +177,18 @@
       <div class="nx-note"><strong>Scope boundary:</strong> “Realised” means explicitly recorded as a state inside NEXIST. It does not mean that a physical object, service, or real-world event has automatically been created.</div>
     </section>
 
+    <section class="nx-section" id="nx-documentation">
+      <div class="eyebrow">06 / DOCUMENTATION & SOURCE</div>
+      <h2 class="nx-section-heading">Explore the NEXIST research files</h2>
+      <p class="nx-muted">The specification defines the current model's rules. The Python package is the reference prototype; the browser playground above is a separate, temporary demonstration and does not save data to the Python engine.</p>
+      <div class="nx-grid">
+        <article class="nx-panel"><div class="mini">MODEL RULES</div><h3>Formal specification</h3><p>Lifecycle semantics, requirement operators, invariants, validation targets, and open research hypotheses.</p><a class="project-link" href="https://github.com/lakindusathsara44-bit/Apokolips/blob/feature/nexist-project-page/nexist-core/SPECIFICATION.md" target="_blank" rel="noopener">READ SPECIFICATION ↗</a></article>
+        <article class="nx-panel"><div class="mini">PYTHON PACKAGE</div><h3>Core documentation</h3><p>Install instructions, quick example, supported operations, and known limitations of the prototype.</p><a class="project-link" href="https://github.com/lakindusathsara44-bit/Apokolips/tree/feature/nexist-project-page/nexist-core" target="_blank" rel="noopener">OPEN CORE SOURCE ↗</a></article>
+        <article class="nx-panel"><div class="mini">REPRODUCIBILITY</div><h3>Tests & examples</h3><p>Run the unit tests and inspect a small quickstart example before experimenting with the engine.</p><a class="project-link" href="https://github.com/lakindusathsara44-bit/Apokolips/tree/feature/nexist-project-page/nexist-core/tests" target="_blank" rel="noopener">VIEW TEST SUITE ↗</a></article>
+      </div>
+      <div class="nx-note"><strong>Research integrity:</strong> passing tests demonstrates that the implementation follows its tested rules; it does not demonstrate that the underlying concept is unprecedented or better than established alternatives.</div>
+    </section>
+
     <div class="nx-footer-links">
       <a href="My-project.html">← ALL PROJECTS</a>
       <a href="https://github.com/lakindusathsara44-bit/Apokolips/tree/feature/nexist-project-page/nexist-core" target="_blank" rel="noopener">PYTHON CORE SOURCE ↗</a>
@@ -199,7 +211,12 @@
         try { return JSON.parse(text); } catch (_) { return text; }
       }
       function readPath(object,path){
-        return path.split('.').reduce((value,key) => value && Object.prototype.hasOwnProperty.call(value,key) ? value[key] : undefined, object);
+        let current = object;
+        for(const key of path.split('.')){
+          if(current === null || typeof current !== 'object' || !Object.prototype.hasOwnProperty.call(current,key)) return undefined;
+          current = current[key];
+        }
+        return current;
       }
       function conditionPasses(actual, requirement){
         if(requirement.operator === 'exists') return actual !== undefined;
@@ -207,6 +224,12 @@
         const expected = requirement.expected;
         switch(requirement.operator){
           case 'eq': return actual === expected;
+          case 'ne': return actual !== expected;
+          case 'in':
+            if(Array.isArray(expected)) return expected.includes(actual);
+            if(typeof expected === 'string') return typeof actual === 'string' && expected.includes(actual);
+            if(expected && typeof expected === 'object') return Object.prototype.hasOwnProperty.call(expected,String(actual));
+            return false;
           case 'gt': return typeof actual === 'number' && typeof expected === 'number' && actual > expected;
           case 'gte': return typeof actual === 'number' && typeof expected === 'number' && actual >= expected;
           case 'lt': return typeof actual === 'number' && typeof expected === 'number' && actual < expected;

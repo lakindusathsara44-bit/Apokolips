@@ -60,3 +60,17 @@ Requirements are declarative and support `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `
 - `REALIZED` means realised inside the NEXIST model. It does not assert that a physical object or external process has been created.
 - Composition currently carries parent lineage and inherited requirements. It does not yet implement emergent semantics.
 - A useful next research step is a reproducible comparison against ordinary Python dataclasses plus graph and constraint utilities.
+
+## Formal specification and research status
+
+Read [SPECIFICATION.md](SPECIFICATION.md) for the lifecycle rules, requirement semantics, invariants, persistence boundary, research hypotheses, and evaluation plan. The specification is a draft; NEXIST is an experimental model, not a proven novel computing primitive.
+
+## Test suite
+
+Run from this directory:
+
+```bash
+python -m unittest discover -s tests -t . -v
+```
+
+The `tests/__init__.py` file makes the test directory importable for this explicit `unittest` discovery command, including in GitHub Actions.
