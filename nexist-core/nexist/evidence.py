@@ -127,6 +127,8 @@ class EvidenceAwareEngine(NexistEngine):
         self._validate_actor(actor)
         self._validate_text(source, "Evidence source")
         self._validate_json(value, "Evidence value")
+        if metadata is not None and not isinstance(metadata, Mapping):
+            raise NXValidationError("Evidence metadata must be a mapping.")
         details = copy.deepcopy(dict(metadata or {}))
         self._validate_json(details, "Evidence metadata")
         observed = self._time(observed_at)
@@ -284,6 +286,7 @@ class EvidenceAwareEngine(NexistEngine):
             matching = [e for e in selected if e.fact_path == req.path]
             valid = [e for e in matching if e.status == EvidenceStatus.ACTIVE
                      and self._parse(e.observed_at) <= moment
+                     and self._parse(e.recorded_at) <= moment
                      and (e.expires_at is None or self._parse(e.expires_at) > moment)]
             ids = tuple(e.id for e in matching)
             if not valid:
@@ -346,7 +349,7 @@ class EvidenceAwareEngine(NexistEngine):
             item = self._evidence.get(eid)
             if item is None or item.status != EvidenceStatus.ACTIVE:
                 return False
-            if self._parse(item.observed_at) > moment:
+            if self._parse(item.observed_at) > moment or self._parse(item.recorded_at) > moment:
                 return False
             if item.expires_at and self._parse(item.expires_at) <= moment:
                 return False
