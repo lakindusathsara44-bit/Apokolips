@@ -116,3 +116,21 @@ python -m benchmarks.equivalent_workload --sizes 100,1000 --rounds 5
 ```
 
 The runner compares normalised semantic summaries before accepting timings. Read [BENCHMARK_PROTOCOL.md](research/BENCHMARK_PROTOCOL.md) before interpreting results and [BENCHMARK_RESULTS.md](research/BENCHMARK_RESULTS.md) for the first successful CI measurements. The initial CI run found no speed advantage for NEXIST; this is exploratory evidence, not a proof of novelty or general performance superiority.
+
+
+## Evidence-aware lifecycle extension (experimental v0.3)
+
+The separate EvidenceAwareEngine prototype extends the model with explicit evidence records, per-requirement evaluation results, dependency invalidation, review flags, and one-use approval before realization. It does not change the original NexistEngine facts-based API.
+
+Run the example from this directory with: python -m examples.evidence_lifecycle
+
+Run all tests with: python -m unittest discover -s tests -t . -v
+
+Key behaviours:
+- Evidence records carry a fact path, value, source label, actor, observation time, optional expiry, and revocation details.
+- Checks return PASS, FAIL, UNKNOWN, or CONFLICT. Missing or conflicting evidence cannot count as success.
+- Revoking or expiring evidence invalidates dependent evaluations. An already REALIZED unit remains historical but receives a review-required flag.
+- Realization requires an explicit, one-use authorization bound to the latest passing evidence evaluation.
+- Evidence snapshots use their own nexist-evidence-0.1 JSON format.
+
+The source labels and timestamps are caller-supplied metadata; they do not authenticate the source. The engine has no identity system, access controls, signature verification, multi-user concurrency, or tamper-proof storage. Do not use it to protect confidential data. Read research/EVIDENCE_LIFECYCLE.md for its related-work boundary and limitations.
