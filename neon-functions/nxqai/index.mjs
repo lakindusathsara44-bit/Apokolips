@@ -281,4 +281,5 @@ export function createHandler(env = process.env, fetcher = fetch, clock = () => 
   };
 }
 
-export default { fetch: (request) => createHandler()(request) };
+const handler = createHandler();
+export default { fetch: handler };
