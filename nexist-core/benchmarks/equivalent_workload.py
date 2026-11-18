@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import platform
 import statistics
@@ -56,7 +57,8 @@ def workload(engine, size: int, save_path: Path) -> dict[str, Any]:
     for unit_id in ids[: max(1, size // 10)]:
         engine.realize(unit_id, actor="benchmark")
     for unit_id in ids[-max(1, size // 10):]:
-        if engine.get(unit_id).state.value if hasattr(engine.get(unit_id).state, "value") else engine.get(unit_id).state == "eligible":
+        state = engine.get(unit_id).state
+        if state_name(state) == "eligible":
             engine.archive(unit_id, actor="benchmark")
 
     engine.save(save_path)
@@ -68,6 +70,67 @@ def state_name(state: Any) -> str:
     return state.value if hasattr(state, "value") else str(state)
 
 
+def _field(value: Any, name: str) -> Any:
+    return getattr(value, name) if hasattr(value, name) else value[name]
+
+
+def _normalise_references(value: Any, id_to_label: dict[str, str], key: str | None = None) -> Any:
+    if key == "target_id":
+        return {"target_label": id_to_label.get(value, "<missing>")}
+    if key == "parent_ids":
+        return [id_to_label.get(item, "<missing>") for item in value]
+    if isinstance(value, dict):
+        return {
+            child_key: _normalise_references(child, id_to_label, child_key)
+            for child_key, child in sorted(value.items())
+        }
+    if isinstance(value, list):
+        return [_normalise_references(child, id_to_label) for child in value]
+    return value
+
+
+def semantic_fingerprint(units: list[Any]) -> str:
+    """Hash stable semantic data, ignoring random IDs and event timestamps."""
+    id_to_label = {unit.id: unit.label for unit in units}
+    normalised = []
+    for unit in units:
+        relations = [
+            {
+                "target_label": id_to_label.get(_field(relation, "target_id"), "<missing>"),
+                "relation": _field(relation, "relation"),
+            }
+            for relation in unit.relations
+        ]
+        requirements = [
+            {
+                "path": _field(requirement, "path"),
+                "operator": _field(requirement, "operator"),
+                "expected": _field(requirement, "expected"),
+            }
+            for requirement in unit.requirements
+        ]
+        events = []
+        for event in unit.events:
+            events.append({
+                "type": _field(event, "event_type"),
+                "actor": _field(event, "actor"),
+                "details": _normalise_references(_field(event, "details"), id_to_label),
+            })
+        normalised.append({
+            "label": unit.label,
+            "kind": unit.kind,
+            "state": state_name(unit.state),
+            "attributes": unit.attributes,
+            "requirements": requirements,
+            "relations": sorted(relations, key=lambda item: (item["relation"], item["target_label"])),
+            "parent_labels": [id_to_label.get(item, "<missing>") for item in unit.parent_ids],
+            "events": events,
+        })
+    normalised.sort(key=lambda item: item["label"])
+    encoded = json.dumps(normalised, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
 def summarise(engine) -> dict[str, Any]:
     units = engine.list_units()
     event_counts: dict[str, int] = {}
@@ -76,7 +139,7 @@ def summarise(engine) -> dict[str, Any]:
         state = state_name(unit.state)
         state_counts[state] = state_counts.get(state, 0) + 1
         for event in unit.events:
-            name = event.event_type if hasattr(event, "event_type") else event["event_type"]
+            name = _field(event, "event_type")
             event_counts[name] = event_counts.get(name, 0) + 1
     return {
         "units": len(units),
@@ -86,6 +149,7 @@ def summarise(engine) -> dict[str, Any]:
         "requirements": sum(len(unit.requirements) for unit in units),
         "events": sum(len(unit.events) for unit in units),
         "event_types": dict(sorted(event_counts.items())),
+        "semantic_sha256": semantic_fingerprint(units),
     }
 
 
