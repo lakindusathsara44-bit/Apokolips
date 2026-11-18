@@ -1,27 +1,30 @@
 # NEXIST Q-Intelligence AI endpoint
 
-This folder contains the server-side Neon AI Gateway adapter. The branch AI Gateway is enabled and Neon injects its branch-scoped credentials into this function at runtime.
+This is the server-side adapter for the project's Neon AI Gateway. It does not expose gateway credentials to the browser.
 
 ## Runtime configuration
 
-No Hugging Face token is required. The Neon AI Gateway is enabled on the existing project branch and injects NEON_AI_GATEWAY_BASE_URL and NEON_AI_GATEWAY_TOKEN into the deployed Neon Function. The function verifies that the requested model appears as enabled in the branch model catalogue before making a request.
+Neon injects the branch-scoped values NEON_AI_GATEWAY_BASE_URL and NEON_AI_GATEWAY_TOKEN into the function because AI Gateway is enabled for this project branch.
 
-The default open-weight model is gpt-oss-120b. The current allow-list deliberately limits model selection to this model until usage, provider availability, and cost are reviewed.
+The function also requires:
+- NEXIST_ACCESS_HASH: PBKDF2-SHA256 hash of the project access password.
+- NEXIST_ACCESS_SALT: hexadecimal salt used to derive that hash.
+- NEXIST_SESSION_SECRET: a high-entropy server-only HMAC key for 15-minute API sessions.
+- NEXIST_ALLOWED_ORIGINS: comma-separated allowed browser origins.
+
+The project access password is checked server-side using PBKDF2-SHA256 with 210,000 iterations. Successful unlock creates a short-lived, signed session token. Model catalogue and AI plan routes require that token. The password and session signing secret are never returned to the browser. The frontend stores only the short-lived session token in the current tab's session storage.
 
 ## Routes
 
-- GET /health reports whether the server-side token is configured.
-- POST /plan accepts a JSON prompt and returns a schema-checked proposal.
+- GET /health — reports whether the server-side AI Gateway is configured.
+- POST /auth — verifies the project password and creates a short-lived session token.
+- GET /models — lists currently enabled open-weight models; requires a valid session.
+- POST /plan — creates a structured candidate proposal using a selected enabled open-weight model; requires a valid session.
 
-The endpoint limits prompt length, item count, accepted model IDs, CORS origins, and in-memory request rate. The rate counter is per Function isolate and is not a complete authentication or DDoS control. Before wider public use, add authenticated Neon Auth sessions and/or a durable shared rate limiter. AI output is always AI_PROPOSAL_ONLY and is never treated as evidence or permission to realize an NX Unit.
+The endpoint limits request size, validates the returned proposal, checks the selected model against the live branch catalogue, and rate-limits failed password attempts in each live function instance.
 
-## Provider notes
+This is still a lightweight project gate, not full user identity management. The password is four digits, and in-memory failure throttling is per function instance rather than a durable global limiter. The page warns against confidential data. A public production service should use authenticated individual user accounts and a durable shared rate limiter.
 
-Neon AI Gateway exposes an OpenAI-compatible chat-completions endpoint. The function discovers availability at runtime through the branch-scoped model catalogue. Model access and prepaid AI credits may change. Gateway credentials remain server-side; the frontend never receives them.
+## Model and evidence boundary
 
-
-## Access code gate
-
-The AI planning route requires the same access code used to unlock the research page. The code is stored as the server-side Neon Function environment variable NXQAI_ACCESS_CODE and compared using a constant-time byte comparison. The browser keeps the entered code only in the current tab's session storage and sends it in a request header.
-
-This is still a lightweight shared-code barrier, not strong user authentication: the current four-digit code is easy to guess, and the in-memory rate limit is per isolate. The page warns against confidential data. Before wider public use, replace this with authenticated user sessions and durable shared rate limiting.
+The AI Gateway model catalogue is queried dynamically. Only enabled open-weight model IDs are listed. A model proposal is never treated as evidence, verification, permission, approval, or an execution command. Every imported item starts in POTENTIAL and remains there until evidence is separately supplied and reviewed in NEXIST.
