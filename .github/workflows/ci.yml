@@ -57,9 +57,13 @@ jobs:
         working-directory: nexist-core
         run: python -m examples.quickstart
 
-      - name: Smoke-test NEXIST benchmark runner
+      - name: Test NEXIST comparative research workload
         working-directory: nexist-core
-        run: python -m benchmarks.compare_baseline --units 10 --rounds 1
+        run: python -m unittest tests.test_research -v
+
+      - name: Benchmark NEXIST against conventional Python baseline
+        working-directory: nexist-core
+        run: python -m benchmarks.equivalent_workload --sizes 100,1000 --rounds 3
 
       - name: Compile NEXIST Python modules
         working-directory: nexist-core
