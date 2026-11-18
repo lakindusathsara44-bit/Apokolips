@@ -1,5 +1,16 @@
-"""NEXIST experimental NX data model."""
+"""NEXIST experimental NX data model and evidence-aware extension."""
 from .engine import NexistEngine
+from .evidence import (
+    AuthorizationStatus,
+    CheckStatus,
+    EvidenceAwareEngine,
+    EvidenceCheck,
+    EvidenceEvaluation,
+    EvidenceStatus,
+    EvaluationOutcome,
+    NXEvidence,
+    RealizationAuthorization,
+)
 from .model import (
     NXError,
     NXEvent,
@@ -14,6 +25,15 @@ from .model import (
 
 __all__ = [
     "NexistEngine",
+    "EvidenceAwareEngine",
+    "NXEvidence",
+    "EvidenceCheck",
+    "EvidenceEvaluation",
+    "RealizationAuthorization",
+    "EvidenceStatus",
+    "CheckStatus",
+    "EvaluationOutcome",
+    "AuthorizationStatus",
     "NXError",
     "NXEvent",
     "NXNotFoundError",
@@ -25,4 +45,4 @@ __all__ = [
     "Requirement",
 ]
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
