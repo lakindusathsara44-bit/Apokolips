@@ -59,6 +59,7 @@ class NexistEngine:
     ) -> NXUnit:
         source = self.get(source_id)
         target = self.get(target_id)
+        self._validate_actor(actor)
         self._require_active(source)
         self._require_active(target)
         if not isinstance(relation, str) or not relation.strip():
@@ -78,6 +79,7 @@ class NexistEngine:
         requirements: list[Requirement] | None = None,
         actor: str = "system",
     ) -> NXUnit:
+        self._validate_actor(actor)
         if len(parent_ids) < 2 or len(set(parent_ids)) != len(parent_ids):
             raise NXValidationError("Composition requires at least two unique parents.")
         parents = [self.get(parent_id) for parent_id in parent_ids]
@@ -104,6 +106,7 @@ class NexistEngine:
         self, unit_id: str, facts: Mapping[str, Any], actor: str = "system"
     ) -> NXUnit:
         unit = self.get(unit_id)
+        self._validate_actor(actor)
         self._require_active(unit)
         if unit.state == NXState.REALIZED:
             raise NXStateError("A realised unit cannot be re-evaluated.")
@@ -138,6 +141,7 @@ class NexistEngine:
 
     def archive(self, unit_id: str, actor: str = "system") -> NXUnit:
         unit = self.get(unit_id)
+        self._validate_actor(actor)
         if unit.state == NXState.ARCHIVED:
             raise NXStateError("Unit is already archived.")
         unit.state = NXState.ARCHIVED
@@ -216,11 +220,15 @@ class NexistEngine:
             raise NXStateError("Archived units cannot be used in this operation.")
 
     @staticmethod
+    def _validate_actor(actor: str) -> None:
+        if not isinstance(actor, str) or not actor.strip():
+            raise NXValidationError("Actor must be a non-empty string.")
+
+    @staticmethod
     def _record(
         unit: NXUnit, event_type: str, actor: str, details: dict[str, Any]
     ) -> None:
-        if not isinstance(actor, str) or not actor.strip():
-            raise NXValidationError("Actor must be a non-empty string.")
+        NexistEngine._validate_actor(actor)
         unit.events.append(NXEvent(event_type, actor=actor.strip(), details=details))
 
     @staticmethod
