@@ -104,3 +104,15 @@ python -m benchmarks.compare_baseline --units 1000 --rounds 7
 ```
 
 This runner is deliberately labelled exploratory. It compares a feature-rich managed engine path with a tiny dataclass baseline, so the timings are not a fair feature-for-feature performance contest and must not be used as evidence of novelty. See [benchmarks/README.md](benchmarks/README.md) before interpreting results.
+
+## Comparative research
+
+The initial research notes are in [research/README.md](research/README.md). They identify overlap with RDF, OWL, constraint modelling, UML state machines, event sourcing, and digital twins. The comparison does not support a "world-first" or "new fundamental data structure" claim at this stage.
+
+Run a feature-parity comparison against an independent conventional Python implementation:
+
+```bash
+python -m benchmarks.equivalent_workload --sizes 100,1000 --rounds 5
+```
+
+The runner compares normalised semantic summaries before accepting timings. Read [BENCHMARK_PROTOCOL.md](research/BENCHMARK_PROTOCOL.md) before interpreting results. It is exploratory evidence, not a proof of novelty or general performance superiority.
