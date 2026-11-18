@@ -85,6 +85,22 @@ jobs:
       - name: Check NEXIST Q-Intelligence server adapter
         run: node --check neon-functions/nxqai/index.mjs
 
+      - name: Test NEXIST Q-Intelligence AI adapter
+        run: node --test neon-functions/nxqai/tests.mjs
+
+      - name: Check NEXIST Q-Intelligence page JavaScript
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          source = Path("nexist-qintelligence.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script>(.*?)</script>", source, re.DOTALL)
+          if not scripts:
+              raise SystemExit("No inline Q-Intelligence script found.")
+          Path("/tmp/nexist-qintelligence-inline.js").write_text("\n".join(scripts), encoding="utf-8")
+          PY
+          node --check /tmp/nexist-qintelligence-inline.js
+
       - name: Check inline NEXIST evidence page JavaScript
         run: |
           python - <<'PY'
