@@ -1,12 +1,12 @@
 # NEXIST Q-Intelligence AI endpoint
 
-This folder contains the server-side Hugging Face Inference Providers adapter.
+This folder contains the server-side Neon AI Gateway adapter. The branch AI Gateway is enabled and Neon injects its branch-scoped credentials into this function at runtime.
 
 ## Runtime configuration
 
-Deploy the Neon Function with the HF_TOKEN secret set in the function environment. The token must have the Hugging Face Inference Providers permission. Never put it in browser JavaScript, HTML, the Git repository, or a public CI variable.
+No Hugging Face token is required. The Neon AI Gateway is enabled on the existing project branch and injects NEON_AI_GATEWAY_BASE_URL and NEON_AI_GATEWAY_TOKEN into the deployed Neon Function. The function verifies that the requested model appears as enabled in the branch model catalogue before making a request.
 
-The default open-weight model is openai/gpt-oss-120b. The current allow-list deliberately limits the model selection to that model until usage, provider availability, and cost are reviewed.
+The default open-weight model is gpt-oss-120b. The current allow-list deliberately limits model selection to this model until usage, provider availability, and cost are reviewed.
 
 ## Routes
 
@@ -17,4 +17,4 @@ The endpoint limits prompt length, item count, accepted model IDs, CORS origins,
 
 ## Provider notes
 
-Hugging Face Inference Providers uses an OpenAI-compatible chat-completions endpoint. Model and provider availability, usage credits, and pricing can change. Configure the credential in the deployed function only; the frontend never receives it.
+Neon AI Gateway exposes an OpenAI-compatible chat-completions endpoint. The function discovers availability at runtime through the branch-scoped model catalogue. Model access and prepaid AI credits may change. Gateway credentials remain server-side; the frontend never receives them.
