@@ -163,7 +163,6 @@
         $('projectContent').hidden = false;
         render();
       }
-      if(sessionStorage.getItem('nexistEvidenceUnlocked') === 'yes'){showProject();}
       $('unlockForm').addEventListener('submit',async function(event){
         event.preventDefault();
         $('unlockError').textContent = '';
@@ -345,7 +344,7 @@
         state=fresh();save();render();
       });
       if(!$('observedAt').value)$('observedAt').value=new Date().toISOString().slice(0,16);
-      if(!$('projectContent').hidden)render();
+      if(sessionStorage.getItem('nexistEvidenceUnlocked') === 'yes'){showProject();}
     })();
   </script>
 </body>
