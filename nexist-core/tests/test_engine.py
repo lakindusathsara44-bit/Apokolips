@@ -1,3 +1,4 @@
+import math
 import tempfile
 import unittest
 from pathlib import Path
@@ -147,6 +148,23 @@ class NexistEngineTests(unittest.TestCase):
         for path in (".x", "x.", "x..y", " x"):
             with self.subTest(path=path), self.assertRaises(NXValidationError):
                 Requirement(path, "eq", 1)
+
+    def test_json_numbers_compare_without_boolean_coercion(self):
+        self.assertTrue(NexistEngine._matches(1.0, Requirement("x", "eq", 1)))
+        self.assertFalse(NexistEngine._matches(True, Requirement("x", "eq", 1)))
+
+    def test_non_json_and_non_finite_values_are_rejected(self):
+        with self.assertRaises(NXValidationError):
+            self.engine.create("Bad", "concept", attributes={"value": object()})
+        with self.assertRaises(NXValidationError):
+            self.engine.create("Bad", "concept", attributes={"value": math.nan})
+        unit = self.engine.create("Facts", "concept")
+        with self.assertRaises(NXValidationError):
+            self.engine.evaluate(unit.id, {"value": math.inf})
+
+    def test_compose_rejects_non_list_parent_ids_cleanly(self):
+        with self.assertRaises(NXValidationError):
+            self.engine.compose("not-a-list", "Invalid composition")
 
     def test_load_rejects_missing_relation_targets(self):
         import json

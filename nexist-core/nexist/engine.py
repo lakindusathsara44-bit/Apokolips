@@ -292,6 +292,25 @@ class NexistEngine:
         return current
 
     @staticmethod
+    def _json_equal(left: Any, right: Any) -> bool:
+        """Compare JSON values without treating booleans as numbers."""
+        if isinstance(left, bool) or isinstance(right, bool):
+            return isinstance(left, bool) and isinstance(right, bool) and left == right
+        if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+            return left == right
+        if type(left) is not type(right):
+            return False
+        if isinstance(left, list):
+            return len(left) == len(right) and all(
+                NexistEngine._json_equal(a, b) for a, b in zip(left, right)
+            )
+        if isinstance(left, dict):
+            return left.keys() == right.keys() and all(
+                NexistEngine._json_equal(left[key], right[key]) for key in left
+            )
+        return left == right
+
+    @staticmethod
     def _matches(actual: Any, requirement: Requirement) -> bool:
         operator = requirement.operator
         expected = requirement.expected
@@ -301,7 +320,7 @@ class NexistEngine:
             return operator == "ne"
         try:
             if operator in {"eq", "ne"}:
-                equal = (type(actual) is type(expected) and actual == expected)
+                equal = NexistEngine._json_equal(actual, expected)
                 return equal if operator == "eq" else not equal
             if operator in {"gt", "gte", "lt", "lte"}:
                 if (
@@ -318,7 +337,7 @@ class NexistEngine:
                 }[operator]
             if operator == "in":
                 if isinstance(expected, list):
-                    return any(type(actual) is type(item) and actual == item for item in expected)
+                    return any(NexistEngine._json_equal(actual, item) for item in expected)
                 if isinstance(expected, str):
                     return isinstance(actual, str) and actual in expected
                 if isinstance(expected, dict):
@@ -326,7 +345,7 @@ class NexistEngine:
                 return False
             if operator == "contains":
                 if isinstance(actual, list):
-                    return any(type(expected) is type(item) and expected == item for item in actual)
+                    return any(NexistEngine._json_equal(expected, item) for item in actual)
                 if isinstance(actual, str):
                     return isinstance(expected, str) and expected in actual
                 if isinstance(actual, dict):

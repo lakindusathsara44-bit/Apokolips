@@ -1,6 +1,6 @@
-# NEXIST — Python Core Prototype
+# NEXIST — Python Core Engine v0.2
 
-NEXIST is an experimental data-model prototype for representing **potential digital entities** as NX Units. This folder contains the Python core engine used as the initial implementation of the model.
+NEXIST is an experimental data-model prototype for representing **potential digital entities** as NX Units. This folder contains the Python reference engine for the current experimental model (package version 0.2.0).
 
 > Research status: prototype only. The design is not claimed to be unprecedented or to be a new fundamental computing primitive. Its novelty and practical advantage require comparison with established data models, graph structures, and constraint systems.
 
@@ -74,3 +74,15 @@ python -m unittest discover -s tests -t . -v
 ```
 
 The `tests/__init__.py` file makes the test directory importable for this explicit `unittest` discovery command, including in GitHub Actions.
+
+
+## v0.2 integrity guarantees
+
+- Public methods return detached snapshots. Editing a returned object does not silently mutate engine records.
+- Attributes, requirement values, and facts are checked for JSON compatibility, including finite numbers and string object keys.
+- Requirement comparisons distinguish booleans from numbers while treating JSON integers and floating-point numbers as the same number domain.
+- JSON saves are written to a temporary file and atomically replaced; loading validates record shape and graph references.
+- The loader accepts the earlier `nexist-0.1` file format and writes subsequent saves as `nexist-0.2`.
+- Composition lineage is checked for missing references and cycles when loading persisted data.
+
+The engine is still an in-memory, single-process prototype. It is not thread-safe and does not provide database transactions or distributed consistency.
