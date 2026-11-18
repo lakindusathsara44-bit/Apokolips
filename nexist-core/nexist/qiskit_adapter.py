@@ -56,7 +56,7 @@ def sample_with_qiskit_aer(
     samples = []
     for raw_bits, count in counts.items():
         bit_string = raw_bits.replace(" ", "")
-        mask = int(bit_string[::-1], 2)
+        mask = int(bit_string, 2)
         selected = tuple(problem.candidates[i].unit_id
                          for i in range(len(problem.candidates)) if mask & (1 << i))
         samples.append({
