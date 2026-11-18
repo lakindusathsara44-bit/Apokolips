@@ -1,3 +1,5 @@
+import { timingSafeEqual } from "node:crypto";
+
 const ALLOWED_ORIGINS = new Set([
   "https://apokolips.xyz",
   "https://www.apokolips.xyz",
@@ -119,6 +121,15 @@ function validatePlan(raw, requestedBudget) {
     evidence_verified: false,
   };
 }
+function hasValidAccessCode(request) {
+  const expected = process.env.NXQAI_ACCESS_CODE || "";
+  const supplied = request.headers.get("x-nxqai-access") || "";
+  if (!expected || !supplied) return false;
+  const left = Buffer.from(expected, "utf8");
+  const right = Buffer.from(supplied, "utf8");
+  return left.length === right.length && timingSafeEqual(left, right);
+}
+
 async function modelAvailability() {
   if (!gatewayBase() || !gatewayToken()) {
     return { status: "needs_configuration", message: "Branch AI Gateway credentials are not injected into this function." };
@@ -165,6 +176,9 @@ export default {
     }
     if (!origin || !ALLOWED_ORIGINS.has(origin)) {
       return response({ error: "A permitted browser Origin header is required." }, 403);
+    }
+    if (!hasValidAccessCode(request)) {
+      return response({ error: "Project access code required.", code: "ACCESS_DENIED" }, 401, origin);
     }
     if (!allowRequest(request)) {
       return response({ error: "Rate limit reached. Try again later.", code: "RATE_LIMIT" }, 429, origin);
