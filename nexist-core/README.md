@@ -86,3 +86,21 @@ The `tests/__init__.py` file makes the test directory importable for this explic
 - Composition lineage is checked for missing references and cycles when loading persisted data.
 
 The engine is still an in-memory, single-process prototype. It is not thread-safe and does not provide database transactions or distributed consistency.
+
+## Runnable example
+
+From the `nexist-core` directory:
+
+```bash
+python -m examples.quickstart
+```
+
+## Exploratory baseline timing
+
+From the same directory:
+
+```bash
+python -m benchmarks.compare_baseline --units 1000 --rounds 7
+```
+
+This runner is deliberately labelled exploratory. It compares a feature-rich managed engine path with a tiny dataclass baseline, so the timings are not a fair feature-for-feature performance contest and must not be used as evidence of novelty. See [benchmarks/README.md](benchmarks/README.md) before interpreting results.
