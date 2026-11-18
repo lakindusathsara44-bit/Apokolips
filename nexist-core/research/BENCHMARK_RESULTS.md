@@ -1,54 +1,64 @@
-# NEXIST Comparative Benchmark Results — Initial CI Run
+# NEXIST Comparative Benchmark Results — Initial Replications
 
-**Run date:** 18 November 2026  
-**Source commit:** `9bd8b0bbd53dcd3be63148e82972f7862f12f219`  
-**GitHub Actions run:** [44342126387](https://github.com/lakindusathsara44-bit/Apokolips/actions/runs/44342126387)  
 **Benchmark:** `nexist-equivalent-workload-v0.1`  
 **Python:** 3.15.2  
-**Runner platform:** Linux 7.0.0-1016-aws, x86_64  
-**Repetitions:** 3 per size
+**Workload sizes:** 100 and 1,000 initial units  
+**Repetitions:** 3 per implementation and size  
+**Validation:** Both runs reported matching semantic fingerprints for NEXIST and the conventional reference implementation at both sizes.
 
-## Results
+## Run A
 
-| Initial units | Final units (after composition) | NEXIST median | Reference median | NEXIST / baseline | NEXIST peak traced memory | Reference peak traced memory |
+- GitHub Actions run: [44342126387](https://github.com/lakindusathsara44-bit/Apokolips/actions/runs/44342126387)
+- Source commit: `9bd8b0bbd53dcd3be63148e82972f7862f12f219`
+- Runner: Linux 7.0.0-1016-aws, x86_64
+- Workload semantic parity: true for both sizes
+
+| Initial units | Final units | NEXIST median | Reference median | Time ratio | NEXIST peak traced memory | Reference peak traced memory |
 |---:|---:|---:|---:|---:|---:|---:|
-| 100 | 105 | 15.933 ms | 9.988 ms | 1.595× | 1,080,729 bytes | 1,109,182 bytes |
-| 1,000 | 1,050 | 158.098 ms | 94.829 ms | 1.667× | 10,820,278 bytes | 11,137,838 bytes |
+| 100 | 105 | 15.933 ms | 9.988 ms | 1.595× | 1,080,729 B | 1,109,182 B |
+| 1,000 | 1,050 | 158.098 ms | 94.829 ms | 1.667× | 10,820,278 B | 11,137,838 B |
 
-The benchmark's semantic fingerprint matched for both implementations at both sizes. The workloads also matched on unit-state counts, relationships, parents, requirement count, and event count.
+## Run B — documentation/website replication
 
-### 100-unit run
+- GitHub Actions run: [44342393531](https://github.com/lakindusathsara44-bit/Apokolips/actions/runs/44342393531)
+- Source commit: `ac5c26a153fe11aff111dd907cdf061e61b7fe96`
+- Runner: Linux 7.0.0-1019-azure, x86_64
+- Workload semantic parity: true for both sizes
 
-- NEXIST median: 15.933 ms (samples: 16.565, 15.912, 15.933 ms)
-- Reference median: 9.988 ms (samples: 10.111, 9.655, 9.988 ms)
-- NEXIST was approximately 59.5% slower in this run.
-- Peak traced memory was approximately 2.6% lower for NEXIST.
+| Initial units | Final units | NEXIST median | Reference median | Time ratio | NEXIST peak traced memory | Reference peak traced memory |
+|---:|---:|---:|---:|---:|---:|---:|
+| 100 | 105 | 26.945 ms | 15.305 ms | 1.761× | 1,079,329 B | 1,109,132 B |
+| 1,000 | 1,050 | 258.048 ms | 155.668 ms | 1.658× | 10,820,428 B | 11,129,438 B |
 
-The final snapshot contained 105 units: 85 eligible, 10 realised, and 10 archived; 50 relations, 10 parent references, 115 requirements, and 285 events.
+## Workload contents and semantic parity
 
-### 1,000-unit run
+Both implementations ran the same valid-input scenario:
+- create units with attributes and declared requirements;
+- link unit pairs;
+- evaluate the requirements against the same facts snapshot;
+- compose parent pairs and inherit requirements;
+- evaluate composites;
+- explicitly realise a deterministic subset;
+- archive another subset;
+- save to JSON, reload, and compare normalised semantic fingerprints.
 
-- NEXIST median: 158.098 ms (samples: 158.098, 161.353, 154.464 ms)
-- Reference median: 94.829 ms (samples: 94.829, 94.741, 100.301 ms)
-- NEXIST was approximately 66.7% slower in this run.
-- Peak traced memory was approximately 2.9% lower for NEXIST.
+For 100 initial units, the final persisted dataset contained 105 units, 50 relations, 10 parent references, 115 requirements, and 285 events. For 1,000 initial units, it contained 1,050 units, 500 relations, 100 parent references, 1,150 requirements, and 2,850 events.
 
-The final snapshot contained 1,050 units: 850 eligible, 100 realised, and 100 archived; 500 relations, 100 parent references, 1,150 requirements, and 2,850 events.
+The matching hashes show that the tested end states, attributes, requirements, relationships, parent lineage, event types, event actors, and event details were equivalent after normalising random IDs and ignoring timestamps.
 
 ## Interpretation
 
-This initial measurement does **not** show a speed advantage for NEXIST. For the tested valid-input workload, the conventional reference implementation completed faster. NEXIST's defensive JSON validation, detached snapshots, and engine-level invariant checks are plausible sources of some of the additional cost, but profiling is required before attributing the difference to any particular operation.
+**NEXIST did not show a speed advantage in these tests.** Across the four within-run comparisons, its median end-to-end runtime was approximately 59.5% to 76.1% higher than the conventional reference implementation. The NEXIST implementation also had a roughly 2.6% to 2.9% lower peak `tracemalloc` reading in these runs; this small difference is not evidence of a memory advantage.
 
-The small peak-memory differences are not meaningful evidence of a memory advantage. They are single-run `tracemalloc` peaks, not full process resident-memory measurements.
+The NEXIST engine performs defensive JSON checks, detached snapshots, and engine-level validation. The reference baseline implements the same successful scenario semantics but is not a duplicate of every NEXIST input-rejection safeguard. Some measured runtime difference may therefore be the cost of those additional protections; profiling is required to identify the actual contributors.
 
-These data are not a statistically strong performance study: only three repetitions were run on one hosted runner and one Python build. The baseline also reproduces the successful workload semantics, not every defensive rejection path supported by NEXIST. Do not generalise these timings to Windows, Kali Linux, other Python versions, or production workloads.
+Run A and Run B used different hosted runner platforms. Compare NEXIST with its baseline **within each run** only; do not compare absolute times across the two runners. Each run used only three repetitions on one hosted environment. These results are indicative engineering measurements, not a statistically strong performance study.
 
-## What this result tells us
+## Next experiment
 
-1. The two implementations produced the same normalised semantic result for the tested scenarios. This is useful conformance evidence for the benchmark fixture.
-2. NEXIST currently carries measurable overhead for the chosen workload.
-3. The result does not establish that NEXIST is novel, faster, or generally better than conventional structures.
-4. A next performance study should profile create, evaluate, link, compose, snapshot, and persistence separately; use more repetitions; report CPU and memory details; and compare on more than one machine.
-5. A separate developer study is still needed to test whether the NEXIST API improves modelling clarity or auditability.
+1. Profile `create`, `evaluate`, `link`, `compose`, detached snapshots, and persistence separately.
+2. Add controlled ablation runs to identify the cost of deep-copy snapshots and JSON validation.
+3. Repeat with more rounds and multiple local machines/interpreters, recording CPU model, OS, Python build, and system load.
+4. Run a separate developer study to test whether the API improves modelling clarity or auditability.
 
-**Research conclusion:** retain NEXIST as an experimental model/API. Do not make a "new fundamental data structure" or performance-superiority claim on the basis of this initial benchmark.
+**Research conclusion:** continue NEXIST as an experimental model/API. The current measurements do not support claims that it is faster or a new fundamental data structure.
