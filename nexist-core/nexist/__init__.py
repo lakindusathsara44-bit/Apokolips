@@ -1,4 +1,4 @@
-"""NEXIST experimental NX data model and evidence-aware extension."""
+"""NEXIST experimental NX data model and hybrid Q-Intelligence extension."""
 from .engine import NexistEngine
 from .evidence import (
     AuthorizationStatus,
@@ -22,10 +22,22 @@ from .model import (
     NXValidationError,
     Requirement,
 )
+from .qintelligence import (
+    EvidenceBackedQAOAResult,
+    NexistQIntelligence,
+    QAOAResult,
+    SelectionCandidate,
+    solve_selection,
+)
 
 __all__ = [
     "NexistEngine",
     "EvidenceAwareEngine",
+    "NexistQIntelligence",
+    "SelectionCandidate",
+    "QAOAResult",
+    "EvidenceBackedQAOAResult",
+    "solve_selection",
     "NXEvidence",
     "EvidenceCheck",
     "EvidenceEvaluation",
@@ -45,4 +57,4 @@ __all__ = [
     "Requirement",
 ]
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
