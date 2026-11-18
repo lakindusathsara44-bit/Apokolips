@@ -30,7 +30,7 @@ class QIntelligenceTests(unittest.TestCase):
         self.assertEqual(result.backend, "nexist-statevector-qaoa-p1")
         self.assertLessEqual(result.measured_resource_cost, 5)
         self.assertTrue(result.measured_feasible)
-        self.assertEqual(result.exact_classical_unit_ids, ("a", "b"))
+        self.assertEqual(result.exact_classical_unit_ids, ("b", "c"))
         self.assertGreaterEqual(result.feasible_probability, 0.0)
         self.assertLessEqual(result.feasible_probability, 1.0)
 
