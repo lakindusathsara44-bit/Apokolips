@@ -53,6 +53,18 @@ jobs:
         working-directory: nexist-core
         run: python -m unittest discover -s tests -t . -v
 
+      - name: Smoke-test NEXIST quickstart
+        working-directory: nexist-core
+        run: python -m examples.quickstart
+
+      - name: Smoke-test NEXIST benchmark runner
+        working-directory: nexist-core
+        run: python -m benchmarks.compare_baseline --units 10 --rounds 1
+
+      - name: Compile NEXIST Python modules
+        working-directory: nexist-core
+        run: python -m compileall -q nexist examples benchmarks tests
+
       - name: Check JavaScript syntax
         run: |
           node --check script.js
