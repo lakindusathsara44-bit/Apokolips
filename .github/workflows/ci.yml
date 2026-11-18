@@ -1,3 +1,4 @@
+# Temporary push-triggered validation of the NEXIST Q-Intelligence pull-request snapshot.
 name: Apokolips CI
 
 on:
