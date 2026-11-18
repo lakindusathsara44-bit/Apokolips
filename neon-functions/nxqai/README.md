@@ -18,3 +18,10 @@ The endpoint limits prompt length, item count, accepted model IDs, CORS origins,
 ## Provider notes
 
 Neon AI Gateway exposes an OpenAI-compatible chat-completions endpoint. The function discovers availability at runtime through the branch-scoped model catalogue. Model access and prepaid AI credits may change. Gateway credentials remain server-side; the frontend never receives them.
+
+
+## Access code gate
+
+The AI planning route requires the same access code used to unlock the research page. The code is stored as the server-side Neon Function environment variable NXQAI_ACCESS_CODE and compared using a constant-time byte comparison. The browser keeps the entered code only in the current tab's session storage and sends it in a request header.
+
+This is still a lightweight shared-code barrier, not strong user authentication: the current four-digit code is easy to guess, and the in-memory rate limit is per isolate. The page warns against confidential data. Before wider public use, replace this with authenticated user sessions and durable shared rate limiting.
