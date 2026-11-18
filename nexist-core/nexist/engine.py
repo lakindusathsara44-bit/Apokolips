@@ -1,7 +1,10 @@
 """In-memory NEXIST engine with declarative requirement evaluation."""
 from __future__ import annotations
 
+import copy
 import json
+import os
+import tempfile
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -19,7 +22,7 @@ from .model import (
 
 
 class NexistEngine:
-    FORMAT_VERSION = "nexist-0.1"
+    FORMAT_VERSION = "nexist-0.2"
 
     def __init__(self) -> None:
         self._units: dict[str, NXUnit] = {}
@@ -43,22 +46,41 @@ class NexistEngine:
         reqs = list(requirements or [])
         if any(not isinstance(item, Requirement) for item in reqs):
             raise NXValidationError("Every requirement must be a Requirement.")
-        unit = NXUnit.new(label.strip(), kind.strip(), attributes, reqs)
+        clean_attributes = copy.deepcopy(dict(attributes or {}))
+        clean_requirements = copy.deepcopy(reqs)
+        unit = NXUnit.new(label.strip(), kind.strip(), clean_attributes, clean_requirements)
         self._record(unit, "created", actor, {"label": unit.label, "kind": unit.kind})
         self._units[unit.id] = unit
-        return unit
+        return self._snapshot(unit)
 
     def get(self, unit_id: str) -> NXUnit:
-        try:
-            return self._units[unit_id]
-        except KeyError as exc:
-            raise NXNotFoundError(f"NX Unit not found: {unit_id}") from exc
+        """Return a detached snapshot; mutations must go through engine methods."""
+        return self._snapshot(self._get_internal(unit_id))
+
+    def list_units(
+        self, *, state: NXState | str | None = None, kind: str | None = None
+    ) -> list[NXUnit]:
+        """Return detached snapshots, optionally filtered by lifecycle state or kind."""
+        selected_state = None
+        if state is not None:
+            try:
+                selected_state = state if isinstance(state, NXState) else NXState(state)
+            except (TypeError, ValueError) as exc:
+                raise NXValidationError(f"Unknown NX state: {state!r}") from exc
+        if kind is not None and (not isinstance(kind, str) or not kind.strip()):
+            raise NXValidationError("Unit kind must be a non-empty string.")
+        return [
+            self._snapshot(unit)
+            for unit in self._units.values()
+            if (selected_state is None or unit.state == selected_state)
+            and (kind is None or unit.kind == kind)
+        ]
 
     def link(
         self, source_id: str, target_id: str, relation: str, actor: str = "system"
     ) -> NXUnit:
-        source = self.get(source_id)
-        target = self.get(target_id)
+        source = self._get_internal(source_id)
+        target = self._get_internal(target_id)
         self._validate_actor(actor)
         self._require_active(source)
         self._require_active(target)
@@ -68,7 +90,7 @@ class NexistEngine:
         self._record(source, "linked", actor, {
             "target_id": target.id, "relation": relation.strip()
         })
-        return source
+        return self._snapshot(source)
 
     def compose(
         self,
@@ -82,7 +104,9 @@ class NexistEngine:
         self._validate_actor(actor)
         if len(parent_ids) < 2 or len(set(parent_ids)) != len(parent_ids):
             raise NXValidationError("Composition requires at least two unique parents.")
-        parents = [self.get(parent_id) for parent_id in parent_ids]
+        if not isinstance(parent_ids, list) or any(not isinstance(item, str) or not item for item in parent_ids):
+            raise NXValidationError("Parent IDs must be a list of non-empty strings.")
+        parents = [self._get_internal(parent_id) for parent_id in parent_ids]
         for parent in parents:
             self._require_active(parent)
         inherited = [
@@ -91,21 +115,22 @@ class NexistEngine:
             for requirement in parent.requirements
         ]
         combined = inherited + list(requirements or [])
-        child = self.create(
+        child_snapshot = self.create(
             label=label,
             kind=kind,
             attributes=attributes,
             requirements=combined,
             actor=actor,
         )
+        child = self._get_internal(child_snapshot.id)
         child.parent_ids = [parent.id for parent in parents]
-        self._record(child, "composed", actor, {"parent_ids": child.parent_ids})
-        return child
+        self._record(child, "composed", actor, {"parent_ids": list(child.parent_ids)})
+        return self._snapshot(child)
 
     def evaluate(
         self, unit_id: str, facts: Mapping[str, Any], actor: str = "system"
     ) -> NXUnit:
-        unit = self.get(unit_id)
+        unit = self._get_internal(unit_id)
         self._validate_actor(actor)
         self._require_active(unit)
         if unit.state == NXState.REALIZED:
@@ -127,37 +152,55 @@ class NexistEngine:
             actor,
             {"passed": not failures, "failures": failures},
         )
-        return unit
+        return self._snapshot(unit)
 
     def realize(self, unit_id: str, actor: str) -> NXUnit:
-        unit = self.get(unit_id)
+        unit = self._get_internal(unit_id)
         if not isinstance(actor, str) or not actor.strip():
             raise NXValidationError("Realisation requires a non-empty actor.")
         if unit.state != NXState.ELIGIBLE:
             raise NXStateError("Only an eligible unit can be realised.")
         unit.state = NXState.REALIZED
         self._record(unit, "realized", actor, {})
-        return unit
+        return self._snapshot(unit)
 
     def archive(self, unit_id: str, actor: str = "system") -> NXUnit:
-        unit = self.get(unit_id)
+        unit = self._get_internal(unit_id)
         self._validate_actor(actor)
         if unit.state == NXState.ARCHIVED:
             raise NXStateError("Unit is already archived.")
         unit.state = NXState.ARCHIVED
         self._record(unit, "archived", actor, {})
-        return unit
+        return self._snapshot(unit)
 
     def save(self, path: str | Path) -> None:
+        """Atomically write a versioned UTF-8 JSON snapshot."""
         destination = Path(path)
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        payload = {
-            "format": self.FORMAT_VERSION,
-            "units": [self._unit_to_dict(unit) for unit in self._units.values()],
-        }
-        destination.write_text(
-            json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
+        temporary_name = None
+        try:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            payload = {
+                "format": self.FORMAT_VERSION,
+                "units": [self._unit_to_dict(unit) for unit in self._units.values()],
+            }
+            encoded = json.dumps(
+                payload, indent=2, ensure_ascii=False, allow_nan=False
+            )
+            with tempfile.NamedTemporaryFile(
+                "w", encoding="utf-8", dir=destination.parent,
+                prefix=f".{destination.name}.", suffix=".tmp", delete=False
+            ) as handle:
+                temporary_name = handle.name
+                handle.write(encoded)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary_name, destination)
+            temporary_name = None
+        except (OSError, TypeError, ValueError) as exc:
+            raise NXValidationError(f"Could not save NEXIST data: {exc}") from exc
+        finally:
+            if temporary_name and os.path.exists(temporary_name):
+                os.unlink(temporary_name)
 
     @classmethod
     def load(cls, path: str | Path) -> "NexistEngine":
@@ -166,15 +209,51 @@ class NexistEngine:
             payload = json.loads(source.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             raise NXValidationError(f"Could not read NEXIST data: {exc}") from exc
-        if payload.get("format") != cls.FORMAT_VERSION:
+        if not isinstance(payload, dict):
+            raise NXValidationError("NEXIST file root must be a JSON object.")
+        if payload.get("format") not in {cls.FORMAT_VERSION, "nexist-0.1"}:
             raise NXValidationError("Unsupported NEXIST file format.")
+        records = payload.get("units")
+        if not isinstance(records, list):
+            raise NXValidationError("NEXIST file 'units' value must be a list.")
         engine = cls()
-        for item in payload.get("units", []):
+        for item in records:
             unit = cls._unit_from_dict(item)
             if unit.id in engine._units:
                 raise NXValidationError(f"Duplicate NX Unit ID: {unit.id}")
             engine._units[unit.id] = unit
+        engine._validate_references()
         return engine
+
+    def _get_internal(self, unit_id: str) -> NXUnit:
+        if not isinstance(unit_id, str) or not unit_id:
+            raise NXNotFoundError(f"NX Unit not found: {unit_id!r}")
+        try:
+            return self._units[unit_id]
+        except KeyError as exc:
+            raise NXNotFoundError(f"NX Unit not found: {unit_id}") from exc
+
+    @staticmethod
+    def _snapshot(unit: NXUnit) -> NXUnit:
+        return copy.deepcopy(unit)
+
+    def _validate_references(self) -> None:
+        known_ids = set(self._units)
+        for unit in self._units.values():
+            if len(set(unit.parent_ids)) != len(unit.parent_ids):
+                raise NXValidationError(f"Duplicate parent IDs in NX Unit {unit.id}.")
+            if unit.id in unit.parent_ids:
+                raise NXValidationError(f"NX Unit {unit.id} cannot be its own parent.")
+            if len(unit.parent_ids) == 1:
+                raise NXValidationError(f"NX Unit {unit.id} must have zero or at least two parents.")
+            for parent_id in unit.parent_ids:
+                if parent_id not in known_ids:
+                    raise NXValidationError(f"Unknown parent ID in NX Unit {unit.id}: {parent_id}")
+            for relation in unit.relations:
+                if relation.target_id not in known_ids:
+                    raise NXValidationError(
+                        f"Unknown relation target in NX Unit {unit.id}: {relation.target_id}"
+                    )
 
     @staticmethod
     def _read_path(facts: Mapping[str, Any], path: str) -> Any:
@@ -194,22 +273,38 @@ class NexistEngine:
         if actual is _MISSING:
             return operator == "ne"
         try:
-            if operator == "eq":
-                return actual == expected
-            if operator == "ne":
-                return actual != expected
-            if operator == "gt":
-                return actual > expected
-            if operator == "gte":
-                return actual >= expected
-            if operator == "lt":
-                return actual < expected
-            if operator == "lte":
-                return actual <= expected
+            if operator in {"eq", "ne"}:
+                equal = (type(actual) is type(expected) and actual == expected)
+                return equal if operator == "eq" else not equal
+            if operator in {"gt", "gte", "lt", "lte"}:
+                if (
+                    isinstance(actual, bool) or isinstance(expected, bool)
+                    or not isinstance(actual, (int, float))
+                    or not isinstance(expected, (int, float))
+                ):
+                    return False
+                return {
+                    "gt": actual > expected,
+                    "gte": actual >= expected,
+                    "lt": actual < expected,
+                    "lte": actual <= expected,
+                }[operator]
             if operator == "in":
-                return actual in expected
+                if isinstance(expected, list):
+                    return any(type(actual) is type(item) and actual == item for item in expected)
+                if isinstance(expected, str):
+                    return isinstance(actual, str) and actual in expected
+                if isinstance(expected, dict):
+                    return isinstance(actual, str) and actual in expected
+                return False
             if operator == "contains":
-                return expected in actual
+                if isinstance(actual, list):
+                    return any(type(expected) is type(item) and expected == item for item in actual)
+                if isinstance(actual, str):
+                    return isinstance(expected, str) and expected in actual
+                if isinstance(actual, dict):
+                    return isinstance(expected, str) and expected in actual
+                return False
         except (TypeError, ValueError):
             return False
         return False
@@ -229,7 +324,13 @@ class NexistEngine:
         unit: NXUnit, event_type: str, actor: str, details: dict[str, Any]
     ) -> None:
         NexistEngine._validate_actor(actor)
-        unit.events.append(NXEvent(event_type, actor=actor.strip(), details=details))
+        unit.events.append(
+            NXEvent(
+                event_type,
+                actor=actor.strip(),
+                details=copy.deepcopy(details),
+            )
+        )
 
     @staticmethod
     def _unit_to_dict(unit: NXUnit) -> dict[str, Any]:

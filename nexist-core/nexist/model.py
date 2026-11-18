@@ -45,8 +45,10 @@ class Requirement:
     def __post_init__(self) -> None:
         if not isinstance(self.path, str) or not self.path.strip():
             raise NXValidationError("Requirement path must be a non-empty string.")
-        if self.operator not in SUPPORTED_OPERATORS:
-            raise NXValidationError(f"Unsupported requirement operator: {self.operator}")
+        if self.path != self.path.strip() or any(not part for part in self.path.split(".")):
+            raise NXValidationError("Requirement path must contain non-empty dot-separated keys.")
+        if not isinstance(self.operator, str) or self.operator not in SUPPORTED_OPERATORS:
+            raise NXValidationError(f"Unsupported requirement operator: {self.operator!r}")
 
 
 @dataclass

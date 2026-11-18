@@ -24,3 +24,5 @@ __all__ = [
     "NXValidationError",
     "Requirement",
 ]
+
+__version__ = "0.2.0"
