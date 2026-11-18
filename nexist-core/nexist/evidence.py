@@ -449,3 +449,230 @@ class EvidenceAwareEngine(NexistEngine):
             self._record(unit, event, "system", {"root_unit_id": root, "reason": reason,
                 "evidence_id": evidence_id, "review_required": uid in self._review_required})
 
+        return found
+
+    def add_dependency(self, unit_id: str, dependency_id: str, actor: str = "system") -> None:
+        self._validate_actor(actor)
+        unit, dependency = self._get_internal(unit_id), self._get_internal(dependency_id)
+        self._require_active(unit)
+        self._require_active(dependency)
+        if unit_id == dependency_id or self._depends_on(dependency_id, unit_id):
+            raise NXValidationError("Dependency graph must be acyclic and non-reflexive.")
+        if dependency_id in self._dependencies_of(unit_id):
+            raise NXValidationError("Dependency already exists.")
+        if unit.state == NXState.REALIZED:
+            raise NXStateError("A realised unit cannot gain new dependencies.")
+        self._dependencies.setdefault(unit_id, set()).add(dependency_id)
+        self._record(unit, "dependency_added", actor, {"dependency_id": dependency_id})
+        self._invalidate_tree(unit_id, "dependency_graph_changed")
+
+    # Evaluation -------------------------------------------------------
+    def evaluate(self, unit_id: str, facts: Mapping[str, Any], actor: str = "system"):
+        raise NXStateError("Use evaluate_with_evidence(); raw facts are disabled in this engine.")
+
+    def evaluate_with_evidence(
+        self, unit_id: str, evidence_ids: Iterable[str], actor: str = "system", *,
+        as_of: str | datetime | None = None,
+    ) -> EvidenceEvaluation:
+        return self._evaluate(unit_id, evidence_ids, actor, as_of, "evaluation")
+
+    def _evaluate(self, unit_id, evidence_ids, actor, as_of, purpose) -> EvidenceEvaluation:
+        unit = self._get_internal(unit_id)
+        self._validate_actor(actor)
+        self._require_active(unit)
+        if unit.state == NXState.REALIZED and purpose != "realization_review":
+            raise NXStateError("A realised unit must be checked through review_realization().")
+        if purpose == "realization_review" and unit.state != NXState.REALIZED:
+            raise NXStateError("Realisation review requires a realised unit.")
+        moment = self._time(as_of)
+        if isinstance(evidence_ids, (str, bytes)):
+            raise NXValidationError("Evidence IDs must be a collection, not a string.")
+        selected_ids = list(evidence_ids)
+        if any(not isinstance(x, str) or not x for x in selected_ids) or len(set(selected_ids)) != len(selected_ids):
+            raise NXValidationError("Evidence IDs must be unique non-empty strings.")
+        selected = []
+        for eid in selected_ids:
+            if eid not in self._evidence:
+                raise NXNotFoundError(f"Evidence not found: {eid}")
+            selected.append(self._evidence[eid])
+
+        dependency_snapshot = {}
+        for dependency_id in self._dependencies_of(unit_id):
+            dep = self._get_internal(dependency_id)
+            latest = self.latest_evaluation(dependency_id)
+            if (dep.state not in {NXState.ELIGIBLE, NXState.REALIZED} or latest is None
+                    or latest.outcome != EvaluationOutcome.ELIGIBLE
+                    or not self._is_current(latest, moment) or dependency_id in self._review_required):
+                raise NXStateError(f"Dependency {dependency_id} is not currently eligible.")
+            dependency_snapshot[dependency_id] = latest.id
+
+        checks, used = [], set()
+        for index, req in enumerate(unit.requirements):
+            matching = [e for e in selected if e.fact_path == req.path]
+            valid = [e for e in matching if e.status == EvidenceStatus.ACTIVE
+                     and self._parse(e.observed_at) <= moment
+                     and (e.expires_at is None or self._parse(e.expires_at) > moment)]
+            ids = tuple(e.id for e in matching)
+            if not valid:
+                checks.append(EvidenceCheck(index, req.path, req.operator, copy.deepcopy(req.expected),
+                    CheckStatus.UNKNOWN, False, None, ids, "No selected active evidence is valid at this time."))
+                used.update(ids)
+            elif any(not self._json_equal(valid[0].value, e.value) for e in valid[1:]):
+                checks.append(EvidenceCheck(index, req.path, req.operator, copy.deepcopy(req.expected),
+                    CheckStatus.CONFLICT, True, None, tuple(e.id for e in valid), "Evidence values conflict."))
+                used.update(e.id for e in valid)
+            else:
+                passed = self._matches(valid[0].value, req)
+                checks.append(EvidenceCheck(index, req.path, req.operator, copy.deepcopy(req.expected),
+                    CheckStatus.PASS if passed else CheckStatus.FAIL, True,
+                    copy.deepcopy(valid[0].value), tuple(e.id for e in valid),
+                    "Requirement satisfied." if passed else "Evidence value does not satisfy the requirement."))
+                used.update(e.id for e in valid)
+
+        if any(c.status == CheckStatus.FAIL for c in checks):
+            outcome = EvaluationOutcome.INELIGIBLE
+        elif any(c.status in {CheckStatus.UNKNOWN, CheckStatus.CONFLICT} for c in checks):
+            outcome = EvaluationOutcome.INDETERMINATE
+        else:
+            outcome = EvaluationOutcome.ELIGIBLE
+
+        previous_id = self._latest_evaluation.get(unit_id)
+        if previous_id:
+            previous = self._evaluations[previous_id]
+            self._evaluations[previous_id] = replace(previous, is_current=False)
+            # Including the root clears any approval tied to the old evaluation.
+            self._invalidate_tree(unit_id, "evaluation_changed")
+
+        result = EvidenceEvaluation(
+            f"nxeval_{uuid4().hex}", unit_id, actor.strip(), self._stamp(moment), purpose,
+            outcome, True, tuple(sorted(used)), dict(sorted(dependency_snapshot.items())), tuple(checks),
+        )
+        self._evaluations[result.id] = result
+        self._latest_evaluation[unit_id] = result.id
+        if purpose == "evaluation":
+            unit.state = NXState.ELIGIBLE if outcome == EvaluationOutcome.ELIGIBLE else NXState.POTENTIAL
+        elif outcome == EvaluationOutcome.ELIGIBLE:
+            self._review_required.discard(unit_id)
+        else:
+            self._review_required.add(unit_id)
+        self._record(unit, "evidence_evaluated", actor, {
+            "evaluation_id": result.id, "outcome": outcome.value, "purpose": purpose,
+            "evidence_ids": list(result.evidence_ids),
+        })
+        return copy.deepcopy(result)
+
+    def latest_evaluation(self, unit_id: str) -> EvidenceEvaluation | None:
+        self._get_internal(unit_id)
+        eid = self._latest_evaluation.get(unit_id)
+        return copy.deepcopy(self._evaluations[eid]) if eid else None
+
+    def _is_current(self, evaluation: EvidenceEvaluation, moment: datetime) -> bool:
+        if not evaluation.is_current:
+            return False
+        for eid in evaluation.evidence_ids:
+            item = self._evidence.get(eid)
+            if item is None or item.status != EvidenceStatus.ACTIVE:
+                return False
+            if self._parse(item.observed_at) > moment:
+                return False
+            if item.expires_at and self._parse(item.expires_at) <= moment:
+                return False
+        for uid, evaluation_id in evaluation.dependency_evaluations.items():
+            latest = self._latest_evaluation.get(uid)
+            if latest != evaluation_id or uid in self._review_required:
+                return False
+            dep = self._evaluations.get(evaluation_id)
+            if dep is None or not self._is_current(dep, moment):
+                return False
+        return True
+
+    def evaluation_is_current(self, unit_id: str, *, as_of: str | datetime | None = None) -> bool:
+        evaluation = self.latest_evaluation(unit_id)
+        return bool(evaluation and self._is_current(evaluation, self._time(as_of)))
+
+    # Approval and realization ----------------------------------------
+    def authorize_realization(self, unit_id: str, approver: str, authorization_reference: str):
+        self._validate_actor(approver)
+        self._validate_text(authorization_reference, "Authorization reference")
+        self.expire_due_evidence()
+        unit, evaluation = self._get_internal(unit_id), self.latest_evaluation(unit_id)
+        if (unit.state != NXState.ELIGIBLE or evaluation is None
+                or evaluation.outcome != EvaluationOutcome.ELIGIBLE
+                or evaluation.purpose != "evaluation" or unit_id in self._review_required
+                or not self._is_current(evaluation, self._now())):
+            raise NXStateError("Only a currently eligible unit can be authorised.")
+        old_id = self._pending_authorization.pop(unit_id, None)
+        if old_id:
+            self._authorizations[old_id] = replace(self._authorizations[old_id], status=AuthorizationStatus.INVALIDATED)
+        auth = RealizationAuthorization(
+            f"nxauth_{uuid4().hex}", unit_id, approver.strip(), authorization_reference.strip(),
+            evaluation.id, self._stamp(self._now()),
+        )
+        self._authorizations[auth.id] = auth
+        self._pending_authorization[unit_id] = auth.id
+        self._record(unit, "realization_authorized", approver, {"authorization_id": auth.id, "evaluation_id": evaluation.id})
+        return copy.deepcopy(auth)
+
+    def realize(self, unit_id: str, actor: str):
+        self._validate_actor(actor)
+        self.expire_due_evidence()
+        unit, evaluation = self._get_internal(unit_id), self.latest_evaluation(unit_id)
+        auth_id = self._pending_authorization.get(unit_id)
+        auth = self._authorizations.get(auth_id) if auth_id else None
+        if (auth is None or auth.status != AuthorizationStatus.PENDING or evaluation is None
+                or auth.evaluation_id != evaluation.id or unit.state != NXState.ELIGIBLE
+                or not self._is_current(evaluation, self._now())):
+            raise NXStateError("Realisation requires an unused approval for the current evaluation.")
+        unit_snapshot = super().realize(unit_id, actor)
+        self._authorizations[auth.id] = replace(auth, status=AuthorizationStatus.CONSUMED,
+                                               consumed_at=self._stamp(self._now()))
+        self._pending_authorization.pop(unit_id, None)
+        self._record(unit, "realization_authorization_consumed", actor, {"authorization_id": auth.id})
+        return unit_snapshot
+
+    def review_realization(self, unit_id: str, evidence_ids: Iterable[str], reviewer: str,
+                           review_reference: str, *, as_of: str | datetime | None = None):
+        unit = self._get_internal(unit_id)
+        if unit.state != NXState.REALIZED or unit_id not in self._review_required:
+            raise NXStateError("This realised unit does not currently require review.")
+        self._validate_text(review_reference, "Review reference")
+        result = self._evaluate(unit_id, evidence_ids, reviewer, as_of, "realization_review")
+        self._record(unit, "realization_reviewed", reviewer, {
+            "evaluation_id": result.id, "review_reference": review_reference.strip(),
+            "outcome": result.outcome.value,
+        })
+        return result
+
+    def needs_review(self, unit_id: str) -> bool:
+        self._get_internal(unit_id)
+        return unit_id in self._review_required
+
+    def archive(self, unit_id: str, actor: str = "system"):
+        result = super().archive(unit_id, actor)
+        self._invalidate_tree(unit_id, "dependency_archived", include_root=False)
+        return result
+
+    # Invalidation -----------------------------------------------------
+    def _invalidate_tree(self, root: str, reason: str, evidence_id: str | None = None,
+                         *, include_root: bool = True, invalidated: set[str] | None = None) -> None:
+        affected = ({root} if include_root else set()) | self._dependents(root)
+        for uid in sorted(affected):
+            if invalidated is not None and uid in invalidated:
+                continue
+            if invalidated is not None:
+                invalidated.add(uid)
+            unit = self._get_internal(uid)
+            eid = self._latest_evaluation.get(uid)
+            if eid and self._evaluations[eid].is_current:
+                self._evaluations[eid] = replace(self._evaluations[eid], is_current=False)
+            auth_id = self._pending_authorization.pop(uid, None)
+            if auth_id:
+                self._authorizations[auth_id] = replace(self._authorizations[auth_id], status=AuthorizationStatus.INVALIDATED)
+            if unit.state == NXState.ELIGIBLE:
+                unit.state = NXState.POTENTIAL
+            elif unit.state == NXState.REALIZED:
+                self._review_required.add(uid)
+            event = "evidence_invalidated" if uid == root and reason.startswith("evidence_") else "dependency_invalidated" if uid != root else "evaluation_invalidated"
+            self._record(unit, event, "system", {"root_unit_id": root, "reason": reason,
+                "evidence_id": evidence_id, "review_required": uid in self._review_required})
+
