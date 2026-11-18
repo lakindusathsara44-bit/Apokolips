@@ -100,7 +100,7 @@ function modelRows(catalog) {
 
 function extractJson(content) {
   if (typeof content !== 'string' || !content.trim()) throw new Error('The AI model returned an empty response.');
-  const text = content.trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/, '');
+  const text = content.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
   const start = text.indexOf('{');
   const finish = text.lastIndexOf('}');
   if (start < 0 || finish <= start) throw new Error('The AI model did not return the requested JSON structure.');
@@ -153,7 +153,7 @@ export function createHandler(env = process.env, fetcher = fetch, clock = () => 
   const allowedOrigins = parseOrigins(env);
 
   async function gateway(path, options = {}) {
-    const base = String(env.NEON_AI_GATEWAY_BASE_URL || '').replace(/\\/$/, '');
+    const base = String(env.NEON_AI_GATEWAY_BASE_URL || '').replace(/\/$/, '');
     const token = env.NEON_AI_GATEWAY_TOKEN;
     if (!base || !token) throw new Error('The AI Gateway is not configured for this service.');
     return fetcher(`${base}/v1${path}`, {
@@ -176,7 +176,7 @@ export function createHandler(env = process.env, fetcher = fetch, clock = () => 
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
 
     const url = new URL(request.url);
-    const path = url.pathname.replace(/\\/+$/, '') || '/';
+    const path = url.pathname.replace(/\/+$/, '') || '/';
     const now = clock();
 
     if (request.method === 'GET' && path === '/health') {
