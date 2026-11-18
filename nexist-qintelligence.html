@@ -311,6 +311,15 @@
         log('UNIT_CREATED',unit.name+' created in POTENTIAL state'+(unit.fromAI?' from an AI proposal.':'.'));
         return unit;
       }
+      function recheckEvidence(unitId){
+        const unit=unitById(unitId);if(!unit)return;
+        if(!activeEvidence(unit).some((item)=>item.value===true)){
+          alert('No active approval evidence is available. Record new evidence first.');return;
+        }
+        unit.status='ELIGIBLE';unit.needsReview=false;store.lastResult=null;
+        log('EVIDENCE_RECHECKED',unit.name+' was re-evaluated using its active evidence records.');
+        save();renderAll();
+      }
       function recordApproval(unitId){
         const unit=unitById(unitId);if(!unit)return;
         const source=prompt('Enter the source document or approval reference you have reviewed. This label is user-supplied and is NOT independently verified.');
@@ -352,6 +361,10 @@
         const field=kind==='dependency'?'dependencies':'conflicts';
         if(unit[field].includes(dependencyId)){alert('This relationship already exists.');return;}
         unit[field].push(dependencyId);
+        if(kind==='dependency'&&unit.status==='ELIGIBLE'){
+          unit.status='POTENTIAL';
+          log('EVALUATION_INVALIDATED',unit.name+' must recheck its evidence after the dependency graph changed.');
+        }
         store.lastResult=null;
         log(kind.toUpperCase()+'_ADDED',unit.name+' relationship added to '+target.name+'.');
         save();renderAll();
@@ -365,8 +378,15 @@
           return {unit,item};
         });
         for(const entry of added){
-          entry.unit.dependencies=(entry.item.depends_on_titles||[]).map((title)=>titleMap.get(String(title).toLowerCase())).filter(Boolean);
-          entry.unit.conflicts=(entry.item.conflicts_with_titles||[]).map((title)=>titleMap.get(String(title).toLowerCase())).filter(Boolean);
+          for(const title of (entry.item.depends_on_titles||[])){
+            const targetId=titleMap.get(String(title).toLowerCase());
+            if(targetId&&canDependOn(entry.unit.id,targetId))entry.unit.dependencies.push(targetId);
+            else if(targetId)log('AI_RELATION_SKIPPED','A cyclic AI dependency was skipped for '+entry.unit.name+'.');
+          }
+          for(const title of (entry.item.conflicts_with_titles||[])){
+            const targetId=titleMap.get(String(title).toLowerCase());
+            if(targetId&&targetId!==entry.unit.id)entry.unit.conflicts.push(targetId);
+          }
         }
         store.aiPlan=null;store.lastResult=null;
         log('AI_PROPOSALS_IMPORTED',added.length+' AI candidates added as POTENTIAL units. Evidence is still required.');
@@ -383,9 +403,10 @@
           const status=unit.status.toLowerCase();
           const deps=unit.dependencies.map((id)=>unitById(id)?.name||id).map(esc).join(', ')||'None';
           const conflicts=unit.conflicts.map((id)=>unitById(id)?.name||id).map(esc).join(', ')||'None';
+          const recheckButton=unit.status==='POTENTIAL'&&activeEvidence(unit).some((item)=>item.value===true)?'<button class="qi-btn" data-action="recheck" data-id="'+esc(unit.id)+'">RECHECK EVIDENCE</button>':'';
           const proofs=unit.evidence.map((item)=>'<p>Evidence: '+esc(item.source)+' · '+esc(item.status)+'</p>').join('');
           const options=eligible.filter((other)=>other.id!==unit.id).map((other)=>'<option value="'+esc(other.id)+'">'+esc(other.name)+'</option>').join('');
-          return '<article class="qi-card"><div class="qi-card-top"><span class="qi-id">'+esc(unit.id)+'</span><span class="qi-state '+status+'">'+esc(unit.status)+'</span></div><h4>'+esc(unit.name)+'</h4><p>Benefit: '+esc(unit.benefit)+' · Resource cost: '+esc(unit.resourceCost)+'</p><p>Created: '+esc(new Date(unit.createdAt).toLocaleString())+(unit.fromAI?' · AI PROPOSAL':'')+'</p>'+proofs+'<p>Depends on: '+deps+'</p><p>Conflicts with: '+conflicts+'</p><button class="qi-btn" data-action="evidence" data-id="'+esc(unit.id)+'">＋ RECORD APPROVAL EVIDENCE</button><button class="qi-btn warn" data-action="revoke" data-id="'+esc(unit.id)+'" '+(activeEvidence(unit).length?'':'disabled')+'>REVOKE EVIDENCE</button><div class="qi-row"><select class="qi-select" data-rel="'+esc(unit.id)+'" data-kind="dependency"><option value="">Add dependency…</option>'+options+'</select><button class="qi-btn" data-action="dependency" data-id="'+esc(unit.id)+'">ADD DEPENDENCY</button></div><div class="qi-row"><select class="qi-select" data-rel="'+esc(unit.id)+'" data-kind="conflict"><option value="">Add conflict…</option>'+options+'</select><button class="qi-btn" data-action="conflict" data-id="'+esc(unit.id)+'">ADD CONFLICT</button></div></article>';
+          return '<article class="qi-card"><div class="qi-card-top"><span class="qi-id">'+esc(unit.id)+'</span><span class="qi-state '+status+'">'+esc(unit.status)+'</span></div><h4>'+esc(unit.name)+'</h4><p>Benefit: '+esc(unit.benefit)+' · Resource cost: '+esc(unit.resourceCost)+'</p><p>Created: '+esc(new Date(unit.createdAt).toLocaleString())+(unit.fromAI?' · AI PROPOSAL':'')+'</p>'+proofs+'<p>Depends on: '+deps+'</p><p>Conflicts with: '+conflicts+'</p>'+recheckButton+'<button class="qi-btn" data-action="evidence" data-id="'+esc(unit.id)+'">＋ RECORD APPROVAL EVIDENCE</button><button class="qi-btn warn" data-action="revoke" data-id="'+esc(unit.id)+'" '+(activeEvidence(unit).length?'':'disabled')+'>REVOKE EVIDENCE</button><div class="qi-row"><select class="qi-select" data-rel="'+esc(unit.id)+'" data-kind="dependency"><option value="">Add dependency…</option>'+options+'</select><button class="qi-btn" data-action="dependency" data-id="'+esc(unit.id)+'">ADD DEPENDENCY</button></div><div class="qi-row"><select class="qi-select" data-rel="'+esc(unit.id)+'" data-kind="conflict"><option value="">Add conflict…</option>'+options+'</select><button class="qi-btn" data-action="conflict" data-id="'+esc(unit.id)+'">ADD CONFLICT</button></div></article>';
         }).join('');
       }
       function renderAiPlan(){
@@ -499,6 +520,7 @@
         const button=event.target.closest('button[data-action]');if(!button)return;
         const unit=unitById(button.dataset.id);if(!unit)return;
         if(button.dataset.action==='evidence')recordApproval(unit.id);
+        if(button.dataset.action==='recheck')recheckEvidence(unit.id);
         if(button.dataset.action==='revoke')revokeApproval(unit.id);
         if(button.dataset.action==='dependency'||button.dataset.action==='conflict'){
           const kind=button.dataset.action;
