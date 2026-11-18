@@ -264,6 +264,7 @@
             $('unlockError').textContent='AI service is temporarily unavailable. The local quantum simulator will remain available.';
           }
           sessionStorage.setItem('nexistQIntelligenceUnlocked','yes');
+          sessionStorage.setItem('nexistQIntelligenceAccess',$('projectPassword').value);
           $('projectPassword').value='';
           showProject();
         }catch(error){$('unlockError').textContent='Password verification is unavailable in this browser.';}
