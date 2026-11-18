@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050609">
+  <meta name="description" content="NEXIST Evidence Lifecycle — experimental evidence-aware data lifecycle research.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="file_00000000a7ec820890154ca6ed49b608.ico">
+  <link rel="stylesheet" href="style.css?v=20261118evidence">
+  <title>NEXIST Evidence Lifecycle | Apokolips</title>
+  <style>
+    :root{--e-bg:#050609;--e-panel:#0b111b;--e-line:#20324a;--e-text:#edf4ff;--e-muted:#91a0b4;--e-blue:#83b7ff;--e-cyan:#8bd8ed;--e-green:#7de0b1;--e-red:#ff929c;--e-amber:#ffd28a}
+    body{background:var(--e-bg);color:var(--e-text)}
+    .ev-wrap{width:min(1120px,92vw);margin:52px auto 80px;position:relative;z-index:1}
+    .ev-kicker{font:700 11px/1.5 Arial,sans-serif;letter-spacing:2.4px;color:var(--e-cyan);text-transform:uppercase}
+    .ev-title{font-size:clamp(34px,6vw,60px);line-height:1.04;margin:12px 0;color:var(--e-text)}
+    .ev-title span{color:var(--e-blue)}
+    .ev-lead{max-width:780px;color:var(--e-muted);font-size:14px;line-height:1.8}
+    .ev-alert{padding:13px 15px;margin:20px 0;background:#19130d;border:1px solid #624a2c;color:#f4d7a8;border-radius:12px;font-size:12px;line-height:1.7}
+    .ev-tags{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+    .ev-tag{border:1px solid #2c405a;background:#0b1522;color:#c5ddff;border-radius:99px;padding:7px 11px;font-size:10px;font-weight:700;letter-spacing:.8px}
+    .ev-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}
+    .ev-stat,.ev-panel,.ev-card{background:linear-gradient(150deg,#0e1724,#080d15);border:1px solid var(--e-line);border-radius:15px}
+    .ev-stat{padding:15px}.ev-stat strong{display:block;color:var(--e-blue);font-size:26px}.ev-stat span{font-size:10px;color:var(--e-muted);letter-spacing:1px}
+    .ev-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+    .ev-panel{padding:19px;min-width:0}.ev-panel h2{font-size:17px;margin:0 0 9px}.ev-panel p{color:var(--e-muted);font-size:12px;line-height:1.7}
+    .ev-label{display:block;margin:12px 0 6px;font-size:10px;letter-spacing:1px;font-weight:700;color:#b2c3d8}
+    .ev-input,.ev-select{box-sizing:border-box;width:100%;padding:11px 12px;background:#050a12;border:1px solid #293d56;border-radius:9px;color:var(--e-text);font:13px Arial,sans-serif}
+    .ev-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .ev-btn{margin:12px 7px 0 0;padding:10px 13px;border:1px solid #345276;border-radius:9px;background:#10233a;color:#eef6ff;font-size:10px;font-weight:700;letter-spacing:.6px;cursor:pointer}
+    .ev-btn.primary{background:#173b66;border-color:#4b82c0}.ev-btn.warn{border-color:#725832;background:#302312;color:#ffe1ab}
+    .ev-btn.danger{border-color:#75414a;background:#32151b;color:#ffd9df}.ev-btn:disabled{opacity:.4;cursor:not-allowed}
+    .ev-section{margin-top:28px}.ev-section h2{font-size:20px}.ev-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+    .ev-card{padding:15px;min-width:0}.ev-card h3{font-size:14px;margin:8px 0}.ev-card p{font-size:11px;color:var(--e-muted);line-height:1.6;overflow-wrap:anywhere}
+    .ev-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.ev-id{font:10px monospace;color:#8295ad;overflow-wrap:anywhere}
+    .ev-state{font-size:9px;letter-spacing:.7px;font-weight:800;padding:5px 8px;border-radius:99px;background:#172434;color:#b9d5f5}
+    .ev-state.eligible{color:#a7efce;background:#123425}.ev-state.realized{color:#c8d9ff;background:#1c2c50}.ev-state.potential{color:#ffd99b;background:#3a2b16}.ev-state.review{color:#ffd99b;background:#4a3218}.ev-state.revoked,.ev-state.archived{color:#ffb4bd;background:#3c1d24}
+    .ev-checks{border-top:1px solid #23334a;padding-top:8px;margin-top:8px;font-size:11px;line-height:1.7;color:#c6d2e2}
+    .ev-log{max-height:230px;overflow:auto}.ev-log-item{padding:8px 0;border-bottom:1px solid #1b293a;font-size:11px;color:var(--e-muted);line-height:1.6}
+    .ev-gate-wrap{min-height:75vh;display:grid;place-items:center;padding:26px;position:relative;z-index:2}
+    .ev-gate{width:min(420px,100%);padding:28px;border-radius:18px;background:linear-gradient(155deg,#101c2b,#080d15);border:1px solid #263c59;box-shadow:0 25px 80px #0009}
+    .ev-gate h1{font-size:26px;margin:10px 0}.ev-gate p{color:var(--e-muted);font-size:12px;line-height:1.7}
+    .ev-error{min-height:19px;margin-top:9px;color:var(--e-red);font-size:11px}
+    .ev-footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:35px;padding-top:17px;border-top:1px solid #1b293a;color:var(--e-muted);font-size:11px}
+    .ev-footer a{color:#aacbfa;text-decoration:none}
+    @media(max-width:760px){.ev-grid,.ev-list{grid-template-columns:1fr}.ev-stats{gap:7px}.ev-stat{padding:11px}.ev-stat strong{font-size:21px}.ev-wrap{margin-top:35px}.ev-row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <canvas id="rain" aria-hidden="true"></canvas>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="brand-mark"><img src="file_00000000a7ec820890154ca6ed49b608.png" alt="Apokolips logo"></span><span>APOKOLIPS</span></a>
+    <button class="menu-toggle" aria-label="Toggle navigation">☰</button>
+    <nav class="nav"><a href="index.html">Home</a><a href="My-project.html">My Projects</a><a href="nexist.html">NEXIST</a></nav>
+  </header>
+
+  <main class="ev-gate-wrap" id="accessGate">
+    <form class="ev-gate" id="unlockForm" autocomplete="off">
+      <div class="ev-kicker">PRIVATE RESEARCH PREVIEW / PROJECT 008</div>
+      <h1>NEXIST <span style="color:var(--e-blue)">Evidence Lifecycle</span></h1>
+      <p>Enter the project password to access the experimental browser demonstration.</p>
+      <label class="ev-label" for="projectPassword">PROJECT PASSWORD</label>
+      <input class="ev-input" id="projectPassword" type="password" inputmode="numeric" maxlength="32" required autocomplete="current-password">
+      <button class="ev-btn primary" type="submit">UNLOCK PROJECT ↗</button>
+      <div class="ev-error" id="unlockError" role="status" aria-live="polite"></div>
+      <p>Access remains unlocked for this browser tab only.</p>
+    </form>
+  </main>
+
+  <main class="ev-wrap" id="projectContent" hidden>
+    <div class="ev-kicker">APOKOLIPS / EXPERIMENTAL SYSTEMS / PROJECT 008</div>
+    <h1 class="ev-title">NEXIST <span>Evidence Lifecycle.</span></h1>
+    <p class="ev-lead">An evidence-aware extension of the NEXIST experimental model. Requirements are evaluated against explicitly selected records. The prototype records which evidence supported a decision, propagates invalidation across dependencies, and requires a separate approval before realization.</p>
+    <div class="ev-tags"><span class="ev-tag">PYTHON CORE 0.3</span><span class="ev-tag">EVIDENCE PROVENANCE</span><span class="ev-tag">DEPENDENCY INVALIDATION</span><span class="ev-tag">EXPLICIT APPROVAL</span></div>
+    <div class="ev-alert"><strong>Important access limitation:</strong> this is a front-end password gate on a static GitHub Pages site, not server-side authentication. The page source and demo code remain publicly retrievable. A four-digit password is easy to guess. Do not enter real personal, confidential, or sensitive information. The password is a convenience barrier, not a security boundary.</div>
+
+    <section class="ev-stats">
+      <div class="ev-stat"><strong id="unitCount">0</strong><span>NX UNITS</span></div>
+      <div class="ev-stat"><strong id="evidenceCount">0</strong><span>ACTIVE EVIDENCE</span></div>
+      <div class="ev-stat"><strong id="reviewCount">0</strong><span>REVIEWS REQUIRED</span></div>
+    </section>
+
+    <section class="ev-grid">
+      <article class="ev-panel">
+        <h2>01 / Create a potential unit</h2>
+        <p>Declare one prerequisite. New units begin in POTENTIAL.</p>
+        <form id="unitForm">
+          <label class="ev-label" for="unitName">UNIT NAME</label>
+          <input class="ev-input" id="unitName" maxlength="70" required placeholder="e.g. Scholarship application">
+          <div class="ev-row">
+            <div><label class="ev-label" for="factPath">REQUIRED FACT PATH</label><input class="ev-input" id="factPath" required value="budget.approved" placeholder="budget.approved"></div>
+            <div><label class="ev-label" for="operator">CONDITION</label><select class="ev-select" id="operator"><option value="gte">≥ Greater than/equal</option><option value="eq">= Equal</option><option value="gt">&gt; Greater than</option><option value="lte">≤ Less than/equal</option><option value="lt">&lt; Less than</option><option value="exists">Exists</option><option value="ne">≠ Not equal</option></select></div>
+          </div>
+          <label class="ev-label" for="expectedValue">EXPECTED VALUE (JSON)</label>
+          <input class="ev-input" id="expectedValue" value="100" required>
+          <button class="ev-btn primary" type="submit">＋ CREATE UNIT</button>
+        </form>
+      </article>
+
+      <article class="ev-panel">
+        <h2>02 / Record evidence</h2>
+        <p>Evidence source labels are metadata supplied by the user; they are not verified identities.</p>
+        <form id="evidenceForm">
+          <label class="ev-label" for="evidencePath">FACT PATH</label>
+          <input class="ev-input" id="evidencePath" required value="budget.approved">
+          <label class="ev-label" for="evidenceValue">OBSERVED VALUE (JSON)</label>
+          <input class="ev-input" id="evidenceValue" required value="150">
+          <label class="ev-label" for="evidenceSource">SOURCE LABEL / REFERENCE</label>
+          <input class="ev-input" id="evidenceSource" required placeholder="e.g. review-report/FIN-204">
+          <div class="ev-row">
+            <div><label class="ev-label" for="observedAt">OBSERVED AT</label><input class="ev-input" id="observedAt" type="datetime-local"></div>
+            <div><label class="ev-label" for="expiresAt">EXPIRES AT (OPTIONAL)</label><input class="ev-input" id="expiresAt" type="datetime-local"></div>
+          </div>
+          <button class="ev-btn primary" type="submit">＋ RECORD EVIDENCE</button>
+        </form>
+      </article>
+    </section>
+
+    <section class="ev-section">
+      <h2>03 / NX Units & lifecycle controls</h2>
+      <p class="ev-lead">Evaluate against selected evidence, authorize explicitly, and only then realize. If evidence changes, current evaluations are invalidated. Realized units remain historical but may require review.</p>
+      <div class="ev-list" id="unitList"><div class="ev-card">No units created yet.</div></div>
+    </section>
+
+    <section class="ev-section">
+      <h2>04 / Evidence registry</h2>
+      <div class="ev-list" id="evidenceList"><div class="ev-card">No evidence recorded yet.</div></div>
+    </section>
+
+    <section class="ev-section ev-panel">
+      <h2>05 / Event history</h2>
+      <div class="ev-log" id="eventLog"><p>No actions yet.</p></div>
+    </section>
+
+    <section class="ev-section ev-panel">
+      <h2>06 / Model boundaries</h2>
+      <p>This browser playground is a temporary client-side demonstration and stores its sample records only in this browser's local storage. It is not connected to the Python engine. The Python reference implementation is in the repository's nexist-core folder.</p>
+      <p>The model is experimental and combines ideas that overlap with provenance standards, graph models, constraint validation, and state-machine systems. No claim of a new fundamental data structure or novelty is established.</p>
+      <a class="project-link" href="https://github.com/lakindusathsara44-bit/Apokolips/blob/main/nexist-core/research/EVIDENCE_LIFECYCLE.md" target="_blank" rel="noopener">READ RESEARCH NOTE ↗</a>
+      <a class="project-link" href="https://github.com/lakindusathsara44-bit/Apokolips/tree/main/nexist-core" target="_blank" rel="noopener">OPEN PYTHON SOURCE ↗</a>
+      <button class="ev-btn danger" id="resetDemo" type="button">CLEAR LOCAL DEMO DATA</button>
+    </section>
+
+    <div class="ev-footer"><span>© <span id="year"></span> Lakindu Sathsara</span><a href="My-project.html">← ALL PROJECTS</a><a href="nexist.html">NEXIST CORE ↑</a></div>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    (function(){
+      'use strict';
+      const SALT = 'a6742172bb7372c247c5247b23b0cc48';
+      const EXPECTED = 'a536c7ea372c8263ff9e1a622379fa100315efef89d6117ad176f95222ba291b';
+      const ROUNDS = 210000;
+      const $ = function(id){ return document.getElementById(id); };
+      const hex = function(bytes){ return Array.from(new Uint8Array(bytes)).map(function(x){return x.toString(16).padStart(2,'0');}).join(''); };
+      async function derive(password){
+        const key = await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);
+        return hex(await crypto.subtle.deriveBits({name:'PBKDF2',salt:Uint8Array.from(SALT.match(/../g).map(function(x){return parseInt(x,16);})),iterations:ROUNDS,hash:'SHA-256'},key,256));
+      }
+      function showProject(){
+        $('accessGate').hidden = true;
+        $('projectContent').hidden = false;
+        render();
+      }
+      $('unlockForm').addEventListener('submit',async function(event){
+        event.preventDefault();
+        $('unlockError').textContent = '';
+        try{
+          const actual = await derive($('projectPassword').value);
+          if(actual !== EXPECTED){$('unlockError').textContent='Incorrect password. Please try again.';return;}
+          sessionStorage.setItem('nexistEvidenceUnlocked','yes');
+          $('projectPassword').value='';
+          showProject();
+        }catch(error){$('unlockError').textContent='Secure password verification is unavailable in this browser.';}
+      });
+
+      const STORAGE = 'nexistEvidenceDemoV1';
+      const fresh = function(){return {units:[],evidence:[],events:[]};};
+      let state = fresh();
+      try{const saved=localStorage.getItem(STORAGE);if(saved){const parsed=JSON.parse(saved);if(parsed&&Array.isArray(parsed.units)&&Array.isArray(parsed.evidence)&&Array.isArray(parsed.events))state=parsed;}}catch(error){state=fresh();}
+      const id = function(prefix){return prefix+'_'+(crypto.randomUUID?crypto.randomUUID().replace(/-/g,''):Date.now().toString(16)+Math.random().toString(16).slice(2));};
+      const escapeHTML = function(value){return String(value).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+      const parseJSON = function(raw){try{return JSON.parse(raw);}catch(error){return raw;}};
+      const equal = function(a,b){return JSON.stringify(a)===JSON.stringify(b);};
+      const log = function(type,detail){state.events.unshift({type:type,detail:detail,at:new Date().toLocaleString()});state.events=state.events.slice(0,120);};
+      const save = function(){try{localStorage.setItem(STORAGE,JSON.stringify(state));}catch(error){log('STORAGE_WARNING','Browser local storage could not save this action.');}};
+      const unitById = function(uid){return state.units.find(function(u){return u.id===uid;});};
+      const evidenceById = function(eid){return state.evidence.find(function(e){return e.id===eid;});};
+      function dependenciesOf(unit){return unit.dependencies||[];}
+      function dependsOn(uid,target,seen){
+        if(uid===target)return true;
+        if(seen.has(uid))return false;
+        seen.add(uid);
+        const unit=unitById(uid);
+        return !!unit&&dependenciesOf(unit).some(function(dep){return dependsOn(dep,target,seen);});
+      }
+      function isCurrent(unit){
+        const ev=unit.evaluation;
+        if(!ev||!ev.current)return false;
+        const now=Date.now();
+        for(const eid of ev.evidenceIds){
+          const item=evidenceById(eid);
+          if(!item||item.status!=='ACTIVE'||(item.observedAt&&Date.parse(item.observedAt)>now)||(item.expiresAt&&Date.parse(item.expiresAt)<=now))return false;
+        }
+        for(const depId of Object.keys(ev.dependencyEvaluations||{})){
+          const dep=unitById(depId);
+          if(!dep||dep.needsReview||!isCurrent(dep)||!dep.evaluation||dep.evaluation.id!==ev.dependencyEvaluations[depId])return false;
+        }
+        return true;
+      }
+      function invalidate(rootId,reason,visited){
+        visited=visited||new Set();
+        if(visited.has(rootId))return;
+        visited.add(rootId);
+        state.units.forEach(function(unit){
+          if(unit.id!==rootId&&dependenciesOf(unit).includes(rootId))invalidate(unit.id,'dependency changed: '+rootId,visited);
+        });
+        const root=unitById(rootId);if(!root)return;
+        if(root.evaluation)root.evaluation.current=false;
+        if(root.authorization&&root.authorization.pending){root.authorization.pending=false;root.authorization.invalidated=true;}
+        if(root.status==='ELIGIBLE')root.status='POTENTIAL';
+        else if(root.status==='REALIZED')root.needsReview=true;
+        log('INVALIDATED',root.name+' — '+reason);
+      }
+      function evaluate(unit,reviewing){
+        const depSnapshot={};
+        for(const depId of dependenciesOf(unit)){
+          const dep=unitById(depId);
+          if(!dep||!dep.evaluation||dep.status!=='ELIGIBLE'&&dep.status!=='REALIZED'||dep.needsReview||!isCurrent(dep)){
+            alert('Dependency '+depId+' must have a current passing evaluation first.');return;
+          }
+          depSnapshot[depId]=dep.evaluation.id;
+        }
+        const checks=[],used=[];
+        unit.requirements.forEach(function(req,index){
+          const matching=state.evidence.filter(function(e){return e.path===req.path;});
+          const now=Date.now();
+          const valid=matching.filter(function(e){return e.status==='ACTIVE'&&(!e.observedAt||Date.parse(e.observedAt)<=now)&&(!e.expiresAt||Date.parse(e.expiresAt)>now);});
+          if(!valid.length){checks.push({index:index,path:req.path,status:'UNKNOWN',reason:'No selected active evidence.'});matching.forEach(function(e){used.push(e.id);});return;}
+          const first=valid[0].value;
+          if(valid.some(function(e){return !equal(e.value,first);})){checks.push({index:index,path:req.path,status:'CONFLICT',reason:'Selected evidence values disagree.'});valid.forEach(function(e){used.push(e.id);});return;}
+          let pass=false;
+          if(req.operator==='exists')pass=true;
+          else if(req.operator==='eq')pass=equal(first,req.expected);
+          else if(req.operator==='ne')pass=!equal(first,req.expected);
+          else if(typeof first==='number'&&typeof req.expected==='number'){
+            if(req.operator==='gte')pass=first>=req.expected;
+            if(req.operator==='gt')pass=first>req.expected;
+            if(req.operator==='lte')pass=first<=req.expected;
+            if(req.operator==='lt')pass=first<req.expected;
+          }
+          checks.push({index:index,path:req.path,status:pass?'PASS':'FAIL',reason:pass?'Requirement satisfied.':'Value does not satisfy requirement.'});
+          valid.forEach(function(e){used.push(e.id);});
+        });
+        const outcome=checks.some(function(c){return c.status==='FAIL';})?'INELIGIBLE':checks.some(function(c){return c.status==='UNKNOWN'||c.status==='CONFLICT';})?'INDETERMINATE':'ELIGIBLE';
+        if(unit.evaluation)invalidate(unit.id,'evaluation replaced');
+        unit.evaluation={id:id('eval'),outcome:outcome,current:true,evidenceIds:Array.from(new Set(used)),dependencyEvaluations:depSnapshot,checks:checks,at:new Date().toISOString()};
+        if(reviewing){
+          unit.needsReview=outcome!=='ELIGIBLE';
+        }else{
+          unit.status=outcome==='ELIGIBLE'?'ELIGIBLE':'POTENTIAL';
+          unit.needsReview=false;
+        }
+        unit.authorization=null;
+        log('EVALUATED',unit.name+': '+outcome);
+        save();render();
+      }
+      function render(){
+        if($('projectContent').hidden)return;
+        $('unitCount').textContent=state.units.length;
+        $('evidenceCount').textContent=state.evidence.filter(function(e){return e.status==='ACTIVE';}).length;
+        $('reviewCount').textContent=state.units.filter(function(u){return u.needsReview;}).length;
+        $('unitList').innerHTML=state.units.length?state.units.slice().reverse().map(function(unit){
+          const status=unit.status.toLowerCase();
+          const checks=unit.evaluation?unit.evaluation.checks.map(function(c){return '#'+(c.index+1)+' '+escapeHTML(c.path)+': '+escapeHTML(c.status)+' — '+escapeHTML(c.reason);}).join('<br>'):'Not evaluated';
+          const depOptions=state.units.filter(function(other){return other.id!==unit.id;}).map(function(other){return '<option value="'+escapeHTML(other.id)+'">'+escapeHTML(other.name)+'</option>';}).join('');
+          const current=isCurrent(unit);
+          const canAuth=unit.status==='ELIGIBLE'&&current&&!unit.needsReview;
+          const canRealize=canAuth&&unit.authorization&&unit.authorization.pending&&unit.authorization.evaluationId===unit.evaluation.id;
+          return '<article class="ev-card"><div class="ev-card-top"><span class="ev-id">'+escapeHTML(unit.id)+'</span><span class="ev-state '+status+'">'+escapeHTML(unit.status)+'</span></div><h3>'+escapeHTML(unit.name)+'</h3><p>Requirement: '+escapeHTML(unit.requirements[0].path)+' '+escapeHTML(unit.requirements[0].operator)+' '+escapeHTML(JSON.stringify(unit.requirements[0].expected))+'</p><p>Evaluation: '+(unit.evaluation?escapeHTML(unit.evaluation.outcome)+' / '+(current?'CURRENT':'STALE'):'not run')+'</p>'+(unit.needsReview?'<span class="ev-state review">REVIEW REQUIRED</span>':'')+'<div class="ev-checks">'+checks+'</div><p>Depends on: '+dependenciesOf(unit).map(function(dep){return escapeHTML(unitById(dep)?.name||dep);}).join(', ')+'</p><button class="ev-btn" data-action="evaluate" data-id="'+escapeHTML(unit.id)+'" '+(unit.status==='ARCHIVED'||unit.status==='REALIZED'?'disabled':'')+'>EVALUATE</button><button class="ev-btn" data-action="authorize" data-id="'+escapeHTML(unit.id)+'" '+(canAuth?'':'disabled')+'>AUTHORIZE</button><button class="ev-btn primary" data-action="realize" data-id="'+escapeHTML(unit.id)+'" '+(canRealize?'':'disabled')+'>REALIZE</button>'+(unit.needsReview?'<button class="ev-btn warn" data-action="review" data-id="'+escapeHTML(unit.id)+'">REVIEW</button>':'')+'<button class="ev-btn" data-action="archive" data-id="'+escapeHTML(unit.id)+'" '+(unit.status==='ARCHIVED'?'disabled':'')+'>ARCHIVE</button>'+(unit.status!=='REALIZED'&&unit.status!=='ARCHIVED'&&state.units.length>1?'<div class="ev-row"><select class="ev-select" data-dependency="'+escapeHTML(unit.id)+'"><option value="">Add dependency...</option>'+depOptions+'</select><button class="ev-btn" data-action="dependency" data-id="'+escapeHTML(unit.id)+'">＋ DEPENDS ON</button></div>':'')+'</article>';
+        }).join(''):'<div class="ev-card">No units created yet.</div>';
+        $('evidenceList').innerHTML=state.evidence.length?state.evidence.slice().reverse().map(function(e){
+          return '<article class="ev-card"><div class="ev-card-top"><span class="ev-id">'+escapeHTML(e.id)+'</span><span class="ev-state '+(e.status==='ACTIVE'?'eligible':'revoked')+'">'+escapeHTML(e.status)+'</span></div><h3>'+escapeHTML(e.path)+' = '+escapeHTML(JSON.stringify(e.value))+'</h3><p>Source: '+escapeHTML(e.source)+'</p><p>Observed: '+escapeHTML(e.observedAt||'not specified')+'</p><button class="ev-btn danger" data-action="revoke" data-id="'+escapeHTML(e.id)+'" '+(e.status!=='ACTIVE'?'disabled':'')+'>REVOKE EVIDENCE</button></article>';
+        }).join(''):'<div class="ev-card">No evidence recorded yet.</div>';
+        $('eventLog').innerHTML=state.events.length?state.events.map(function(item){return '<div class="ev-log-item"><strong>'+escapeHTML(item.type)+'</strong> · '+escapeHTML(item.at)+'<br>'+escapeHTML(item.detail)+'</div>';}).join(''):'<p>No actions yet.</p>';
+        $('year').textContent=new Date().getFullYear();
+      }
+
+      $('unitForm').addEventListener('submit',function(event){
+        event.preventDefault();
+        const path=$('factPath').value.trim(),name=$('unitName').value.trim();
+        if(!path||!name){alert('Enter a unit name and fact path.');return;}
+        const expected=parseJSON($('expectedValue').value);
+        const unit={id:id('nx'),name:name,status:'POTENTIAL',requirements:[{path:path,operator:$('operator').value,expected:expected}],dependencies:[],evaluation:null,authorization:null,needsReview:false};
+        state.units.push(unit);log('UNIT_CREATED',name+' created as POTENTIAL.');$('unitName').value='';save();render();
+      });
+      $('evidenceForm').addEventListener('submit',function(event){
+        event.preventDefault();
+        const path=$('evidencePath').value.trim(),source=$('evidenceSource').value.trim();
+        if(!path||!source){alert('Enter the fact path and source label.');return;}
+        let observed=$('observedAt').value?new Date($('observedAt').value).toISOString():new Date().toISOString();
+        let expires=$('expiresAt').value?new Date($('expiresAt').value).toISOString():null;
+        if(expires&&Date.parse(expires)<=Date.parse(observed)){alert('Expiry must be later than observation time.');return;}
+        const item={id:id('nxe'),path:path,value:parseJSON($('evidenceValue').value),source:source,observedAt:observed,expiresAt:expires,status:'ACTIVE'};
+        state.evidence.push(item);log('EVIDENCE_RECORDED',path+' stored from '+source+'.');$('evidenceSource').value='';save();render();
+      });
+      $('unitList').addEventListener('click',function(event){
+        const button=event.target.closest('button[data-action]');if(!button)return;
+        const unit=unitById(button.dataset.id);if(!unit)return;
+        const action=button.dataset.action;
+        if(action==='evaluate')evaluate(unit,false);
+        if(action==='review')evaluate(unit,true);
+        if(action==='authorize'){
+          if(!unit.evaluation||unit.evaluation.outcome!=='ELIGIBLE'||!isCurrent(unit)){alert('Evaluate the unit with current evidence first.');return;}
+          unit.authorization={id:id('auth'),pending:true,evaluationId:unit.evaluation.id,approvedAt:new Date().toISOString()};
+          log('AUTHORIZED',unit.name+' approved for one realization.');save();render();
+        }
+        if(action==='realize'){
+          if(!unit.authorization||!unit.authorization.pending||!unit.evaluation||unit.authorization.evaluationId!==unit.evaluation.id||!isCurrent(unit)){alert('A current one-use approval is required.');return;}
+          unit.status='REALIZED';unit.authorization.pending=false;unit.authorization.consumed=true;log('REALIZED',unit.name+' explicitly realized by this model.');save();render();
+        }
+        if(action==='archive'){
+          unit.status='ARCHIVED';unit.authorization=null;invalidate(unit.id,'unit archived');log('ARCHIVED',unit.name+' archived.');save();render();
+        }
+        if(action==='dependency'){
+          const select=$('unitList').querySelector('select[data-dependency="'+unit.id+'"]');
+          const target=select&&select.value;if(!target){alert('Choose a dependency first.');return;}
+          if(dependsOn(target,unit.id,new Set())){alert('That dependency would create a cycle.');return;}
+          if(dependenciesOf(unit).includes(target)){alert('Dependency already exists.');return;}
+          unit.dependencies.push(target);invalidate(unit.id,'dependency graph changed');log('DEPENDENCY_ADDED',unit.name+' depends on '+(unitById(target)?.name||target));save();render();
+        }
+      });
+      $('evidenceList').addEventListener('click',function(event){
+        const button=event.target.closest('button[data-action="revoke"]');if(!button)return;
+        const evidence=evidenceById(button.dataset.id);if(!evidence||evidence.status!=='ACTIVE')return;
+        evidence.status='REVOKED';evidence.revokedAt=new Date().toISOString();
+        const affected=state.units.filter(function(unit){return unit.evaluation&&unit.evaluation.current&&unit.evaluation.evidenceIds.includes(evidence.id);});
+        const visited=new Set();affected.forEach(function(unit){invalidate(unit.id,'evidence '+evidence.id+' revoked',visited);});
+        log('EVIDENCE_REVOKED',evidence.id+' revoked; '+affected.length+' direct unit(s) affected.');save();render();
+      });
+      $('resetDemo').addEventListener('click',function(){
+        if(!confirm('Clear all demo units, evidence, and events stored in this browser?'))return;
+        state=fresh();save();render();
+      });
+      if(!$('observedAt').value)$('observedAt').value=new Date().toISOString().slice(0,16);
+      if(sessionStorage.getItem('nexistEvidenceUnlocked') === 'yes'){showProject();}
+    })();
+  </script>
+</body>
+</html>
