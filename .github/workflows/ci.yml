@@ -105,6 +105,13 @@ jobs:
       - name: Test NEXIST Q-Intelligence AI adapter
         run: node --test neon-functions/nxqai/tests.mjs neon-functions/nxqai/tests/*.test.mjs
 
+      - name: Verify deployable Q-Intelligence function archive
+        run: |
+          base64 -d neon-functions/nxqai/function.zip.b64 > /tmp/nxqai.zip
+          unzip -p /tmp/nxqai.zip index.mjs > /tmp/nxqai-archive-index.mjs
+          cmp neon-functions/nxqai/index.mjs /tmp/nxqai-archive-index.mjs
+          node --check /tmp/nxqai-archive-index.mjs
+
       - name: Test NEXIST comparative research workload
         working-directory: nexist-core
         run: python -m unittest tests.test_research -v
