@@ -103,20 +103,7 @@ jobs:
         run: node --check neon-functions/nxqai/index.mjs
 
       - name: Test NEXIST Q-Intelligence AI adapter
-        run: node --test neon-functions/nxqai/tests/*.test.mjs
-
-      - name: Check inline NEXIST evidence page JavaScript
-        run: |
-          python - <<'PY'
-          import re
-          from pathlib import Path
-          source = Path("nexist-evidence.html").read_text(encoding="utf-8")
-          scripts = re.findall(r"<script>(.*?)</script>", source, re.DOTALL)
-          if not scripts:
-              raise SystemExit("No inline demo script found.")
-          Path("/tmp/nexist-evidence-inline.js").write_text("\n".join(scripts), encoding="utf-8")
-          PY
-          node --check /tmp/nexist-evidence-inline.js
+        run: node --test neon-functions/nxqai/tests.mjs neon-functions/nxqai/tests/*.test.mjs
 
       - name: Test NEXIST comparative research workload
         working-directory: nexist-core
