@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 import os
 import tempfile
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -48,6 +50,9 @@ class NexistEngine:
             raise NXValidationError("Every requirement must be a Requirement.")
         clean_attributes = copy.deepcopy(dict(attributes or {}))
         clean_requirements = copy.deepcopy(reqs)
+        self._validate_json(clean_attributes, "Attributes")
+        for requirement in clean_requirements:
+            self._validate_json(requirement.expected, "Requirement expected value")
         unit = NXUnit.new(label.strip(), kind.strip(), clean_attributes, clean_requirements)
         self._record(unit, "created", actor, {"label": unit.label, "kind": unit.kind})
         self._units[unit.id] = unit
@@ -102,10 +107,12 @@ class NexistEngine:
         actor: str = "system",
     ) -> NXUnit:
         self._validate_actor(actor)
-        if len(parent_ids) < 2 or len(set(parent_ids)) != len(parent_ids):
-            raise NXValidationError("Composition requires at least two unique parents.")
-        if not isinstance(parent_ids, list) or any(not isinstance(item, str) or not item for item in parent_ids):
-            raise NXValidationError("Parent IDs must be a list of non-empty strings.")
+        if not isinstance(parent_ids, list) or len(parent_ids) < 2:
+            raise NXValidationError("Composition requires at least two parent IDs.")
+        if any(not isinstance(item, str) or not item for item in parent_ids):
+            raise NXValidationError("Parent IDs must be non-empty strings.")
+        if len(set(parent_ids)) != len(parent_ids):
+            raise NXValidationError("Composition requires unique parent IDs.")
         parents = [self._get_internal(parent_id) for parent_id in parent_ids]
         for parent in parents:
             self._require_active(parent)
@@ -137,9 +144,11 @@ class NexistEngine:
             raise NXStateError("A realised unit cannot be re-evaluated.")
         if not isinstance(facts, Mapping):
             raise NXValidationError("Facts must be a mapping.")
+        clean_facts = copy.deepcopy(dict(facts))
+        self._validate_json(clean_facts, "Facts")
         failures: list[dict[str, Any]] = []
         for requirement in unit.requirements:
-            actual = self._read_path(facts, requirement.path)
+            actual = self._read_path(clean_facts, requirement.path)
             if not self._matches(actual, requirement):
                 failures.append({
                     "path": requirement.path,
@@ -207,7 +216,7 @@ class NexistEngine:
         source = Path(path)
         try:
             payload = json.loads(source.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
             raise NXValidationError(f"Could not read NEXIST data: {exc}") from exc
         if not isinstance(payload, dict):
             raise NXValidationError("NEXIST file root must be a JSON object.")
@@ -239,6 +248,7 @@ class NexistEngine:
 
     def _validate_references(self) -> None:
         known_ids = set(self._units)
+        parent_graph: dict[str, list[str]] = {}
         for unit in self._units.values():
             if len(set(unit.parent_ids)) != len(unit.parent_ids):
                 raise NXValidationError(f"Duplicate parent IDs in NX Unit {unit.id}.")
@@ -246,6 +256,7 @@ class NexistEngine:
                 raise NXValidationError(f"NX Unit {unit.id} cannot be its own parent.")
             if len(unit.parent_ids) == 1:
                 raise NXValidationError(f"NX Unit {unit.id} must have zero or at least two parents.")
+            parent_graph[unit.id] = list(unit.parent_ids)
             for parent_id in unit.parent_ids:
                 if parent_id not in known_ids:
                     raise NXValidationError(f"Unknown parent ID in NX Unit {unit.id}: {parent_id}")
@@ -254,6 +265,22 @@ class NexistEngine:
                     raise NXValidationError(
                         f"Unknown relation target in NX Unit {unit.id}: {relation.target_id}"
                     )
+        visiting: set[str] = set()
+        visited: set[str] = set()
+
+        def visit(unit_id: str) -> None:
+            if unit_id in visiting:
+                raise NXValidationError("Composition lineage must be acyclic.")
+            if unit_id in visited:
+                return
+            visiting.add(unit_id)
+            for parent_id in parent_graph[unit_id]:
+                visit(parent_id)
+            visiting.remove(unit_id)
+            visited.add(unit_id)
+
+        for unit_id in parent_graph:
+            visit(unit_id)
 
     @staticmethod
     def _read_path(facts: Mapping[str, Any], path: str) -> Any:
@@ -315,9 +342,48 @@ class NexistEngine:
             raise NXStateError("Archived units cannot be used in this operation.")
 
     @staticmethod
+    def _validate_text(value: Any, field_name: str) -> None:
+        if not isinstance(value, str) or not value.strip():
+            raise NXValidationError(f"{field_name} must be a non-empty string.")
+
+    @staticmethod
+    def _validate_json(value: Any, field_name: str) -> None:
+        active: set[int] = set()
+
+        def walk(item: Any, location: str) -> None:
+            if item is None or isinstance(item, (str, bool, int)):
+                return
+            if isinstance(item, float):
+                if not math.isfinite(item):
+                    raise NXValidationError(f"{field_name} contains a non-finite number at {location}.")
+                return
+            if isinstance(item, list):
+                marker = id(item)
+                if marker in active:
+                    raise NXValidationError(f"{field_name} contains a circular reference at {location}.")
+                active.add(marker)
+                for index, child in enumerate(item):
+                    walk(child, f"{location}[{index}]")
+                active.remove(marker)
+                return
+            if isinstance(item, Mapping):
+                marker = id(item)
+                if marker in active:
+                    raise NXValidationError(f"{field_name} contains a circular reference at {location}.")
+                active.add(marker)
+                for key, child in item.items():
+                    if not isinstance(key, str):
+                        raise NXValidationError(f"{field_name} object keys must be strings at {location}.")
+                    walk(child, f"{location}.{key}")
+                active.remove(marker)
+                return
+            raise NXValidationError(f"{field_name} contains a non-JSON value at {location}.")
+
+        walk(value, "$")
+
+    @staticmethod
     def _validate_actor(actor: str) -> None:
-        if not isinstance(actor, str) or not actor.strip():
-            raise NXValidationError("Actor must be a non-empty string.")
+        NexistEngine._validate_text(actor, "Actor")
 
     @staticmethod
     def _record(
@@ -360,24 +426,81 @@ class NexistEngine:
             ],
         }
 
-    @staticmethod
-    def _unit_from_dict(data: Mapping[str, Any]) -> NXUnit:
+    @classmethod
+    def _unit_from_dict(cls, data: Mapping[str, Any]) -> NXUnit:
+        if not isinstance(data, Mapping):
+            raise NXValidationError("Each NX Unit record must be a JSON object.")
         try:
+            unit_id, label, kind = data["id"], data["label"], data["kind"]
+            cls._validate_text(unit_id, "Unit ID")
+            cls._validate_text(label, "Unit label")
+            cls._validate_text(kind, "Unit kind")
+            state = NXState(data["state"])
+
+            attributes = data.get("attributes", {})
+            if not isinstance(attributes, Mapping):
+                raise NXValidationError("Unit attributes must be a JSON object.")
+            cls._validate_json(dict(attributes), "Unit attributes")
+
+            raw_requirements = data.get("requirements", [])
+            if not isinstance(raw_requirements, list):
+                raise NXValidationError("Unit requirements must be a list.")
+            requirements = []
+            for item in raw_requirements:
+                if not isinstance(item, Mapping):
+                    raise NXValidationError("Each requirement must be a JSON object.")
+                requirement = Requirement(**item)
+                cls._validate_json(requirement.expected, "Requirement expected value")
+                requirements.append(requirement)
+
+            raw_relations = data.get("relations", [])
+            if not isinstance(raw_relations, list):
+                raise NXValidationError("Unit relations must be a list.")
+            relations = []
+            for item in raw_relations:
+                if not isinstance(item, Mapping):
+                    raise NXValidationError("Each relation must be a JSON object.")
+                target_id, relation_name = item["target_id"], item["relation"]
+                cls._validate_text(target_id, "Relation target ID")
+                cls._validate_text(relation_name, "Relation name")
+                relations.append(NXRelation(target_id, relation_name))
+
+            parent_ids = data.get("parent_ids", [])
+            if (
+                not isinstance(parent_ids, list)
+                or any(not isinstance(item, str) or not item for item in parent_ids)
+                or len(set(parent_ids)) != len(parent_ids)
+                or len(parent_ids) == 1
+            ):
+                raise NXValidationError(
+                    "Unit parent_ids must be empty or contain at least two unique strings."
+                )
+
+            raw_events = data.get("events", [])
+            if not isinstance(raw_events, list):
+                raise NXValidationError("Unit events must be a list.")
+            events = []
+            for item in raw_events:
+                if not isinstance(item, Mapping):
+                    raise NXValidationError("Each event must be a JSON object.")
+                event_type, timestamp, actor = item["event_type"], item["timestamp"], item["actor"]
+                cls._validate_text(event_type, "Event type")
+                cls._validate_text(timestamp, "Event timestamp")
+                cls._validate_text(actor, "Event actor")
+                datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                details = item.get("details", {})
+                if not isinstance(details, Mapping):
+                    raise NXValidationError("Event details must be a JSON object.")
+                cls._validate_json(dict(details), "Event details")
+                events.append(NXEvent(event_type, timestamp, actor, dict(details)))
+
             return NXUnit(
-                id=data["id"],
-                label=data["label"],
-                kind=data["kind"],
-                state=NXState(data["state"]),
-                attributes=dict(data.get("attributes", {})),
-                requirements=[
-                    Requirement(**item) for item in data.get("requirements", [])
-                ],
-                relations=[
-                    NXRelation(**item) for item in data.get("relations", [])
-                ],
-                parent_ids=list(data.get("parent_ids", [])),
-                events=[NXEvent(**item) for item in data.get("events", [])],
+                id=unit_id, label=label, kind=kind, state=state,
+                attributes=dict(attributes), requirements=requirements,
+                relations=relations, parent_ids=list(parent_ids), events=events,
             )
+        except NXValidationError:
+            raise
         except (KeyError, TypeError, ValueError) as exc:
             raise NXValidationError(f"Invalid NX Unit record: {exc}") from exc
 
