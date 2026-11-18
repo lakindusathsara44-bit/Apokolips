@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050609">
+  <meta name="description" content="NEXIST Q-Intelligence — a hybrid research experiment combining evidence-aware decisions, open-weight AI planning, and QAOA-style quantum simulation.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/x-icon" href="file_00000000a7ec820890154ca6ed49b608.ico">
+  <link rel="stylesheet" href="style.css?v=20261118qintel">
+  <title>NEXIST Q-Intelligence | Apokolips</title>
+  <style>
+    :root{--q-bg:#050609;--q-panel:#0b111b;--q-line:#20324a;--q-text:#edf4ff;--q-muted:#91a0b4;--q-blue:#83b7ff;--q-cyan:#8bd8ed;--q-green:#7de0b1;--q-red:#ff929c;--q-amber:#ffd28a;--q-violet:#b6a5ff}
+    body{background:var(--q-bg);color:var(--q-text)}
+    [hidden]{display:none!important}
+    .qi-wrap{width:min(1160px,92vw);margin:48px auto 80px;position:relative;z-index:1}
+    .qi-kicker{font:700 10px/1.5 Arial,sans-serif;letter-spacing:2.4px;color:var(--q-cyan);text-transform:uppercase}
+    .qi-title{font-size:clamp(34px,6vw,62px);line-height:1.04;letter-spacing:-1.8px;margin:12px 0}
+    .qi-title span{color:var(--q-blue)}
+    .qi-lead{max-width:820px;color:var(--q-muted);font-size:14px;line-height:1.85}
+    .qi-tags{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+    .qi-tag{border:1px solid #2c405a;background:#0b1522;color:#c5ddff;border-radius:99px;padding:7px 11px;font-size:9px;font-weight:800;letter-spacing:.8px}
+    .qi-alert{padding:13px 15px;margin:18px 0;background:#19130d;border:1px solid #624a2c;color:#f4d7a8;border-radius:12px;font-size:11px;line-height:1.75}
+    .qi-alert strong{color:#ffe3b0}
+    .qi-statusbar{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin:20px 0}
+    .qi-status,.qi-panel,.qi-card,.qi-stat{background:linear-gradient(150deg,#0e1724,#080d15);border:1px solid var(--q-line);border-radius:15px}
+    .qi-status{padding:14px;min-width:0}.qi-status .eyebrow{font-size:9px;letter-spacing:1px;color:var(--q-muted)}.qi-status strong{display:block;margin-top:7px;font-size:12px;overflow-wrap:anywhere}
+    .qi-status strong.good{color:var(--q-green)}.qi-status strong.warn{color:var(--q-amber)}.qi-status strong.info{color:var(--q-blue)}
+    .qi-architecture{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:20px 0 28px;align-items:stretch}
+    .qi-arch{border:1px solid #243c58;border-radius:12px;padding:13px 10px;background:#0a1420;min-width:0;text-align:center}
+    .qi-arch .symbol{font-size:23px;display:block;color:var(--q-cyan);margin-bottom:8px}
+    .qi-arch strong{display:block;font-size:10px;letter-spacing:.4px}
+    .qi-arch small{display:block;color:var(--q-muted);font-size:9px;line-height:1.5;margin-top:5px}
+    .qi-arch-arrow{display:none}
+    .qi-section{margin-top:28px}
+    .qi-section-title{font-size:21px;letter-spacing:-.5px;margin:0 0 7px}
+    .qi-section-lead{color:var(--q-muted);font-size:12px;line-height:1.75;margin:0 0 15px}
+    .qi-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .qi-panel{padding:18px;min-width:0}
+    .qi-panel h3{font-size:15px;margin:0 0 8px}
+    .qi-panel p{font-size:11px;color:var(--q-muted);line-height:1.7}
+    .qi-label{display:block;margin:12px 0 6px;font-size:9px;font-weight:800;letter-spacing:1px;color:#b2c3d8}
+    .qi-input,.qi-select,.qi-textarea{box-sizing:border-box;width:100%;padding:11px 12px;background:#050a12;border:1px solid #293d56;border-radius:9px;color:var(--q-text);font:12px Arial,sans-serif;outline:none}
+    .qi-input:focus,.qi-select:focus,.qi-textarea:focus{border-color:#70b7ff;box-shadow:0 0 0 3px #458ad322}
+    .qi-textarea{min-height:104px;resize:vertical;line-height:1.6}
+    .qi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .qi-btn{margin:10px 7px 0 0;padding:10px 13px;border:1px solid #345276;border-radius:9px;background:#10233a;color:#eef6ff;font-size:9px;font-weight:800;letter-spacing:.6px;cursor:pointer;transition:.16s}
+    .qi-btn:hover{border-color:#7cbcff;background:#173553}
+    .qi-btn.primary{background:#173b66;border-color:#4b82c0}.qi-btn.subtle{background:transparent}.qi-btn.warn{border-color:#725832;background:#302312;color:#ffe1ab}.qi-btn.danger{border-color:#75414a;background:#32151b;color:#ffd9df}
+    .qi-btn:disabled{opacity:.4;cursor:not-allowed}
+    .qi-small{font-size:10px;color:var(--q-muted);line-height:1.6}
+    .qi-message{min-height:18px;margin-top:9px;color:var(--q-muted);font-size:10px;line-height:1.6}
+    .qi-message.error{color:var(--q-red)}.qi-message.success{color:var(--q-green)}.qi-message.warning{color:var(--q-amber)}
+    .qi-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:15px 0}
+    .qi-stat{padding:12px;min-width:0}.qi-stat strong{display:block;color:var(--q-blue);font-size:22px}.qi-stat span{display:block;color:var(--q-muted);font-size:8px;letter-spacing:.8px;margin-top:4px}
+    .qi-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:14px}
+    .qi-card{padding:14px;min-width:0}
+    .qi-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .qi-id{font:9px monospace;color:#8295ad;overflow-wrap:anywhere}
+    .qi-state{font-size:8px;letter-spacing:.7px;font-weight:900;padding:5px 8px;border-radius:99px;background:#172434;color:#b9d5f5;white-space:nowrap}
+    .qi-state.eligible{color:#a7efce;background:#123425}.qi-state.potential{color:#ffd99b;background:#3a2b16}.qi-state.revoked{color:#ffb4bd;background:#3c1d24}.qi-state.proposal{color:#c4b4ff;background:#292047}
+    .qi-card h4{font-size:14px;margin:9px 0 5px;overflow-wrap:anywhere}
+    .qi-card p{font-size:10px;color:var(--q-muted);line-height:1.6;margin:4px 0;overflow-wrap:anywhere}
+    .qi-card .qi-row{margin-top:8px}
+    .qi-result{border:1px solid #355779;border-radius:14px;padding:16px;background:linear-gradient(135deg,#0c1b2d,#0a1019);margin-top:14px}
+    .qi-result h3{font-size:15px;margin:0 0 8px}
+    .qi-result .chosen{color:#bfead7;font-size:12px;line-height:1.8}
+    .qi-table{width:100%;border-collapse:collapse;font-size:10px;margin-top:10px}
+    .qi-table th,.qi-table td{text-align:left;padding:8px 7px;border-bottom:1px solid #20334a}
+    .qi-table th{color:#9fb5cf;font-weight:800}
+    .qi-log{max-height:240px;overflow:auto}
+    .qi-log-item{padding:8px 0;border-bottom:1px solid #1b293a;font-size:10px;color:var(--q-muted);line-height:1.6}
+    .qi-footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:32px;padding-top:17px;border-top:1px solid #1b293a;color:var(--q-muted);font-size:10px}
+    .qi-footer a{color:#aacbfa;text-decoration:none}
+    .qi-gate-wrap{min-height:75vh;display:grid;place-items:center;padding:26px;position:relative;z-index:2}
+    .qi-gate{width:min(430px,100%);padding:28px;border-radius:18px;background:linear-gradient(155deg,#101c2b,#080d15);border:1px solid #263c59;box-shadow:0 25px 80px #0009}
+    .qi-gate h1{font-size:25px;margin:10px 0}.qi-gate p{color:var(--q-muted);font-size:11px;line-height:1.7}
+    .qi-error{min-height:18px;margin-top:8px;color:var(--q-red);font-size:10px}
+    @media(max-width:850px){.qi-architecture{grid-template-columns:repeat(3,1fr)}.qi-arch:nth-child(4),.qi-arch:nth-child(5){grid-column:span 1}}
+    @media(max-width:680px){.qi-grid,.qi-card-grid{grid-template-columns:1fr}.qi-statusbar{grid-template-columns:1fr}.qi-stats{grid-template-columns:repeat(2,1fr)}.qi-architecture{grid-template-columns:repeat(2,1fr)}.qi-row{grid-template-columns:1fr}.qi-wrap{margin-top:34px}}
+  </style>
+</head>
+<body>
+  <canvas id="rain" aria-hidden="true"></canvas>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="brand-mark"><img src="file_00000000a7ec820890154ca6ed49b608.png" alt="Apokolips logo"></span><span>APOKOLIPS</span></a>
+    <button class="menu-toggle" aria-label="Toggle navigation">☰</button>
+    <nav class="nav"><a href="index.html">Home</a><a href="My-project.html">My Projects</a><a href="nexist.html">NEXIST</a></nav>
+  </header>
+
+  <main class="qi-gate-wrap" id="accessGate">
+    <form class="qi-gate" id="unlockForm" autocomplete="off">
+      <div class="qi-kicker">PRIVATE RESEARCH PREVIEW / PROJECT 009</div>
+      <h1>NEXIST <span style="color:var(--q-blue)">Q-Intelligence</span></h1>
+      <p>Enter the project password to open the hybrid AI and quantum-computing research demonstration.</p>
+      <label class="qi-label" for="projectPassword">PROJECT PASSWORD</label>
+      <input class="qi-input" id="projectPassword" type="password" inputmode="numeric" maxlength="32" required autocomplete="current-password">
+      <button class="qi-btn primary" type="submit">UNLOCK PROJECT ↗</button>
+      <div class="qi-error" id="unlockError" role="status" aria-live="polite"></div>
+      <p>Access remains unlocked for this browser tab only.</p>
+    </form>
+  </main>
+
+  <main class="qi-wrap" id="projectContent" hidden>
+    <div class="qi-kicker">APOKOLIPS / EXPERIMENTAL SYSTEMS / PROJECT 009</div>
+    <h1 class="qi-title">NEXIST <span>Q-Intelligence.</span></h1>
+    <p class="qi-lead">A hybrid research prototype that combines NEXIST evidence-aware lifecycle rules, an open-weight AI planning advisor, and a small QAOA-style qubit state-vector simulator. AI proposes. NEXIST checks evidence. Quantum simulation explores candidate combinations. A classical validator and human decision remain in control.</p>
+    <div class="qi-tags"><span class="qi-tag">NEXIST EVIDENCE GATE</span><span class="qi-tag">OPEN-WEIGHT AI</span><span class="qi-tag">QAOA / QUBITS</span><span class="qi-tag">CLASSICAL VALIDATION</span></div>
+    <div class="qi-alert"><strong>Research and security boundary:</strong> this page is a browser demonstration. Its local demo records are not connected to the persistent Python engine. The password check is client-side and does not provide real confidentiality. Do not enter private, personal, financial, or confidential data. The current quantum backend is a classical computer simulating a small quantum state vector, not a physical quantum processor. No quantum advantage is claimed.</div>
+
+    <section class="qi-statusbar">
+      <div class="qi-status"><span class="eyebrow">AI ADVISOR</span><strong id="aiStatus" class="warn">CHECKING SERVICE…</strong><p id="aiStatusDetail" class="qi-small">Checking the secure server-side AI adapter.</p></div>
+      <div class="qi-status"><span class="eyebrow">QUANTUM ENGINE</span><strong class="good">LOCAL STATEVECTOR READY</strong><p class="qi-small">QAOA-style p=1 • Maximum 8 browser-demo qubits.</p></div>
+      <div class="qi-status"><span class="eyebrow">NEXIST GATE</span><strong class="info">EVIDENCE REQUIRED</strong><p class="qi-small">AI proposals remain POTENTIAL until evidence is supplied.</p></div>
+    </section>
+
+    <section class="qi-architecture" aria-label="Hybrid architecture">
+      <div class="qi-arch"><span class="symbol">✧</span><strong>AI PLANNER</strong><small>Turns a goal into candidate proposals</small></div>
+      <div class="qi-arch"><span class="symbol">◇</span><strong>NEXIST CORE</strong><small>Evidence, eligibility, dependencies, history</small></div>
+      <div class="qi-arch"><span class="symbol">ψ</span><strong>QUBIT ENGINE</strong><small>Superposition, phase, RX mixer, sampling</small></div>
+      <div class="qi-arch"><span class="symbol">⌁</span><strong>CLASSICAL CHECK</strong><small>Feasibility and exact small-case baseline</small></div>
+      <div class="qi-arch"><span class="symbol">✓</span><strong>HUMAN CONTROL</strong><small>No automatic approval or realization</small></div>
+    </section>
+
+    <section class="qi-section">
+      <h2 class="qi-section-title">01 / AI planning advisor</h2>
+      <p class="qi-section-lead">Use an open-weight model to structure a planning goal into up to 10 candidate proposals. The server-side API token is never sent to the browser. AI-generated items are proposals only and start in POTENTIAL.</p>
+      <div class="qi-panel">
+        <form id="aiForm">
+          <label class="qi-label" for="planningGoal">PLANNING GOAL</label>
+          <textarea class="qi-textarea" id="planningGoal" maxlength="3000" placeholder="Example: Plan a small digital learning centre using a limited budget. Include equipment, connectivity, accessibility and teacher training."></textarea>
+          <div class="qi-row">
+            <div><label class="qi-label" for="aiBudget">AVAILABLE RESOURCE BUDGET</label><input class="qi-input" id="aiBudget" type="number" min="0" step="0.01" value="10"></div>
+            <div><label class="qi-label" for="aiModel">OPEN-WEIGHT MODEL</label><select class="qi-select" id="aiModel"><option value="openai/gpt-oss-120b">openai/gpt-oss-120b</option></select></div>
+          </div>
+          <button class="qi-btn primary" id="askAi" type="submit">ASK AI TO BUILD A PROPOSAL ↗</button>
+        </form>
+        <div class="qi-message" id="aiMessage" role="status" aria-live="polite">AI service status will appear above. The local quantum simulator works independently of the AI API.</div>
+        <div id="aiProposal" hidden></div>
+      </div>
+    </section>
+
+    <section class="qi-section">
+      <h2 class="qi-section-title">02 / NEXIST candidate units</h2>
+      <p class="qi-section-lead">Only units with active, manually recorded approval evidence can enter the quantum selection run. Source labels are user-entered references and are not independently authenticated by this demo.</p>
+      <div class="qi-grid">
+        <article class="qi-panel">
+          <h3>Create a proposed unit</h3>
+          <form id="candidateForm">
+            <label class="qi-label" for="candidateName">PROJECT / CANDIDATE NAME</label>
+            <input class="qi-input" id="candidateName" maxlength="90" required placeholder="e.g. Community computer lab">
+            <div class="qi-row">
+              <div><label class="qi-label" for="candidateBenefit">BENEFIT SCORE</label><input class="qi-input" id="candidateBenefit" type="number" min="0" step="0.01" value="10" required></div>
+              <div><label class="qi-label" for="candidateCost">RESOURCE COST</label><input class="qi-input" id="candidateCost" type="number" min="0" step="0.01" value="4" required></div>
+            </div>
+            <button class="qi-btn primary" type="submit">＋ CREATE POTENTIAL UNIT</button>
+          </form>
+          <div class="qi-message" id="candidateMessage"></div>
+        </article>
+        <article class="qi-panel">
+          <h3>Evidence rules</h3>
+          <p>1. Create a proposed unit. It begins as POTENTIAL.</p>
+          <p>2. Record an evidence source label after reviewing a real supporting record.</p>
+          <p>3. The unit becomes ELIGIBLE in this demo only when the approval evidence is active.</p>
+          <p>4. Revoking evidence returns the unit to POTENTIAL and removes it from the next optimization run.</p>
+          <div class="qi-alert">The demo does not authenticate the evidence source or verify the underlying document. A typed reference is not proof of truth.</div>
+        </article>
+      </div>
+      <div class="qi-stats">
+        <div class="qi-stat"><strong id="unitCount">0</strong><span>NX UNITS</span></div>
+        <div class="qi-stat"><strong id="eligibleCount">0</strong><span>EVIDENCE-ELIGIBLE</span></div>
+        <div class="qi-stat"><strong id="evidenceCount">0</strong><span>ACTIVE EVIDENCE</span></div>
+        <div class="qi-stat"><strong id="proposalCount">0</strong><span>AI PROPOSALS</span></div>
+      </div>
+      <div class="qi-card-grid" id="candidateList"><div class="qi-card">No candidates added yet.</div></div>
+    </section>
+
+    <section class="qi-section">
+      <h2 class="qi-section-title">03 / Quantum selection engine</h2>
+      <p class="qi-section-lead">The p=1 QAOA-style simulator encodes candidate benefit and constraints in a diagonal phase operator, applies an RX mixer, then samples a probability distribution. A small exhaustive classical search is reported beside the result as a reference.</p>
+      <div class="qi-panel">
+        <div class="qi-row">
+          <div><label class="qi-label" for="solverBudget">RESOURCE BUDGET</label><input class="qi-input" id="solverBudget" type="number" min="0" step="0.01" value="10"></div>
+          <div><label class="qi-label" for="solverShots">MEASUREMENT SHOTS</label><select class="qi-select" id="solverShots"><option value="256">256</option><option value="512">512</option><option value="1024" selected>1024</option><option value="2048">2048</option></select></div>
+        </div>
+        <button class="qi-btn primary" id="runQuantum" type="button">RUN QAOA SIMULATION</button>
+        <button class="qi-btn subtle" id="clearResults" type="button">CLEAR LAST RESULT</button>
+        <div class="qi-message" id="quantumMessage" role="status" aria-live="polite">Add candidates and record evidence before running the simulator.</div>
+        <div id="quantumResult" hidden></div>
+      </div>
+    </section>
+
+    <section class="qi-section">
+      <h2 class="qi-section-title">04 / Local event history</h2>
+      <div class="qi-panel qi-log" id="eventLog"><p class="qi-small">No actions yet.</p></div>
+    </section>
+
+    <section class="qi-section qi-panel">
+      <h2 class="qi-section-title">05 / Research limits</h2>
+      <p class="qi-section-lead">This project is a hybrid prototype, not a verified new data structure or a quantum-advantage demonstration.</p>
+      <div class="qi-grid">
+        <div><h3>AI boundary</h3><p class="qi-small">AI output is structured proposal data. It cannot establish evidence, approve a project, or change NEXIST lifecycle state.</p></div>
+        <div><h3>Quantum boundary</h3><p class="qi-small">The browser and Python engines simulate qubits on a classical machine. The small state-vector circuit is exponential in candidate count and deliberately capped.</p></div>
+        <div><h3>Evidence boundary</h3><p class="qi-small">Source labels and timestamps do not authenticate documents or identities. Real deployment needs access control, signed provenance, and durable audit storage.</p></div>
+        <div><h3>Decision boundary</h3><p class="qi-small">Optimization only returns a recommendation. It never calls realization, spends money, launches infrastructure, or executes real-world actions.</p></div>
+      </div>
+      <button class="qi-btn danger" id="clearDemo" type="button">CLEAR BROWSER DEMO DATA</button>
+      <div class="qi-message">This demonstration stores sample records in this browser's local storage. It is separate from the persistent Python core engine.</div>
+    </section>
+
+    <div class="qi-footer"><span>© <span id="year"></span> Lakindu Sathsara</span><a href="My-project.html">← ALL PROJECTS</a><a href="nexist.html">NEXIST CORE ↑</a><a href="nexist-evidence.html">EVIDENCE LIFECYCLE</a></div>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    (function(){
+      'use strict';
+      const $ = (id) => document.getElementById(id);
+      const AI_API_BASE = "https://br-silent-frost-b3chnc64-nxqai.compute.c-4.ap-southeast-1.aws.neon.tech";
+      const SALT = 'a6742172bb7372c247c5247b23b0cc48';
+      const EXPECTED = 'a536c7ea372c8263ff9e1a622379fa100315efef89d6117ad176f95222ba291b';
+      const ROUNDS = 210000;
+      const STORE_KEY = 'nexistQIntelligenceDemoV1';
+
+      const hex = (bytes) => Array.from(new Uint8Array(bytes)).map((value) => value.toString(16).padStart(2,'0')).join('');
+      async function derive(password){
+        const salt=Uint8Array.from(SALT.match(/../g).map((value)=>parseInt(value,16)));
+        const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);
+        return hex(await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:ROUNDS,hash:'SHA-256'},key,256));
+      }
+      function showProject(){
+        $('accessGate').hidden=true;
+        $('projectContent').hidden=false;
+        renderAll();
+        checkAiStatus();
+      }
+      $('unlockForm').addEventListener('submit',async function(event){
+        event.preventDefault();
+        $('unlockError').textContent='';
+        try{
+          const actual=await derive($('projectPassword').value);
+          if(actual!==EXPECTED){$('unlockError').textContent='Incorrect password. Please try again.';return;}
+          sessionStorage.setItem('nexistQIntelligenceUnlocked','yes');
+          $('projectPassword').value='';
+          showProject();
+        }catch(error){$('unlockError').textContent='Password verification is unavailable in this browser.';}
+      });
+
+      const makeFresh=()=>({units:[],events:[],aiPlan:null,lastResult:null});
+      let store=makeFresh();
+      try{
+        const saved=localStorage.getItem(STORE_KEY);
+        if(saved){
+          const parsed=JSON.parse(saved);
+          if(parsed&&Array.isArray(parsed.units)&&Array.isArray(parsed.events))store=parsed;
+        }
+      }catch(error){store=makeFresh();}
+      const uid=(prefix)=>prefix+'_'+(crypto.randomUUID?crypto.randomUUID().replace(/-/g,''):Date.now().toString(16)+Math.random().toString(16).slice(2));
+      const esc=(value)=>String(value).replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+      const numeric=(value)=>Number.isFinite(Number(value))&&Number(value)>=0?Number(value):null;
+      const log=(type,detail)=>{store.events.unshift({type,detail,at:new Date().toLocaleString()});store.events=store.events.slice(0,120);};
+      const save=()=>{try{localStorage.setItem(STORE_KEY,JSON.stringify(store));}catch(error){log('STORAGE_WARNING','Browser storage is unavailable or full.');}};
+      const unitById=(id)=>store.units.find((unit)=>unit.id===id);
+      const activeEvidence=(unit)=>unit.evidence.filter((item)=>item.status==='ACTIVE');
+      const currentEligible=(unit)=>unit.status==='ELIGIBLE'&&activeEvidence(unit).some((item)=>item.value===true);
+      const dependencyPairs=()=>{
+        const ready=store.units.filter(currentEligible);
+        const ids=new Set(ready.map((unit)=>unit.id));
+        return ready.flatMap((unit)=>unit.dependencies.filter((id)=>ids.has(id)).map((id)=>[unit.id,id]));
+      };
+      const conflictPairs=()=>{
+        const ready=store.units.filter(currentEligible);
+        const ids=new Set(ready.map((unit)=>unit.id));
+        const pairs=[];
+        for(const unit of ready)for(const id of unit.conflicts||[])if(ids.has(id)&&unit.id<id)pairs.push([unit.id,id]);
+        return pairs;
+      };
+      function addUnit(data){
+        const unit={
+          id:uid('nx'),name:String(data.name).slice(0,90),
+          benefit:Number(data.benefit),resourceCost:Number(data.resourceCost),
+          status:'POTENTIAL',evidence:[],dependencies:[],conflicts:[],
+          fromAI:Boolean(data.fromAI),rationale:String(data.rationale||'').slice(0,320),
+          needsReview:false,createdAt:new Date().toISOString()
+        };
+        store.units.push(unit);
+        log('UNIT_CREATED',unit.name+' created in POTENTIAL state'+(unit.fromAI?' from an AI proposal.':'.'));
+        return unit;
+      }
+      function recordApproval(unitId){
+        const unit=unitById(unitId);if(!unit)return;
+        const source=prompt('Enter the source document or approval reference you have reviewed. This label is user-supplied and is NOT independently verified.');
+        if(!source||!source.trim())return;
+        const item={id:uid('ev'),path:'approval',value:true,source:source.trim().slice(0,160),actor:'browser-user',observedAt:new Date().toISOString(),status:'ACTIVE'};
+        unit.evidence.push(item);
+        unit.status='ELIGIBLE';
+        unit.needsReview=false;
+        store.lastResult=null;
+        log('EVIDENCE_RECORDED',unit.name+' received a manually entered evidence reference.');
+        save();renderAll();
+      }
+      function revokeApproval(unitId){
+        const unit=unitById(unitId);if(!unit)return;
+        const active=activeEvidence(unit);
+        if(!active.length)return;
+        active.forEach((item)=>{item.status='REVOKED';item.revokedAt=new Date().toISOString();});
+        unit.status='POTENTIAL';unit.needsReview=false;
+        store.lastResult=null;
+        log('EVIDENCE_REVOKED',unit.name+' evidence was revoked; candidate returned to POTENTIAL.');
+        save();renderAll();
+      }
+      function canDependOn(unitId,dependencyId){
+        if(unitId===dependencyId)return false;
+        const visited=new Set();
+        function visit(current){
+          if(current===unitId)return true;
+          if(visited.has(current))return false;
+          visited.add(current);
+          const item=unitById(current);
+          return !!item&&item.dependencies.some(visit);
+        }
+        return !visit(dependencyId);
+      }
+      function addDependency(unitId,dependencyId,kind){
+        const unit=unitById(unitId),target=unitById(dependencyId);
+        if(!unit||!target||unitId===dependencyId)return;
+        if(kind==='dependency'&&!canDependOn(unitId,dependencyId)){alert('That dependency would create a cycle.');return;}
+        const field=kind==='dependency'?'dependencies':'conflicts';
+        if(unit[field].includes(dependencyId)){alert('This relationship already exists.');return;}
+        unit[field].push(dependencyId);
+        store.lastResult=null;
+        log(kind.toUpperCase()+'_ADDED',unit.name+' relationship added to '+target.name+'.');
+        save();renderAll();
+      }
+      function addAiProposals(){
+        if(!store.aiPlan||!Array.isArray(store.aiPlan.items))return;
+        const titleMap=new Map();
+        const added=store.aiPlan.items.map((item)=>{
+          const unit=addUnit({name:item.title,benefit:item.benefit,resourceCost:item.resource_cost,fromAI:true,rationale:item.rationale});
+          titleMap.set(String(item.title).toLowerCase(),unit.id);
+          return {unit,item};
+        });
+        for(const entry of added){
+          entry.unit.dependencies=(entry.item.depends_on_titles||[]).map((title)=>titleMap.get(String(title).toLowerCase())).filter(Boolean);
+          entry.unit.conflicts=(entry.item.conflicts_with_titles||[]).map((title)=>titleMap.get(String(title).toLowerCase())).filter(Boolean);
+        }
+        store.aiPlan=null;store.lastResult=null;
+        log('AI_PROPOSALS_IMPORTED',added.length+' AI candidates added as POTENTIAL units. Evidence is still required.');
+        save();renderAll();
+      }
+      function renderCandidates(){
+        $('unitCount').textContent=store.units.length;
+        $('eligibleCount').textContent=store.units.filter(currentEligible).length;
+        $('evidenceCount').textContent=store.units.reduce((sum,unit)=>sum+activeEvidence(unit).length,0);
+        $('proposalCount').textContent=store.units.filter((unit)=>unit.fromAI).length;
+        if(!store.units.length){$('candidateList').innerHTML='<div class="qi-card">No candidates added yet. Create a candidate or request an AI proposal.</div>';return;}
+        const eligible=store.units.filter(currentEligible);
+        $('candidateList').innerHTML=store.units.slice().reverse().map((unit)=>{
+          const status=unit.status.toLowerCase();
+          const deps=unit.dependencies.map((id)=>unitById(id)?.name||id).map(esc).join(', ')||'None';
+          const conflicts=unit.conflicts.map((id)=>unitById(id)?.name||id).map(esc).join(', ')||'None';
+          const proofs=unit.evidence.map((item)=>'<p>Evidence: '+esc(item.source)+' · '+esc(item.status)+'</p>').join('');
+          const options=eligible.filter((other)=>other.id!==unit.id).map((other)=>'<option value="'+esc(other.id)+'">'+esc(other.name)+'</option>').join('');
+          return '<article class="qi-card"><div class="qi-card-top"><span class="qi-id">'+esc(unit.id)+'</span><span class="qi-state '+status+'">'+esc(unit.status)+'</span></div><h4>'+esc(unit.name)+'</h4><p>Benefit: '+esc(unit.benefit)+' · Resource cost: '+esc(unit.resourceCost)+'</p><p>Created: '+esc(new Date(unit.createdAt).toLocaleString())+(unit.fromAI?' · AI PROPOSAL':'')+'</p>'+proofs+'<p>Depends on: '+deps+'</p><p>Conflicts with: '+conflicts+'</p><button class="qi-btn" data-action="evidence" data-id="'+esc(unit.id)+'">＋ RECORD APPROVAL EVIDENCE</button><button class="qi-btn warn" data-action="revoke" data-id="'+esc(unit.id)+'" '+(activeEvidence(unit).length?'':'disabled')+'>REVOKE EVIDENCE</button><div class="qi-row"><select class="qi-select" data-rel="'+esc(unit.id)+'" data-kind="dependency"><option value="">Add dependency…</option>'+options+'</select><button class="qi-btn" data-action="dependency" data-id="'+esc(unit.id)+'">ADD DEPENDENCY</button></div><div class="qi-row"><select class="qi-select" data-rel="'+esc(unit.id)+'" data-kind="conflict"><option value="">Add conflict…</option>'+options+'</select><button class="qi-btn" data-action="conflict" data-id="'+esc(unit.id)+'">ADD CONFLICT</button></div></article>';
+        }).join('');
+      }
+      function renderAiPlan(){
+        const host=$('aiProposal');
+        if(!store.aiPlan){host.hidden=true;host.innerHTML='';return;}
+        host.hidden=false;
+        const items=store.aiPlan.items.map((item)=>'<tr><td>'+esc(item.title)+'</td><td>'+esc(item.benefit)+'</td><td>'+esc(item.resource_cost)+'</td></tr>').join('');
+        host.innerHTML='<div class="qi-result"><h3>AI proposal · not verified evidence</h3><p class="qi-small">'+esc(store.aiPlan.goal||'')+'</p><table class="qi-table"><thead><tr><th>Candidate</th><th>Benefit</th><th>Cost</th></tr></thead><tbody>'+items+'</tbody></table><p class="qi-small">Assumptions: '+esc((store.aiPlan.assumptions||[]).join(' · ')||'None returned')+'</p><p class="qi-small">Risks: '+esc((store.aiPlan.risk_notes||[]).join(' · ')||'None returned')+'</p><button class="qi-btn primary" id="importAiPlan" type="button">IMPORT AS POTENTIAL UNITS</button><p class="qi-small">Importing creates POTENTIAL units only. Each needs separate human-reviewed evidence.</p></div>';
+        $('importAiPlan').addEventListener('click',addAiProposals);
+      }
+      function renderResult(){
+        const host=$('quantumResult');
+        if(!store.lastResult){host.hidden=true;host.innerHTML='';return;}
+        const result=store.lastResult;
+        const chosen=result.selected.map((item)=>esc(item.name)).join(', ')||'No candidates selected';
+        const rows=result.top.map((row)=>'<tr><td>'+esc(row.bits)+'</td><td>'+esc(row.count)+'</td><td>'+esc(row.score.toFixed(2))+'</td><td>'+ (row.feasible?'YES':'NO')+'</td></tr>').join('');
+        host.hidden=false;
+        host.innerHTML='<div class="qi-result"><h3>QAOA simulation result</h3><p class="chosen"><strong>Measured selection:</strong> '+chosen+'</p><div class="qi-stats"><div class="qi-stat"><strong>'+result.nqubits+'</strong><span>QUBITS SIMULATED</span></div><div class="qi-stat"><strong>'+result.shots+'</strong><span>MEASUREMENTS</span></div><div class="qi-stat"><strong>'+result.feasibleProbability.toFixed(1)+'%</strong><span>FEASIBLE PROBABILITY</span></div><div class="qi-stat"><strong>'+result.measuredScore.toFixed(2)+'</strong><span>MEASURED SCORE</span></div></div><p class="qi-small">Resource use: '+result.measuredCost.toFixed(2)+' / '+result.budget.toFixed(2)+' · Benefit: '+result.measuredBenefit.toFixed(2)+' · State: '+(result.measuredFeasible?'FEASIBLE':'INFEASIBLE')+'</p><p class="qi-small">QAOA expected score: '+result.expectedScore.toFixed(3)+' · Uniform baseline: '+result.uniformScore.toFixed(3)+' · Best small-case classical solution: '+result.exactSelection.map((item)=>esc(item.name)).join(', ')+'</p><p class="qi-small">Angles: γ = '+result.gamma.toFixed(3)+' · β = '+result.beta.toFixed(3)+' · Grid: 12 × 12</p><table class="qi-table"><thead><tr><th>Bit string</th><th>Count</th><th>Score</th><th>Feasible</th></tr></thead><tbody>'+rows+'</tbody></table><p class="qi-small">This is a local state-vector simulation. No real QPU was used and no NEXIST unit was realized or modified.</p></div>';
+      }
+      function renderLog(){
+        $('eventLog').innerHTML=store.events.length?store.events.map((item)=>'<div class="qi-log-item"><strong>'+esc(item.type)+'</strong> · '+esc(item.at)+'<br>'+esc(item.detail)+'</div>').join(''):'<p class="qi-small">No actions yet.</p>';
+      }
+      function renderAll(){
+        if($('projectContent').hidden)return;
+        renderCandidates();renderAiPlan();renderResult();renderLog();
+        $('year').textContent=new Date().getFullYear();
+      }
+      async function checkAiStatus(){
+        const target=$('aiStatus'),detail=$('aiStatusDetail');
+        try{
+          const response=await fetch(AI_API_BASE+'/health',{method:'GET',headers:{'Accept':'application/json'}});
+          const data=await response.json();
+          if(data.status==='ready'){target.textContent='READY';target.className='good';detail.textContent=data.provider+' · '+data.model;}
+          else{target.textContent='SETUP NEEDED';target.className='warn';detail.textContent=data.message||'Configure the server-side AI token.';}
+        }catch(error){target.textContent='OFFLINE';target.className='warn';detail.textContent='The secure AI endpoint is not reachable. The local QAOA simulator remains available.';}
+      }
+      $('aiForm').addEventListener('submit',async function(event){
+        event.preventDefault();
+        const promptText=$('planningGoal').value.trim();
+        const budget=numeric($('aiBudget').value);
+        if(!promptText){$('aiMessage').textContent='Enter a planning goal first.';$('aiMessage').className='qi-message error';return;}
+        if(budget===null){$('aiMessage').textContent='Enter a valid non-negative budget.';$('aiMessage').className='qi-message error';return;}
+        const button=$('askAi');button.disabled=true;button.textContent='ASKING AI…';
+        $('aiMessage').textContent='Sending the planning goal to the server-side open-weight AI adapter…';$('aiMessage').className='qi-message';
+        try{
+          const response=await fetch(AI_API_BASE+'/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:promptText,budget:budget,model:$('aiModel').value})});
+          const data=await response.json();
+          if(!response.ok)throw new Error(data.error||'AI request failed.');
+          store.aiPlan=data.plan;log('AI_PLAN_RECEIVED','AI returned '+data.plan.items.length+' proposal candidates. None are evidence-verified.');
+          save();renderAiPlan();renderLog();
+          $('aiMessage').textContent='AI proposal received. Importing it will create POTENTIAL units only.';$('aiMessage').className='qi-message success';
+        }catch(error){$('aiMessage').textContent=error.message||'AI service is not ready.';$('aiMessage').className='qi-message warning';}
+        finally{button.disabled=false;button.textContent='ASK AI TO BUILD A PROPOSAL ↗';}
+      });
+      $('candidateForm').addEventListener('submit',function(event){
+        event.preventDefault();
+        const name=$('candidateName').value.trim(),benefit=numeric($('candidateBenefit').value),cost=numeric($('candidateCost').value);
+        if(!name||benefit===null||cost===null){$('candidateMessage').textContent='Please enter a name and valid non-negative numeric values.';$('candidateMessage').className='qi-message error';return;}
+        addUnit({name,benefit,resourceCost:cost,fromAI:false});
+        $('candidateName').value='';save();renderAll();
+        $('candidateMessage').textContent='Candidate created as POTENTIAL. Record evidence before optimization.';$('candidateMessage').className='qi-message success';
+      });
+      $('candidateList').addEventListener('click',function(event){
+        const button=event.target.closest('button[data-action]');if(!button)return;
+        const unit=unitById(button.dataset.id);if(!unit)return;
+        if(button.dataset.action==='evidence')recordApproval(unit.id);
+        if(button.dataset.action==='revoke')revokeApproval(unit.id);
+        if(button.dataset.action==='dependency'||button.dataset.action==='conflict'){
+          const kind=button.dataset.action;
+          const select=$('candidateList').querySelector('select[data-rel="'+unit.id+'"][data-kind="'+kind+'"]');
+          if(!select||!select.value){alert('Choose another candidate first.');return;}
+          addDependency(unit.id,select.value,kind);
+        }
+      });
+
+      function scoreMask(candidates,mask,budget,dependencies,conflicts){
+        let benefit=0,cost=0,violations=0;
+        const ids=new Set();
+        candidates.forEach((item,index)=>{if(mask&(1<<index)){benefit+=item.benefit;cost+=item.resourceCost;ids.add(item.id);}});
+        if(cost>budget)violations++;
+        if(dependencies.some((pair)=>ids.has(pair[0])&&!ids.has(pair[1])))violations++;
+        if(conflicts.some((pair)=>ids.has(pair[0])&&ids.has(pair[1])))violations++;
+        const penalty=Math.max(1,candidates.reduce((sum,item)=>sum+item.benefit,0)+1);
+        return {score:benefit-penalty*violations,benefit,cost,feasible:violations===0};
+      }
+      function qaoa(candidates,budget,shots,dependencies,conflicts){
+        const n=candidates.length,size=1<<n;
+        const table=Array.from({length:size},(_,mask)=>scoreMask(candidates,mask,budget,dependencies,conflicts));
+        const uniformScore=table.reduce((sum,item)=>sum+item.score,0)/size;
+        const scale=Math.max(1,...table.map((item)=>Math.abs(item.score)));
+        let bestExpected=-Infinity,bestGamma=0,bestBeta=0,bestProbabilities=[];
+        const steps=12;
+        for(let gi=0;gi<steps;gi++){
+          const gamma=2*Math.PI*gi/steps;
+          for(let bi=0;bi<steps;bi++){
+            const beta=Math.PI*bi/steps;
+            const re=new Float64Array(size),im=new Float64Array(size);
+            re.fill(1/Math.sqrt(size));
+            for(let mask=0;mask<size;mask++){
+              const angle=gamma*table[mask].score/scale,cos=Math.cos(angle),sin=Math.sin(angle);
+              const rr=re[mask],ii=im[mask];
+              re[mask]=rr*cos-ii*sin;im[mask]=rr*sin+ii*cos;
+            }
+            const c=Math.cos(beta),s=Math.sin(beta);
+            for(let q=0;q<n;q++){
+              const bit=1<<q;
+              for(let mask=0;mask<size;mask++){
+                if(mask&bit)continue;
+                const a0r=re[mask],a0i=im[mask],a1r=re[mask|bit],a1i=im[mask|bit];
+                re[mask]=c*a0r+s*a1i;
+                im[mask]=c*a0i-s*a1r;
+                re[mask|bit]=c*a1r+s*a0i;
+                im[mask|bit]=c*a1i-s*a0r;
+              }
+            }
+            const probabilities=Array.from({length:size},(_,mask)=>re[mask]*re[mask]+im[mask]*im[mask]);
+            const norm=probabilities.reduce((sum,value)=>sum+value,0);
+            for(let i=0;i<size;i++)probabilities[i]/=norm;
+            const expected=probabilities.reduce((sum,p,mask)=>sum+p*table[mask].score,0);
+            if(expected>bestExpected+1e-12){bestExpected=expected;bestGamma=gamma;bestBeta=beta;bestProbabilities=probabilities;}
+          }
+        }
+        let seed=20261118;
+        const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+        const counts=new Array(size).fill(0),cumulative=[];
+        let running=0;bestProbabilities.forEach((p)=>{running+=p;cumulative.push(running);});
+        for(let shot=0;shot<shots;shot++){
+          const r=random();let lo=0,hi=size;
+          while(lo<hi){const mid=(lo+hi)>>1;if(r<=cumulative[mid])hi=mid;else lo=mid+1;}
+          counts[Math.min(lo,size-1)]++;
+        }
+        const sampled=counts.map((count,mask)=>({mask,count,...table[mask]})).filter((row)=>row.count>0);
+        const chosen=sampled.sort((a,b)=>(Number(b.feasible)-Number(a.feasible))||(b.score-a.score)||(b.count-a.count))[0];
+        const exact=table.map((row,mask)=>({mask,...row})).sort((a,b)=>(Number(b.feasible)-Number(a.feasible))||(b.score-a.score))[0];
+        const feasibleProbability=bestProbabilities.reduce((sum,p,mask)=>sum+(table[mask].feasible?p:0),0);
+        const top=sampled.sort((a,b)=>(b.score-a.score)||(b.count-a.count)).slice(0,7).map((row)=>({
+          bits:Array.from({length:n},(_,i)=>row.mask&(1<<(n-1-i))?'1':'0').join(''),
+          count:row.count,score:row.score,feasible:row.feasible
+        }));
+        return {
+          nqubits:n,shots,budget,gamma:bestGamma,beta:bestBeta,expectedScore:bestExpected,
+          uniformScore,feasibleProbability:feasibleProbability*100,
+          selected:candidates.filter((item,index)=>chosen.mask&(1<<index)),
+          measuredScore:chosen.score,measuredCost:chosen.cost,measuredBenefit:chosen.benefit,
+          measuredFeasible:chosen.feasible,exactSelection:candidates.filter((item,index)=>exact.mask&(1<<index)),top
+        };
+      }
+      $('runQuantum').addEventListener('click',function(){
+        const budget=numeric($('solverBudget').value),shots=Number($('solverShots').value);
+        if(budget===null){$('quantumMessage').textContent='Enter a valid non-negative resource budget.';$('quantumMessage').className='qi-message error';return;}
+        const eligible=store.units.filter(currentEligible);
+        if(!eligible.length){$('quantumMessage').textContent='No candidates have a current active approval evidence record.';$('quantumMessage').className='qi-message warning';return;}
+        if(eligible.length>8){$('quantumMessage').textContent='The browser simulator is limited to 8 qubits. Reduce the eligible candidates.';$('quantumMessage').className='qi-message error';return;}
+        const eligibleIds=new Set(eligible.map((unit)=>unit.id));
+        const candidates=eligible.map((unit)=>({id:unit.id,name:unit.name,benefit:unit.benefit,resourceCost:unit.resourceCost}));
+        const dependencies=dependencyPairs().filter((pair)=>eligibleIds.has(pair[0])&&eligibleIds.has(pair[1]));
+        const conflicts=conflictPairs().filter((pair)=>eligibleIds.has(pair[0])&&eligibleIds.has(pair[1]));
+        try{
+          $('runQuantum').disabled=true;$('quantumMessage').textContent='Simulating the state vector and searching QAOA angles…';$('quantumMessage').className='qi-message';
+          const result=qaoa(candidates,budget,shots,dependencies,conflicts);
+          store.lastResult=result;log('QAOA_COMPLETED',result.nqubits+' qubits simulated; measured '+result.selected.length+' project(s).');
+          save();renderResult();renderLog();
+          $('quantumMessage').textContent='QAOA simulation completed. Compare its sample with the exact classical small-case reference.';$('quantumMessage').className='qi-message success';
+        }catch(error){$('quantumMessage').textContent=error.message||'Quantum simulation failed.';$('quantumMessage').className='qi-message error';}
+        finally{$('runQuantum').disabled=false;}
+      });
+      $('clearResults').addEventListener('click',function(){store.lastResult=null;save();renderResult();$('quantumMessage').textContent='The last quantum result was cleared.';});
+      $('clearDemo').addEventListener('click',function(){
+        if(!confirm('Clear all NEXIST Q-Intelligence demo candidates, evidence, events and results stored in this browser?'))return;
+        store=makeFresh();save();renderAll();$('quantumMessage').textContent='Local demo data cleared.';
+      });
+      if(sessionStorage.getItem('nexistQIntelligenceUnlocked')==='yes')showProject();
+    })();
+  </script>
+</body>
+</html>
