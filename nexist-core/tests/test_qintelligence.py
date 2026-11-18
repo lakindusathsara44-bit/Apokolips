@@ -89,6 +89,14 @@ class QIntelligenceTests(unittest.TestCase):
                 [SelectionCandidate(unit.id, 5, 1)], budget=2
             )
 
+    def test_dependency_cycles_are_rejected(self):
+        candidates = [
+            SelectionCandidate("a", 1, 1),
+            SelectionCandidate("b", 1, 1),
+        ]
+        with self.assertRaises(NXValidationError):
+            solve_selection(candidates, budget=2, dependencies=[("a", "b"), ("b", "a")])
+
     def test_invalid_inputs_are_rejected(self):
         with self.assertRaises(NXValidationError):
             solve_selection([], budget=10)
