@@ -124,7 +124,7 @@
 
     <section class="qi-section">
       <h2 class="qi-section-title">01 / Quantum plan advisor and candidate units</h2>
-      <p class="qi-section-lead">Enter candidate name, expected benefit and resource cost. After training on your labels, the Quantum Neural Network estimates each candidate’s suitability from its numerical features. Only units with active, manually recorded approval evidence can enter the QAOA portfolio run; a QNN prediction is not approval evidence.</p>
+      <p class="qi-section-lead">Enter each candidate's name, expected benefit and resource cost. After training on your labels, the Quantum Neural Network estimates suitability from four numerical features: normalized benefit, benefit-to-cost density, budget margin and dependency simplicity. No external AI service or API key is used. This advisor scores structured candidates; it does not generate a free-text plan from a prompt. Only units with active, manually recorded approval evidence can enter the QAOA portfolio run.</p>
       <div class="qi-grid">
         <article class="qi-panel">
           <h3>Add a candidate for Quantum AI assessment</h3>
@@ -518,7 +518,7 @@
         $('eventLog').innerHTML=store.events.length?store.events.map((item)=>'<div class="qi-log-item"><strong>'+esc(item.type)+'</strong> · '+esc(item.at)+'<br>'+esc(item.detail)+'</div>').join(''):'<p class="qi-small">No actions yet.</p>';
       }
       function renderQnnPanel(){
-        const labelled=store.units.filter((unit)=>unit.qnnLabel===true||unit.qnnLabel===false);
+        const labelled=store.units.filter((unit)=>unit.qnnLabel===1||unit.qnnLabel===0);
         $('qnnLabelCount').textContent=labelled.length;
         $('qnnModelState').textContent=qnnIsValid(store.qnnModel)?'TRAINED':'NOT TRAINED';
         const topStatus=$('qnnTopStatus');
