@@ -25,12 +25,13 @@ class QuantumNeuralNetworkTests(unittest.TestCase):
             self.assertLessEqual(value, 1.0)
 
     def test_parameter_shift_training_and_model_round_trip(self):
-        model = QuantumNeuralNetwork(seed=11)
+        model = QuantumNeuralNetwork(seed=17)
         before = model.predict((0.9, 0.8, 0.8, 0.9)).probability_suitable
-        summary = model.fit(self.examples, epochs=8, learning_rate=0.08)
+        summary = model.fit(self.examples, epochs=40, learning_rate=0.08)
         after = model.predict((0.9, 0.8, 0.8, 0.9)).probability_suitable
         self.assertEqual(summary["examples"], 4)
-        self.assertEqual(summary["epochs"], 8)
+        self.assertEqual(summary["epochs"], 40)
+        self.assertLess(summary["final_loss"], summary["initial_loss"])
         self.assertTrue(math.isfinite(summary["final_loss"]))
         self.assertNotEqual(before, after)
         restored = QuantumNeuralNetwork.from_dict(model.to_dict())
