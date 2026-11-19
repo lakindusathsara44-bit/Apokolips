@@ -49,6 +49,23 @@ jobs:
       - name: Check required files, HTML references, and sitemap
         run: python .github/scripts/verify_site.py
 
+      - name: Ensure NEXIST pages contain no repository/source links
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          pages = ("My-project.html", "nexist.html", "nexist-evidence.html", "nexist-qintelligence.html")
+          forbidden = ("github.com/", "raw.githubusercontent.com/")
+          errors = []
+          for name in pages:
+              source = (Path(name).read_text(encoding="utf-8")).lower()
+              for marker in forbidden:
+                  if marker in source:
+                      errors.append(f"{name} contains a forbidden repository link: {marker}")
+          if errors:
+              raise SystemExit("\n".join(errors))
+          print("NEXIST project pages contain no GitHub or raw source links.")
+          PY
+
       - name: Test NEXIST Python core
         working-directory: nexist-core
         run: python -m unittest discover -s tests -t . -v
@@ -61,18 +78,39 @@ jobs:
         working-directory: nexist-core
         run: python -m examples.evidence_lifecycle
 
-      - name: Check inline NEXIST evidence page JavaScript
+      - name: Smoke-test NEXIST Q-Intelligence example
+        working-directory: nexist-core
+        run: python -m examples.q_intelligence
+
+      - name: Check inline NEXIST demo JavaScript
         run: |
           python - <<'PY'
           import re
           from pathlib import Path
-          source = Path("nexist-evidence.html").read_text(encoding="utf-8")
-          scripts = re.findall(r"<script>(.*?)</script>", source, re.DOTALL)
-          if not scripts:
-              raise SystemExit("No inline demo script found.")
-          Path("/tmp/nexist-evidence-inline.js").write_text("\n".join(scripts), encoding="utf-8")
+          for page in ("nexist-evidence.html", "nexist-qintelligence.html"):
+              source = Path(page).read_text(encoding="utf-8")
+              scripts = re.findall(r"<script>(.*?)</script>", source, re.DOTALL)
+              if not scripts:
+                  raise SystemExit(f"No inline demo script found in {page}.")
+              output = Path("/tmp") / (page + ".inline.js")
+              output.write_text("\n".join(scripts), encoding="utf-8")
+              print(f"Extracted inline script from {page}")
           PY
-          node --check /tmp/nexist-evidence-inline.js
+          node --check /tmp/nexist-evidence.html.inline.js
+          node --check /tmp/nexist-qintelligence.html.inline.js
+
+      - name: Check NEXIST Q-Intelligence server adapter
+        run: node --check neon-functions/nxqai/index.mjs
+
+      - name: Test NEXIST Q-Intelligence AI adapter
+        run: node --test neon-functions/nxqai/tests.mjs neon-functions/nxqai/tests/*.test.mjs
+
+      - name: Verify deployable Q-Intelligence function archive
+        run: |
+          base64 -d neon-functions/nxqai/function.zip.b64 > /tmp/nxqai.zip
+          unzip -p /tmp/nxqai.zip index.mjs > /tmp/nxqai-archive-index.mjs
+          cmp neon-functions/nxqai/index.mjs /tmp/nxqai-archive-index.mjs
+          node --check /tmp/nxqai-archive-index.mjs
 
       - name: Test NEXIST comparative research workload
         working-directory: nexist-core

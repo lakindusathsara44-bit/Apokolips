@@ -134,3 +134,53 @@ Key behaviours:
 - Evidence snapshots use their own nexist-evidence-0.1 JSON format.
 
 The source labels and timestamps are caller-supplied metadata; they do not authenticate the source. The engine has no identity system, access controls, signature verification, multi-user concurrency, or tamper-proof storage. Do not use it to protect confidential data. Read research/EVIDENCE_LIFECYCLE.md for its related-work boundary and limitations.
+
+
+## NEXIST Q-Intelligence (experimental v0.4)
+
+Q-Intelligence combines the evidence-aware lifecycle with a small p=1 QAOA-style binary selection experiment.
+
+- Candidate decisions are represented by qubits in a local state-vector simulation.
+- A diagonal phase separator encodes candidate benefit, resource budget, dependencies, and conflicts.
+- An RX mixer explores superpositions; a simple grid search selects gamma and beta.
+- The result reports sampled selections, feasibility probability, an exhaustive classical optimum, and the evidence-evaluation IDs that admitted the candidate units.
+- The optimization method never changes NEXIST lifecycle states, issues approval, or realizes a unit.
+
+Run the example from this directory:
+
+    python -m examples.q_intelligence
+
+The standard engine uses only the Python standard library and is limited to 12 qubits (2^n state-vector amplitudes). This is intentionally small and runs on ordinary computers. It is a simulator, not a physical quantum processor and not proof of quantum advantage.
+
+For an optional Qiskit Aer circuit sampler, install:
+
+    pip install -r requirements-quantum.txt
+
+The optional adapter samples a QAOA circuit in Qiskit Aer. It still uses a local simulator; a real quantum hardware backend is a separate future integration.
+
+## Hybrid AI boundary
+
+The hosted AI advisor is a server-side Node.js 24 Neon Function using the branch's Neon AI Gateway. It retrieves the current enabled model catalogue and filters for open-weight model IDs; the model list can change with provider availability and account access. The browser does not receive the AI Gateway credential.
+
+The AI endpoint verifies the project password on the server using PBKDF2, then issues a short-lived HMAC-signed session. The API has the following routes:
+
+- GET /health reports whether the branch AI Gateway is configured.
+- POST /auth verifies the project password and creates a short-lived API session.
+- GET /models returns currently enabled open-weight models for the authenticated session.
+- POST /plan returns a structured candidate portfolio with assumptions, risks, dependencies and conflicts.
+
+AI output is always unverified proposal data. It is imported as POTENTIAL units. A user-entered evidence label in the static browser demo is only a self-attestation and does not authenticate the source document. The persistent Python EvidenceAwareEngine is the reference implementation for explicit evidence evaluations, revocation, invalidation and review.
+
+The full workflow is:
+
+    User goal -> Open-weight AI proposal -> NEXIST evidence gate
+              -> QAOA selection -> classical validation
+              -> human approval -> explicit realization
+
+The browser page is a demonstration UI; its local records are separate from the persistent Python engine. The browser QAOA simulator is limited to a small state vector and does not use a physical quantum processor. No quantum advantage is claimed.
+
+Run the server adapter tests with:
+
+    node --test neon-functions/nxqai/tests.mjs
+
+The server reads NEXIST_ACCESS_HASH, NEXIST_ACCESS_SALT, NEXIST_SESSION_SECRET and NEXIST_ALLOWED_ORIGINS from server-side environment variables. Neon injects NEON_AI_GATEWAY_BASE_URL and NEON_AI_GATEWAY_TOKEN into the Function environment. Never place these secrets in browser code or commit them to the repository.

@@ -12,7 +12,7 @@
     {
       title: "My Projects",
       description: "Explore the software projects and learning platforms built through Apokolips.",
-      keywords: "projects portfolio Tenses English grammar Constantine Vajrapani Buddhism Catholic GPA calculator SLIATE HNDIT NervaEdu Apokolips Search",
+      keywords: "projects portfolio Tenses English grammar Constantine Vajrapani Buddhism Catholic GPA calculator SLIATE HNDIT NervaEdu Apokolips Search NEXIST Quantum QAOA qubits AI intelligence",
       href: "./My-project.html",
       category: "PROJECTS",
     },
