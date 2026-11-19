@@ -158,29 +158,41 @@ For an optional Qiskit Aer circuit sampler, install:
 
 The optional adapter samples a QAOA circuit in Qiskit Aer. It still uses a local simulator; a real quantum hardware backend is a separate future integration.
 
-## Hybrid AI boundary
+## NEXIST Quantum Neural AI (experimental v0.5)
 
-The hosted AI advisor is a server-side Node.js 24 Neon Function using the branch's Neon AI Gateway. It retrieves the current enabled model catalogue and filters for open-weight model IDs; the model list can change with provider availability and account access. The browser does not receive the AI Gateway credential.
+The AI scoring engine is now a small **variational quantum neural network (QNN)** rather than treating a classical language-model response or QAOA optimizer as the AI itself.
 
-The AI endpoint verifies the project password on the server using PBKDF2, then issues a short-lived HMAC-signed session. The API has the following routes:
+The reference implementation is `nexist/quantum_neural.py` and uses only the Python standard library:
 
-- GET /health reports whether the branch AI Gateway is configured.
-- POST /auth verifies the project password and creates a short-lived API session.
-- GET /models returns currently enabled open-weight models for the authenticated session.
-- POST /plan returns a structured candidate portfolio with assumptions, risks, dependencies and conflicts.
+1. Four bounded numeric features are angle-encoded into four qubits using (R_y) and (R_z) rotations.
+2. Two trainable variational layers apply (R_y(	heta)), (R_z(	heta)), and entangling CNOT gates.
+3. Measurement estimates the Pauli-Z expectation values (langle Z_iangle).
+4. A small classical readout maps these expectations to a suitability probability:
+   (p(y=1|x)=\sigma(b+\sum_i w_i\langle Z_i\rangle)).
+5. The variational parameters are trained from human-labelled examples with the parameter-shift gradient rule:
+   \(\partial_\theta\langle Z\rangle=\frac{\langle Z\rangle_{\theta+\pi/2}-\langle Z\rangle_{\theta-\pi/2}}{2}\).
 
-AI output is always unverified proposal data. It is imported as POTENTIAL units. A user-entered evidence label in the static browser demo is only a self-attestation and does not authenticate the source document. The persistent Python EvidenceAwareEngine is the reference implementation for explicit evidence evaluations, revocation, invalidation and review.
+The page's optional OpenRouter connection is only a language-to-structured-proposal convenience. It can draft candidate records from text, but it does not calculate QNN predictions, train the quantum circuit, validate evidence, or authorize a project. The QNN learns from examples the user explicitly labels as suitable or unsuitable. Its suitability probability then adjusts candidate utility inside the QAOA portfolio objective:
 
-The full workflow is:
+\[
+U_i = B_i(0.5 + p_i)
+\]
 
-    User goal -> Open-weight AI proposal -> NEXIST evidence gate
-              -> QAOA selection -> classical validation
-              -> human approval -> explicit realization
+where (B_i) is the declared benefit and (p_i) is the QNN suitability probability. The neutral default (p_i=0.5) leaves the declared benefit unchanged. This is a tunable prototype heuristic, not a calibrated real-world probability.
 
-The browser page is a demonstration UI; its local records are separate from the persistent Python engine. The browser QAOA simulator is limited to a small state vector and does not use a physical quantum processor. No quantum advantage is claimed.
+Run the example from this directory:
 
-Run the server adapter tests with:
+    python -m examples.quantum_neural
 
-    node --test neon-functions/nxqai/tests.mjs
+Train a model in Python with `QuantumNeuralNetwork.fit()`, restore it with `QuantumNeuralNetwork.from_dict()`, and pass each prediction's `probability_suitable` into `SelectionCandidate(qnn_suitability=...)`.
 
-The server reads NEXIST_ACCESS_HASH, NEXIST_ACCESS_SALT, NEXIST_SESSION_SECRET and NEXIST_ALLOWED_ORIGINS from server-side environment variables. Neon injects NEON_AI_GATEWAY_BASE_URL and NEON_AI_GATEWAY_TOKEN into the Function environment. Never place these secrets in browser code or commit them to the repository.
+### Quantum and research limits
+
+- The model simulates a four-qubit state vector on a classical CPU. It does not currently submit circuits to physical quantum hardware.
+- The circuit uses quantum-state amplitudes, parameterized rotation gates, CNOT entanglement, Born-rule measurement, and parameter-shift training. The readout and optimizer are classical; this is a hybrid variational quantum model.
+- The model is a small supervised classifier, not a general-purpose conversational or language model. It cannot learn reliable domain knowledge without representative, correctly labelled training data.
+- The UI keeps its demonstration labels and learned model in that browser's local storage. They are not shared with the Python package or another device.
+- The QNN score never replaces NEXIST's evidence checks. It cannot make a POTENTIAL unit eligible, realize a unit, or prove that a user-entered evidence reference is genuine.
+- The exact classical selection reference remains in the QAOA demo. The state-vector/QAOA simulation and QNN do not demonstrate quantum advantage.
+
+The design is an experimental milestone that should be evaluated against classical classifiers on the same labelled dataset, train/test splits, metrics, and hardware. No claim of quantum speedup, greater accuracy, or general quantum advantage is made.

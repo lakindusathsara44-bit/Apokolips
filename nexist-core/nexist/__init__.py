@@ -22,6 +22,11 @@ from .model import (
     NXValidationError,
     Requirement,
 )
+from .quantum_neural import (
+    QuantumNeuralNetwork,
+    QuantumPrediction,
+    QuantumTrainingExample,
+)
 from .qintelligence import (
     EvidenceBackedQAOAResult,
     NexistQIntelligence,
@@ -34,6 +39,9 @@ __all__ = [
     "NexistEngine",
     "EvidenceAwareEngine",
     "NexistQIntelligence",
+    "QuantumNeuralNetwork",
+    "QuantumPrediction",
+    "QuantumTrainingExample",
     "SelectionCandidate",
     "QAOAResult",
     "EvidenceBackedQAOAResult",
@@ -57,4 +65,4 @@ __all__ = [
     "Requirement",
 ]
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
