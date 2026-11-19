@@ -105,7 +105,7 @@
     <div class="qi-kicker">APOKOLIPS / EXPERIMENTAL SYSTEMS / PROJECT 009</div>
     <h1 class="qi-title">NEXIST <span>Q-Intelligence.</span></h1>
     <p class="qi-lead">A research prototype whose primary scoring model is a trainable variational Quantum Neural Network (QNN). It angle-encodes candidate features into qubits, applies trainable quantum gates and entanglement, measures Pauli-Z expectations, and learns from human-labelled examples. An optional language model can structure text into draft candidates; it does not perform QNN inference. NEXIST checks evidence and QAOA explores portfolios.</p>
-    <div class="qi-tags"><span class="qi-tag">NEXIST EVIDENCE GATE</span><span class="qi-tag">OPEN-WEIGHT AI</span><span class="qi-tag">QAOA / QUBITS</span><span class="qi-tag">CLASSICAL VALIDATION</span></div>
+    <div class="qi-tags"><span class="qi-tag">NEXIST EVIDENCE GATE</span><span class="qi-tag">VARIATIONAL QUANTUM AI</span><span class="qi-tag">QAOA / QUBITS</span><span class="qi-tag">CLASSICAL VALIDATION</span></div>
     <div class="qi-alert"><strong>Research and security boundary:</strong> this page is a browser demonstration. Its local demo records are not connected to the persistent Python engine. The page uses only a client-side convenience gate; there is no server-side password authentication. The four-digit password is not strong authentication. The site is still statically hosted and its browser demonstration is publicly retrievable; a four-digit password is not strong authentication. Do not enter private, personal, financial, or confidential data. The QNN and QAOA are small quantum-circuit simulations executed on a classical computer, not physical quantum hardware. The QNN is supervised and only learns from labels you supply. No quantum advantage is claimed. The optional OpenRouter language adapter does not calculate QNN scores.</div>
 
     <section class="qi-statusbar">
@@ -175,7 +175,7 @@
         <div class="qi-stat"><strong id="unitCount">0</strong><span>NX UNITS</span></div>
         <div class="qi-stat"><strong id="eligibleCount">0</strong><span>EVIDENCE-ELIGIBLE</span></div>
         <div class="qi-stat"><strong id="evidenceCount">0</strong><span>ACTIVE EVIDENCE</span></div>
-        <div class="qi-stat"><strong id="proposalCount">0</strong><span>AI PROPOSALS</span></div>
+        <div class="qi-stat"><strong id="proposalCount">0</strong><span>LANGUAGE DRAFTS</span></div>
       </div>
       <div class="qi-card-grid" id="candidateList"><div class="qi-card">No candidates added yet.</div></div>
     </section>
@@ -448,7 +448,7 @@
           needsReview:false,createdAt:new Date().toISOString()
         };
         store.units.push(unit);
-        log('UNIT_CREATED',unit.name+' created in POTENTIAL state'+(unit.fromAI?' from an AI proposal.':'.'));
+        log('UNIT_CREATED',unit.name+' created in POTENTIAL state'+(unit.fromAI?' from a language-model draft.':'.'));
         return unit;
       }
       function recheckEvidence(unitId){
@@ -648,7 +648,7 @@
         $('aiMessage').textContent='Calling OpenRouter directly from this browser…';$('aiMessage').className='qi-message';
         try{
           const data=await requestOpenRouterPlan(promptText,budget,modelId);
-          store.aiPlan=data.plan;log('AI_PLAN_RECEIVED','OpenRouter model '+data.model+' returned '+data.plan.items.length+' proposal candidates. None are evidence-verified.');
+          store.aiPlan=data.plan;log('AI_PLAN_RECEIVED','Optional language model '+data.model+' returned '+data.plan.items.length+' draft candidates. None are evidence-verified.');
           save();renderAiPlan();renderLog();
           $('aiMessage').textContent='Draft received from '+data.model+'. Importing creates POTENTIAL units only.';$('aiMessage').className='qi-message success';
         }catch(error){$('aiMessage').textContent=error.message||'AI request failed.';$('aiMessage').className='qi-message warning';}
