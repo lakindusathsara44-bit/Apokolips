@@ -479,15 +479,6 @@
         $('unlockError').textContent='Project locked. Enter the project password again.';
         $('projectPassword').value='';
       });
-      $('reconnectAi').addEventListener('click',function(){
-        aiSessionToken='';
-        sessionStorage.removeItem('nexistQApiSession');
-        sessionStorage.removeItem('nexistQIntelligenceUnlocked');
-        $('projectContent').hidden=true;
-        $('accessGate').hidden=false;
-        $('unlockError').textContent='Enter the project password to create a fresh AI session.';
-        $('projectPassword').value='';
-      });
       $('candidateForm').addEventListener('submit',function(event){
         event.preventDefault();
         const name=$('candidateName').value.trim(),benefit=numeric($('candidateBenefit').value),cost=numeric($('candidateCost').value);
