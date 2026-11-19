@@ -222,7 +222,8 @@
       const EXPECTED = 'a536c7ea372c8263ff9e1a622379fa100315efef89d6117ad176f95222ba291b';
       const ROUNDS = 210000;
       const STORE_KEY = 'nexistQIntelligenceDemoV1';
-      let openRouterApiKey = '';\n      let freeModelCatalogue = [];
+      let openRouterApiKey = '';
+      let freeModelCatalogue = [];
 
       const hex = (bytes) => Array.from(new Uint8Array(bytes)).map((value) => value.toString(16).padStart(2,'0')).join('');
       async function derive(password){
@@ -243,7 +244,8 @@
         try{
           const actual=await derive(entered);
           if(actual!==EXPECTED){$('unlockError').textContent='Incorrect password. Please try again.';return;}
-          openRouterApiKey='';\n          sessionStorage.setItem('nexistQIntelligenceUnlocked','yes');
+          openRouterApiKey='';
+          sessionStorage.setItem('nexistQIntelligenceUnlocked','yes');
           $('projectPassword').value='';
           showProject();
         }catch(error){$('unlockError').textContent='Password verification is unavailable in this browser.';}
@@ -472,7 +474,8 @@
         }catch(error){$('aiMessage').textContent=error.message||'AI request failed.';$('aiMessage').className='qi-message warning';}
         finally{button.disabled=false;button.textContent='ASK AI TO BUILD A PROPOSAL ↗';}
       });
-      $('openRouterKey').addEventListener('input',function(){openRouterApiKey=this.value.trim();});\n      $('reconnectAi').addEventListener('click',function(){
+      $('openRouterKey').addEventListener('input',function(){openRouterApiKey=this.value.trim();});
+      $('reconnectAi').addEventListener('click',function(){
         openRouterApiKey='';$('openRouterKey').value='';
         sessionStorage.removeItem('nexistQIntelligenceUnlocked');
         $('projectContent').hidden=true;$('accessGate').hidden=false;
