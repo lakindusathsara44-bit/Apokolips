@@ -82,6 +82,10 @@ jobs:
         working-directory: nexist-core
         run: python -m examples.q_intelligence
 
+      - name: Smoke-test NEXIST Quantum Neural AI example
+        working-directory: nexist-core
+        run: python -m examples.quantum_neural
+
       - name: Check inline NEXIST demo JavaScript
         run: |
           python - <<'PY'
