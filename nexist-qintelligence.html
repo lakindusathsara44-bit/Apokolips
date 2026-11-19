@@ -22,7 +22,7 @@
     .qi-tag{border:1px solid #2c405a;background:#0b1522;color:#c5ddff;border-radius:99px;padding:7px 11px;font-size:9px;font-weight:800;letter-spacing:.8px}
     .qi-alert{padding:13px 15px;margin:18px 0;background:#19130d;border:1px solid #624a2c;color:#f4d7a8;border-radius:12px;font-size:11px;line-height:1.75}
     .qi-alert strong{color:#ffe3b0}
-    .qi-statusbar{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin:20px 0}
+    .qi-statusbar{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin:20px 0}
     .qi-status,.qi-panel,.qi-card,.qi-stat{background:linear-gradient(150deg,#0e1724,#080d15);border:1px solid var(--q-line);border-radius:15px}
     .qi-status{padding:14px;min-width:0}.qi-status .eyebrow{font-size:9px;letter-spacing:1px;color:var(--q-muted)}.qi-status strong{display:block;margin-top:7px;font-size:12px;overflow-wrap:anywhere}
     .qi-status strong.good{color:var(--q-green)}.qi-status strong.warn{color:var(--q-amber)}.qi-status strong.info{color:var(--q-blue)}
@@ -106,19 +106,20 @@
     <h1 class="qi-title">NEXIST <span>Q-Intelligence.</span></h1>
     <p class="qi-lead">A research prototype whose primary scoring model is a trainable variational Quantum Neural Network (QNN). It angle-encodes candidate features into qubits, applies trainable quantum gates and entanglement, measures Pauli-Z expectations, and learns from human-labelled examples. An optional language model can structure text into draft candidates; it does not perform QNN inference. NEXIST checks evidence and QAOA explores portfolios.</p>
     <div class="qi-tags"><span class="qi-tag">NEXIST EVIDENCE GATE</span><span class="qi-tag">OPEN-WEIGHT AI</span><span class="qi-tag">QAOA / QUBITS</span><span class="qi-tag">CLASSICAL VALIDATION</span></div>
-    <div class="qi-alert"><strong>Research and security boundary:</strong> this page is a browser demonstration. Its local demo records are not connected to the persistent Python engine. The page uses a client-side convenience gate and the AI API separately verifies the password to issue a short-lived server session. The site is still statically hosted and its browser demonstration is publicly retrievable; a four-digit password is not strong authentication. Do not enter private, personal, financial, or confidential data. The QNN and QAOA are small quantum-circuit simulations executed on a classical computer, not physical quantum hardware. The QNN is supervised and only learns from labels you supply. No quantum advantage is claimed. The optional OpenRouter language adapter does not calculate QNN scores.</div>
+    <div class="qi-alert"><strong>Research and security boundary:</strong> this page is a browser demonstration. Its local demo records are not connected to the persistent Python engine. The page uses only a client-side convenience gate; there is no server-side password authentication. The four-digit password is not strong authentication. The site is still statically hosted and its browser demonstration is publicly retrievable; a four-digit password is not strong authentication. Do not enter private, personal, financial, or confidential data. The QNN and QAOA are small quantum-circuit simulations executed on a classical computer, not physical quantum hardware. The QNN is supervised and only learns from labels you supply. No quantum advantage is claimed. The optional OpenRouter language adapter does not calculate QNN scores.</div>
 
     <section class="qi-statusbar">
-      <div class="qi-status"><span class="eyebrow">OPTIONAL LANGUAGE ADAPTER</span><strong id="aiStatus" class="warn">CHECKING SERVICE…</strong><p id="aiStatusDetail" class="qi-small">Checking the secure server-side AI adapter.</p></div>
-      <div class="qi-status"><span class="eyebrow">QUANTUM ENGINE</span><strong class="good">LOCAL STATEVECTOR READY</strong><p class="qi-small">QAOA-style p=1 • Maximum 8 browser-demo qubits.</p></div>
-      <div class="qi-status"><span class="eyebrow">NEXIST GATE</span><strong class="info">EVIDENCE REQUIRED</strong><p class="qi-small">AI proposals remain POTENTIAL until evidence is supplied.</p></div>
+      <div class="qi-status"><span class="eyebrow">QUANTUM NEURAL AI</span><strong id="qnnTopStatus" class="warn">LABELS REQUIRED</strong><p class="qi-small">Four-qubit trainable variational classifier. Runs locally.</p></div>
+      <div class="qi-status"><span class="eyebrow">OPTIONAL LANGUAGE ADAPTER</span><strong id="aiStatus" class="warn">CHECKING CATALOGUE…</strong><p id="aiStatusDetail" class="qi-small">Checking OpenRouter's public model catalogue. QNN inference does not use this API.</p></div>
+      <div class="qi-status"><span class="eyebrow">QAOA OPTIMIZER</span><strong class="good">STATEVECTOR READY</strong><p class="qi-small">p=1 QAOA-style portfolio search • Maximum 8 browser-demo qubits.</p></div>
+      <div class="qi-status"><span class="eyebrow">NEXIST GATE</span><strong class="info">EVIDENCE REQUIRED</strong><p class="qi-small">QNN predictions never replace evidence or human approval.</p></div>
     </section>
 
-    <section class="qi-architecture" aria-label="Hybrid architecture">
-      <div class="qi-arch"><span class="symbol">✧</span><strong>AI PLANNER</strong><small>Optional text-to-candidate drafting</small></div>
+    <section class="qi-architecture" aria-label="Quantum-first NEXIST architecture">
+      <div class="qi-arch"><span class="symbol">ψ</span><strong>QUANTUM NEURAL AI</strong><small>Trainable circuit, entanglement, Born-rule readout</small></div>
       <div class="qi-arch"><span class="symbol">◇</span><strong>NEXIST CORE</strong><small>Evidence, eligibility, dependencies, history</small></div>
-      <div class="qi-arch"><span class="symbol">ψ</span><strong>QUBIT ENGINE</strong><small>Angle encoding, trainable rotations, entanglement, measurement</small></div>
-      <div class="qi-arch"><span class="symbol">⌁</span><strong>QAOA SOLVER</strong><small>Feasibility and exact small-case baseline</small></div>
+      <div class="qi-arch"><span class="symbol">✧</span><strong>OPTIONAL LANGUAGE INPUT</strong><small>Text-to-candidate drafting only</small></div>
+      <div class="qi-arch"><span class="symbol">⌁</span><strong>QAOA SOLVER</strong><small>QNN-weighted portfolio search and classical reference</small></div>
       <div class="qi-arch"><span class="symbol">✓</span><strong>HUMAN CONTROL</strong><small>No automatic approval or realization</small></div>
     </section>
 
@@ -139,7 +140,7 @@
           <button class="qi-btn primary" id="askAi" type="submit">ASK LANGUAGE MODEL TO DRAFT CANDIDATES ↗</button>
         </form>
         <div class="qi-message" id="aiMessage" role="status" aria-live="polite">AI service status will appear above. The local quantum simulator works independently of the AI API.</div>
-        <button class="qi-btn" id="reconnectAi" type="button">RE-ENTER PASSWORD / REFRESH AI SESSION</button>
+        <button class="qi-btn" id="reconnectAi" type="button">LOCK PROJECT / CLEAR API KEY</button>
         <div id="aiProposal" hidden></div>
       </div>
     </section>
@@ -576,6 +577,9 @@
         const labelled=store.units.filter((unit)=>unit.qnnLabel===true||unit.qnnLabel===false);
         $('qnnLabelCount').textContent=labelled.length;
         $('qnnModelState').textContent=qnnIsValid(store.qnnModel)?'TRAINED':'NOT TRAINED';
+        const topStatus=$('qnnTopStatus');
+        topStatus.textContent=qnnIsValid(store.qnnModel)?'TRAINED QNN READY':'LABEL EXAMPLES TO TRAIN';
+        topStatus.className=qnnIsValid(store.qnnModel)?'good':'warn';
         const summary=store.qnnModel&&store.qnnModel.training;
         $('qnnAccuracy').textContent=summary?Math.round(summary.accuracy*100)+'%':'—';
         $('qnnLoss').textContent=summary?Number(summary.finalLoss).toFixed(3):'—';
