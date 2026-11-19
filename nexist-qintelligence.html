@@ -124,7 +124,7 @@
 
     <section class="qi-section">
       <h2 class="qi-section-title">01 / AI planning advisor</h2>
-      <p class="qi-section-lead">Use an open-weight model to structure a planning goal into up to 10 candidate proposals. The server-side API token is never sent to the browser. AI-generated items are proposals only and start in POTENTIAL.</p>
+      <p class="qi-section-lead">Use an open-weight model to structure a planning goal into up to 10 candidate proposals. Connect directly from this browser using your own OpenRouter key. The key is kept in page memory only and is not saved to the repository or browser storage. AI-generated items are proposals only and start in POTENTIAL.</p>
       <div class="qi-panel">
         <form id="aiForm">
           <label class="qi-label" for="planningGoal">PLANNING GOAL</label>
@@ -217,12 +217,12 @@
     (function(){
       'use strict';
       const $ = (id) => document.getElementById(id);
-      const AI_API_BASE = "https://br-silent-frost-b3chnc64-nxqai.compute.c-4.ap-southeast-1.aws.neon.tech";
+      const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
       const SALT = 'a6742172bb7372c247c5247b23b0cc48';
       const EXPECTED = 'a536c7ea372c8263ff9e1a622379fa100315efef89d6117ad176f95222ba291b';
       const ROUNDS = 210000;
       const STORE_KEY = 'nexistQIntelligenceDemoV1';
-      let aiSessionToken = sessionStorage.getItem('nexistQApiSession') || '';
+      let openRouterApiKey = '';\n      let freeModelCatalogue = [];
 
       const hex = (bytes) => Array.from(new Uint8Array(bytes)).map((value) => value.toString(16).padStart(2,'0')).join('');
       async function derive(password){
@@ -234,7 +234,7 @@
         $('accessGate').hidden=true;
         $('projectContent').hidden=false;
         renderAll();
-        checkAiStatus();
+        loadFreeModels();
       }
       $('unlockForm').addEventListener('submit',async function(event){
         event.preventDefault();
@@ -243,27 +243,7 @@
         try{
           const actual=await derive(entered);
           if(actual!==EXPECTED){$('unlockError').textContent='Incorrect password. Please try again.';return;}
-          aiSessionToken='';
-          try{
-            const response=await fetch(AI_API_BASE+'/auth',{
-              method:'POST',
-              headers:{'Content-Type':'application/json','Accept':'application/json'},
-              body:JSON.stringify({password:entered}),
-              signal:AbortSignal.timeout(12000)
-            });
-            const result=await response.json().catch(()=>({}));
-            if(response.ok&&result.token){
-              aiSessionToken=result.token;
-              sessionStorage.setItem('nexistQApiSession',aiSessionToken);
-            }else{
-              sessionStorage.removeItem('nexistQApiSession');
-              $('unlockError').textContent=(result.error||'AI session could not be opened.')+' The local simulator will remain available.';
-            }
-          }catch(error){
-            sessionStorage.removeItem('nexistQApiSession');
-            $('unlockError').textContent='AI service is temporarily unavailable. The local quantum simulator will remain available.';
-          }
-          sessionStorage.setItem('nexistQIntelligenceUnlocked','yes');
+          openRouterApiKey='';\n          sessionStorage.setItem('nexistQIntelligenceUnlocked','yes');
           $('projectPassword').value='';
           showProject();
         }catch(error){$('unlockError').textContent='Password verification is unavailable in this browser.';}
@@ -433,78 +413,70 @@
         renderCandidates();renderAiPlan();renderResult();renderLog();
         $('year').textContent=new Date().getFullYear();
       }
-      async function aiRequest(path,options={}){
-        const headers=new Headers(options.headers||{});
-        if(aiSessionToken)headers.set('Authorization','Bearer '+aiSessionToken);
-        if(options.body)headers.set('Content-Type','application/json');
-        const response=await fetch(AI_API_BASE+path,{...options,headers});
-        const data=await response.json().catch(()=>({}));
-        if(response.status===401){
-          aiSessionToken='';
-          sessionStorage.removeItem('nexistQApiSession');
-          $('aiStatus').textContent='RE-UNLOCK REQUIRED';
-          $('aiStatus').className='warn';
-          $('aiStatusDetail').textContent='The short-lived AI session expired. Re-enter the project password to reconnect.';
-        }
-        if(!response.ok)throw new Error(data.error||'AI service returned HTTP '+response.status+'.');
-        return data;
-      }
-      async function checkAiStatus(){
+      async function loadFreeModels(){
         const target=$('aiStatus'),detail=$('aiStatusDetail'),select=$('aiModel'),button=$('askAi');
+        target.textContent='LOADING FREE MODELS…';target.className='warn';
         try{
-          const response=await fetch(AI_API_BASE+'/health',{method:'GET',headers:{'Accept':'application/json'},signal:AbortSignal.timeout(10000)});
-          const health=await response.json().catch(()=>({}));
-          if(!response.ok||health.status!=='ready'){
-            target.textContent='SETUP NEEDED';target.className='warn';
-            detail.textContent=health.message||'The server-side AI Gateway is not configured.';
-            select.innerHTML='<option value="">AI service not ready</option>';button.disabled=true;return;
-          }
-          if(!aiSessionToken){
-            target.textContent='UNLOCK TO CONNECT';target.className='warn';
-            detail.textContent='The gateway is ready. Re-enter the project password to establish a short-lived AI session.';
-            select.innerHTML='<option value="">Unlock to load open-weight models</option>';button.disabled=true;return;
-          }
-          const catalogue=await aiRequest('/models');
-          const available=Array.isArray(catalogue.models)?catalogue.models:[];
-          select.innerHTML=available.length
-            ?available.map((model)=>'<option value="'+esc(model.id)+'">'+esc(model.name)+' · '+esc(model.provider)+'</option>').join('')
-            :'<option value="">No enabled open-weight models</option>';
-          button.disabled=available.length===0;
-          target.textContent=available.length?'READY':'NO OPEN-WEIGHT MODELS';
-          target.className=available.length?'good':'warn';
-          detail.textContent=available.length
-            ?available.length+' enabled open-weight model(s) loaded from the live catalogue.'
-            :'AI Gateway is connected, but no enabled open-weight models were returned. Check gateway credits and model access.';
+          const response=await fetch(OPENROUTER_BASE+'/models',{headers:{'Accept':'application/json'},signal:AbortSignal.timeout(15000)});
+          const data=await response.json().catch(()=>({}));
+          if(!response.ok)throw new Error(data.error?.message||'OpenRouter model catalogue returned HTTP '+response.status);
+          freeModelCatalogue=(Array.isArray(data.data)?data.data:[]).filter((model)=>typeof model.id==='string'&&model.id.endsWith(':free')&&model.architecture?.modality?.includes('text'));
+          freeModelCatalogue.sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id));
+          select.innerHTML=freeModelCatalogue.length?freeModelCatalogue.map((model)=>'<option value="'+esc(model.id)+'">'+esc(model.name||model.id)+'</option>').join(''):'<option value="">No free text models currently listed</option>';
+          target.textContent=freeModelCatalogue.length?'FREE MODELS AVAILABLE':'NO FREE MODELS LISTED';target.className=freeModelCatalogue.length?'good':'warn';
+          detail.textContent=freeModelCatalogue.length+' free model variants discovered from OpenRouter. Availability can change by provider.';
+          button.disabled=!freeModelCatalogue.length;
         }catch(error){
-          target.textContent='OFFLINE';target.className='warn';
-          detail.textContent=error.message||'The secure AI endpoint is not reachable. The local QAOA simulator remains available.';
-          select.innerHTML='<option value="">AI model catalogue unavailable</option>';button.disabled=true;
+          target.textContent='CATALOGUE OFFLINE';target.className='warn';detail.textContent=error.message||'Could not load OpenRouter free models.';
+          select.innerHTML='<option value="">Model catalogue unavailable</option>';button.disabled=true;
         }
+      }
+      async function requestOpenRouterPlan(promptText,budget,modelId){
+        const key=$('openRouterKey').value.trim();
+        if(!key)throw new Error('Paste your own OpenRouter API key to use AI.');
+        if(!modelId)throw new Error('Choose a free model first.');
+        openRouterApiKey=key;
+        const system='You are the NEXIST Q-Intelligence planning assistant. Return ONLY valid JSON, no markdown, with this schema: {"goal":"short restatement","items":[{"title":"candidate title","benefit":1,"resource_cost":1,"rationale":"short reason","depends_on_titles":[],"conflicts_with_titles":[]}],"assumptions":["..."],"risk_notes":["..."]}. Create 2 to 8 practical candidates, use non-negative numeric benefit and resource_cost, keep total candidate count at most 8, do not claim evidence exists, and do not authorize or realize anything. Budget is a planning constraint, not a fact.';
+        const response=await fetch(OPENROUTER_BASE+'/chat/completions',{
+          method:'POST',
+          headers:{'Authorization':'Bearer '+openRouterApiKey,'Content-Type':'application/json','HTTP-Referer':'https://apokolips.xyz','X-Title':'NEXIST Q-Intelligence'},
+          body:JSON.stringify({model:modelId,temperature:0.2,max_tokens:1800,messages:[{role:'system',content:system},{role:'user',content:'Planning goal: '+promptText+'\\nAvailable resource budget: '+budget}] }),
+          signal:AbortSignal.timeout(60000)
+        });
+        const data=await response.json().catch(()=>({}));
+        if(!response.ok)throw new Error(data.error?.message||'OpenRouter request failed with HTTP '+response.status+'. Check your key, free model availability and rate limits.');
+        const content=data.choices?.[0]?.message?.content;
+        if(typeof content!=='string'||!content.trim())throw new Error('The selected model returned no text.');
+        const cleaned=content.trim().replace(/^\`\`\`(?:json)?\\s*/i,'').replace(/\\s*\`\`\`$/,'');
+        let plan;
+        try{plan=JSON.parse(cleaned);}catch(error){const first=cleaned.indexOf('{'),last=cleaned.lastIndexOf('}');if(first<0||last<=first)throw new Error('The model did not return valid JSON. Try another free model.');plan=JSON.parse(cleaned.slice(first,last+1));}
+        if(!plan||!Array.isArray(plan.items))throw new Error('The model response did not match the NEXIST proposal schema.');
+        plan.items=plan.items.slice(0,8).map((item)=>({title:String(item.title||'Untitled candidate').slice(0,100),benefit:numeric(item.benefit)??1,resource_cost:numeric(item.resource_cost)??1,rationale:String(item.rationale||'').slice(0,500),depends_on_titles:Array.isArray(item.depends_on_titles)?item.depends_on_titles.map(String).slice(0,8):[],conflicts_with_titles:Array.isArray(item.conflicts_with_titles)?item.conflicts_with_titles.map(String).slice(0,8):[]}));
+        plan.goal=String(plan.goal||promptText).slice(0,500);
+        plan.assumptions=Array.isArray(plan.assumptions)?plan.assumptions.map(String).slice(0,10):[];
+        plan.risk_notes=Array.isArray(plan.risk_notes)?plan.risk_notes.map(String).slice(0,10):[];
+        return {plan,model:data.model||modelId};
       }
       $('aiForm').addEventListener('submit',async function(event){
         event.preventDefault();
-        const promptText=$('planningGoal').value.trim();
-        const budget=numeric($('aiBudget').value);
+        const promptText=$('planningGoal').value.trim(),budget=numeric($('aiBudget').value),modelId=$('aiModel').value;
         if(!promptText){$('aiMessage').textContent='Enter a planning goal first.';$('aiMessage').className='qi-message error';return;}
         if(budget===null){$('aiMessage').textContent='Enter a valid non-negative budget.';$('aiMessage').className='qi-message error';return;}
         const button=$('askAi');button.disabled=true;button.textContent='ASKING AI…';
-        $('aiMessage').textContent='Sending the planning goal to the server-side open-weight AI adapter…';$('aiMessage').className='qi-message';
+        $('aiMessage').textContent='Calling OpenRouter directly from this browser…';$('aiMessage').className='qi-message';
         try{
-          const data=await aiRequest('/plan',{method:'POST',body:JSON.stringify({prompt:promptText,budget:budget,model:$('aiModel').value})});
-          if(!data.plan||!Array.isArray(data.plan.items))throw new Error('The AI service returned an invalid proposal format.');
-          store.aiPlan=data.plan;log('AI_PLAN_RECEIVED','AI returned '+data.plan.items.length+' proposal candidates. None are evidence-verified.');
+          const data=await requestOpenRouterPlan(promptText,budget,modelId);
+          store.aiPlan=data.plan;log('AI_PLAN_RECEIVED','OpenRouter model '+data.model+' returned '+data.plan.items.length+' proposal candidates. None are evidence-verified.');
           save();renderAiPlan();renderLog();
-          $('aiMessage').textContent='AI proposal received. Importing it will create POTENTIAL units only.';$('aiMessage').className='qi-message success';
-        }catch(error){$('aiMessage').textContent=error.message||'AI service is not ready.';$('aiMessage').className='qi-message warning';}
+          $('aiMessage').textContent='AI proposal received from '+data.model+'. Importing creates POTENTIAL units only.';$('aiMessage').className='qi-message success';
+        }catch(error){$('aiMessage').textContent=error.message||'AI request failed.';$('aiMessage').className='qi-message warning';}
         finally{button.disabled=false;button.textContent='ASK AI TO BUILD A PROPOSAL ↗';}
       });
-      $('reconnectAi').addEventListener('click',function(){
-        aiSessionToken='';
-        sessionStorage.removeItem('nexistQApiSession');
+      $('openRouterKey').addEventListener('input',function(){openRouterApiKey=this.value.trim();});\n      $('reconnectAi').addEventListener('click',function(){
+        openRouterApiKey='';$('openRouterKey').value='';
         sessionStorage.removeItem('nexistQIntelligenceUnlocked');
-        $('projectContent').hidden=true;
-        $('accessGate').hidden=false;
-        $('unlockError').textContent='Enter the project password to create a fresh AI session.';
+        $('projectContent').hidden=true;$('accessGate').hidden=false;
+        $('unlockError').textContent='Project locked. Enter the project password again.';
         $('projectPassword').value='';
       });
       $('candidateForm').addEventListener('submit',function(event){
