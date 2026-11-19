@@ -222,7 +222,8 @@
       const EXPECTED = 'a536c7ea372c8263ff9e1a622379fa100315efef89d6117ad176f95222ba291b';
       const ROUNDS = 210000;
       const STORE_KEY = 'nexistQIntelligenceDemoV1';
-      let openRouterApiKey = '';\n      let freeModelCatalogue = [];
+      let openRouterApiKey = '';
+      let freeModelCatalogue = [];
 
       const hex = (bytes) => Array.from(new Uint8Array(bytes)).map((value) => value.toString(16).padStart(2,'0')).join('');
       async function derive(password){
