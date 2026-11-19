@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#050609">
-  <meta name="description" content="NEXIST Q-Intelligence — a hybrid research experiment combining evidence-aware decisions, open-weight AI planning, and QAOA-style quantum simulation.">
+  <meta name="description" content="NEXIST Q-Intelligence — experimental variational quantum neural classifier, evidence-aware NEXIST model, and QAOA-style portfolio simulation.">
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" type="image/x-icon" href="file_00000000a7ec820890154ca6ed49b608.ico">
   <link rel="stylesheet" href="style.css?v=20261118qintel">
@@ -104,27 +104,27 @@
   <main class="qi-wrap" id="projectContent" hidden>
     <div class="qi-kicker">APOKOLIPS / EXPERIMENTAL SYSTEMS / PROJECT 009</div>
     <h1 class="qi-title">NEXIST <span>Q-Intelligence.</span></h1>
-    <p class="qi-lead">A hybrid research prototype that combines NEXIST evidence-aware lifecycle rules, an open-weight AI planning advisor, and a small QAOA-style qubit state-vector simulator. AI proposes. NEXIST checks evidence. Quantum simulation explores candidate combinations. A classical validator and human decision remain in control.</p>
+    <p class="qi-lead">A research prototype whose primary scoring model is a trainable variational Quantum Neural Network (QNN). It angle-encodes candidate features into qubits, applies trainable quantum gates and entanglement, measures Pauli-Z expectations, and learns from human-labelled examples. An optional language model can structure text into draft candidates; it does not perform QNN inference. NEXIST checks evidence and QAOA explores portfolios.</p>
     <div class="qi-tags"><span class="qi-tag">NEXIST EVIDENCE GATE</span><span class="qi-tag">OPEN-WEIGHT AI</span><span class="qi-tag">QAOA / QUBITS</span><span class="qi-tag">CLASSICAL VALIDATION</span></div>
-    <div class="qi-alert"><strong>Research and security boundary:</strong> this page is a browser demonstration. Its local demo records are not connected to the persistent Python engine. The page uses a client-side convenience gate and the AI API separately verifies the password to issue a short-lived server session. The site is still statically hosted and its browser demonstration is publicly retrievable; a four-digit password is not strong authentication. Do not enter private, personal, financial, or confidential data. The current quantum backend is a classical computer simulating a small quantum state vector, not a physical quantum processor. No quantum advantage is claimed.</div>
+    <div class="qi-alert"><strong>Research and security boundary:</strong> this page is a browser demonstration. Its local demo records are not connected to the persistent Python engine. The page uses a client-side convenience gate and the AI API separately verifies the password to issue a short-lived server session. The site is still statically hosted and its browser demonstration is publicly retrievable; a four-digit password is not strong authentication. Do not enter private, personal, financial, or confidential data. The QNN and QAOA are small quantum-circuit simulations executed on a classical computer, not physical quantum hardware. The QNN is supervised and only learns from labels you supply. No quantum advantage is claimed. The optional OpenRouter language adapter does not calculate QNN scores.</div>
 
     <section class="qi-statusbar">
-      <div class="qi-status"><span class="eyebrow">AI ADVISOR</span><strong id="aiStatus" class="warn">CHECKING SERVICE…</strong><p id="aiStatusDetail" class="qi-small">Checking the secure server-side AI adapter.</p></div>
+      <div class="qi-status"><span class="eyebrow">OPTIONAL LANGUAGE ADAPTER</span><strong id="aiStatus" class="warn">CHECKING SERVICE…</strong><p id="aiStatusDetail" class="qi-small">Checking the secure server-side AI adapter.</p></div>
       <div class="qi-status"><span class="eyebrow">QUANTUM ENGINE</span><strong class="good">LOCAL STATEVECTOR READY</strong><p class="qi-small">QAOA-style p=1 • Maximum 8 browser-demo qubits.</p></div>
       <div class="qi-status"><span class="eyebrow">NEXIST GATE</span><strong class="info">EVIDENCE REQUIRED</strong><p class="qi-small">AI proposals remain POTENTIAL until evidence is supplied.</p></div>
     </section>
 
     <section class="qi-architecture" aria-label="Hybrid architecture">
-      <div class="qi-arch"><span class="symbol">✧</span><strong>AI PLANNER</strong><small>Turns a goal into candidate proposals</small></div>
+      <div class="qi-arch"><span class="symbol">✧</span><strong>AI PLANNER</strong><small>Optional text-to-candidate drafting</small></div>
       <div class="qi-arch"><span class="symbol">◇</span><strong>NEXIST CORE</strong><small>Evidence, eligibility, dependencies, history</small></div>
-      <div class="qi-arch"><span class="symbol">ψ</span><strong>QUBIT ENGINE</strong><small>Superposition, phase, RX mixer, sampling</small></div>
-      <div class="qi-arch"><span class="symbol">⌁</span><strong>CLASSICAL CHECK</strong><small>Feasibility and exact small-case baseline</small></div>
+      <div class="qi-arch"><span class="symbol">ψ</span><strong>QUBIT ENGINE</strong><small>Angle encoding, trainable rotations, entanglement, measurement</small></div>
+      <div class="qi-arch"><span class="symbol">⌁</span><strong>QAOA SOLVER</strong><small>Feasibility and exact small-case baseline</small></div>
       <div class="qi-arch"><span class="symbol">✓</span><strong>HUMAN CONTROL</strong><small>No automatic approval or realization</small></div>
     </section>
 
     <section class="qi-section">
-      <h2 class="qi-section-title">01 / AI planning advisor</h2>
-      <p class="qi-section-lead">Use an open-weight model to structure a planning goal into up to 10 candidate proposals. Connect directly from this browser using your own OpenRouter key. The key is kept in page memory only and is not saved to the repository or browser storage. AI-generated items are proposals only and start in POTENTIAL.</p>
+      <h2 class="qi-section-title">01 / Optional language-to-plan adapter</h2>
+      <p class="qi-section-lead">This optional adapter can convert a written goal into draft candidate records. It is not the NEXIST AI scoring brain: the Quantum Neural Network below performs suitability inference and learns from your labelled examples. OpenRouter is only a convenience for text structuring. Its key is kept in page memory only and is not saved to the repository or browser storage. Drafts start in POTENTIAL.</p>
       <div class="qi-panel">
         <form id="aiForm">
           <label class="qi-label" for="planningGoal">PLANNING GOAL</label>
@@ -136,7 +136,7 @@
             <div><label class="qi-label" for="aiBudget">AVAILABLE RESOURCE BUDGET</label><input class="qi-input" id="aiBudget" type="number" min="0" step="0.01" value="10"></div>
             <div><label class="qi-label" for="aiModel">OPEN-WEIGHT MODEL</label><select class="qi-select" id="aiModel"><option value="">Unlock to load enabled open-weight models</option></select></div>
           </div>
-          <button class="qi-btn primary" id="askAi" type="submit">ASK AI TO BUILD A PROPOSAL ↗</button>
+          <button class="qi-btn primary" id="askAi" type="submit">ASK LANGUAGE MODEL TO DRAFT CANDIDATES ↗</button>
         </form>
         <div class="qi-message" id="aiMessage" role="status" aria-live="polite">AI service status will appear above. The local quantum simulator works independently of the AI API.</div>
         <button class="qi-btn" id="reconnectAi" type="button">RE-ENTER PASSWORD / REFRESH AI SESSION</button>
@@ -146,7 +146,7 @@
 
     <section class="qi-section">
       <h2 class="qi-section-title">02 / NEXIST candidate units</h2>
-      <p class="qi-section-lead">Only units with active, manually recorded approval evidence can enter the quantum selection run. Source labels are user-entered references and are not independently authenticated by this demo.</p>
+      <p class="qi-section-lead">Label candidates as suitable or unsuitable to teach the QNN. Only units with active, manually recorded approval evidence can enter the later QAOA portfolio run. A QNN label is training feedback, not approval evidence.</p>
       <div class="qi-grid">
         <article class="qi-panel">
           <h3>Create a proposed unit</h3>
@@ -177,11 +177,31 @@
         <div class="qi-stat"><strong id="proposalCount">0</strong><span>AI PROPOSALS</span></div>
       </div>
       <div class="qi-card-grid" id="candidateList"><div class="qi-card">No candidates added yet.</div></div>
+      </div>
     </section>
 
     <section class="qi-section">
-      <h2 class="qi-section-title">03 / Quantum selection engine</h2>
-      <p class="qi-section-lead">The p=1 QAOA-style simulator encodes candidate benefit and constraints in a diagonal phase operator, applies an RX mixer, then samples a probability distribution. A small exhaustive classical search is reported beside the result as a reference.</p>
+      <h2 class="qi-section-title">03 / Quantum Neural AI engine</h2>
+      <p class="qi-section-lead">This is the primary learning and scoring model. Label at least four candidates (including both suitable and unsuitable examples), then train the four-qubit variational circuit. The model converts Pauli-Z expectation values into a suitability score. Those scores influence the QAOA objective; they never replace evidence requirements or human review.</p>
+      <div class="qi-panel">
+        <div class="qi-stats">
+          <div class="qi-stat"><strong id="qnnLabelCount">0</strong><span>LABELLED EXAMPLES</span></div>
+          <div class="qi-stat"><strong id="qnnModelState">NOT TRAINED</strong><span>QNN MODEL STATE</span></div>
+          <div class="qi-stat"><strong id="qnnAccuracy">—</strong><span>TRAINING ACCURACY</span></div>
+          <div class="qi-stat"><strong id="qnnLoss">—</strong><span>TRAINING LOSS</span></div>
+        </div>
+        <p class="qi-small">Circuit: feature rotations RY(πxᵢ), RZ(π(xᵢ−0.5)) → two trainable RY/RZ layers → entangling CNOT gates → Pauli-Z measurements.</p>
+        <p class="qi-small">Readout: p(suitable|x) = σ(b + Σᵢ wᵢ⟨Zᵢ⟩). Training uses the parameter-shift rule: ∂⟨Z⟩/∂θ = [⟨Z⟩(θ+π/2) − ⟨Z⟩(θ−π/2)] / 2.</p>
+        <button class="qi-btn primary" id="trainQnn" type="button">TRAIN QUANTUM NEURAL AI · 80 EPOCHS</button>
+        <button class="qi-btn subtle" id="resetQnn" type="button">RESET QNN PARAMETERS</button>
+        <div class="qi-message" id="qnnMessage" role="status" aria-live="polite">No model trained yet. Use the candidate cards to add human suitability labels. A minimum of four examples with both labels is required.</div>
+        <p class="qi-small">Four-qubit local state-vector simulation (16 complex amplitudes). The readout and optimizer are classical; the model is a hybrid variational quantum classifier, not a general-purpose language model or physical quantum computer.</p>
+      </div>
+    </section>
+
+    <section class="qi-section">
+      <h2 class="qi-section-title">04 / QAOA portfolio selection engine</h2>
+      <p class="qi-section-lead">The QAOA-style portfolio solver uses the QNN-adjusted candidate utility in its phase operator, then applies an RX mixer and samples a probability distribution. With no trained QNN, the neutral suitability value 0.5 leaves the original benefit unchanged. A small exhaustive classical search is reported as a correctness reference.</p>
       <div class="qi-panel">
         <div class="qi-row">
           <div><label class="qi-label" for="solverBudget">RESOURCE BUDGET</label><input class="qi-input" id="solverBudget" type="number" min="0" step="0.01" value="10"></div>
@@ -195,16 +215,16 @@
     </section>
 
     <section class="qi-section">
-      <h2 class="qi-section-title">04 / Local event history</h2>
+      <h2 class="qi-section-title">05 / Local event history</h2>
       <div class="qi-panel qi-log" id="eventLog"><p class="qi-small">No actions yet.</p></div>
     </section>
 
     <section class="qi-section qi-panel">
-      <h2 class="qi-section-title">05 / Research limits</h2>
+      <h2 class="qi-section-title">06 / Research limits</h2>
       <p class="qi-section-lead">This project is a hybrid prototype, not a verified new data structure or a quantum-advantage demonstration.</p>
       <div class="qi-grid">
-        <div><h3>AI boundary</h3><p class="qi-small">AI output is structured proposal data. It cannot establish evidence, approve a project, or change NEXIST lifecycle state.</p></div>
-        <div><h3>Quantum boundary</h3><p class="qi-small">The browser and Python engines simulate qubits on a classical machine. The small state-vector circuit is exponential in candidate count and deliberately capped.</p></div>
+        <div><h3>Language-model boundary</h3><p class="qi-small">The optional language model drafts structured candidate records only. It does not calculate QNN suitability predictions or train the quantum circuit.</p></div>
+        <div><h3>Quantum boundary</h3><p class="qi-small">The QNN and QAOA execute as small state-vector simulations on a classical machine. No physical QPU or quantum advantage is claimed.</p></div>
         <div><h3>Evidence boundary</h3><p class="qi-small">Source labels and timestamps do not authenticate documents or identities. Real deployment needs access control, signed provenance, and durable audit storage.</p></div>
         <div><h3>Decision boundary</h3><p class="qi-small">Optimization only returns a recommendation. It never calls realization, spends money, launches infrastructure, or executes real-world actions.</p></div>
       </div>
@@ -254,13 +274,149 @@
         }catch(error){$('unlockError').textContent='Password verification is unavailable in this browser.';}
       });
 
-      const makeFresh=()=>({units:[],events:[],aiPlan:null,lastResult:null});
+
+      const QNN_QUBITS=4,QNN_LAYERS=2,QNN_EPOCHS=80,QNN_PARAMETER_COUNT=QNN_QUBITS*QNN_LAYERS*2;
+      const qnnClamp=(value,min=0,max=1)=>Math.max(min,Math.min(max,value));
+      function qnnIsValid(model){
+        return !!model&&model.version===1&&model.qubits===QNN_QUBITS&&model.layers===QNN_LAYERS&&
+          Array.isArray(model.theta)&&model.theta.length===QNN_PARAMETER_COUNT&&
+          Array.isArray(model.weights)&&model.weights.length===QNN_QUBITS&&
+          model.theta.concat(model.weights,[model.bias]).every((value)=>Number.isFinite(value));
+      }
+      function qnnInitialModel(){
+        let seed=20261119;
+        const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+        return {version:1,qubits:QNN_QUBITS,layers:QNN_LAYERS,
+          theta:Array.from({length:QNN_PARAMETER_COUNT},()=>((random()*2)-1)*0.2),
+          weights:Array.from({length:QNN_QUBITS},()=>((random()*2)-1)*0.1),bias:0,training:null};
+      }
+      function qnnApplyRY(re,im,qubit,angle){
+        const bit=1<<qubit,c=Math.cos(angle/2),sn=Math.sin(angle/2);
+        for(let index=0;index<re.length;index++){
+          if(index&bit)continue;
+          const other=index|bit,ar=re[index],ai=im[index],br=re[other],bi=im[other];
+          re[index]=c*ar-sn*br;im[index]=c*ai-sn*bi;
+          re[other]=sn*ar+c*br;im[other]=sn*ai+c*bi;
+        }
+      }
+      function qnnApplyRZ(re,im,qubit,angle){
+        const bit=1<<qubit,c=Math.cos(angle/2),sn=Math.sin(angle/2);
+        for(let index=0;index<re.length;index++){
+          const ar=re[index],ai=im[index];
+          if(index&bit){re[index]=ar*c-ai*sn;im[index]=ar*sn+ai*c;}
+          else{re[index]=ar*c+ai*sn;im[index]=ai*c-ar*sn;}
+        }
+      }
+      function qnnApplyCNOT(re,im,control,target){
+        const controlBit=1<<control,targetBit=1<<target;
+        for(let index=0;index<re.length;index++){
+          if((index&controlBit)&&!(index&targetBit)){
+            const other=index|targetBit;
+            [re[index],re[other]]=[re[other],re[index]];
+            [im[index],im[other]]=[im[other],im[index]];
+          }
+        }
+      }
+      function qnnExpectations(features,theta){
+        const size=1<<QNN_QUBITS,re=new Float64Array(size),im=new Float64Array(size);re[0]=1;
+        for(let qubit=0;qubit<QNN_QUBITS;qubit++){
+          qnnApplyRY(re,im,qubit,Math.PI*features[qubit]);
+          qnnApplyRZ(re,im,qubit,Math.PI*(features[qubit]-0.5));
+        }
+        let parameter=0;
+        for(let layer=0;layer<QNN_LAYERS;layer++){
+          for(let qubit=0;qubit<QNN_QUBITS;qubit++){
+            qnnApplyRY(re,im,qubit,theta[parameter++]);
+            qnnApplyRZ(re,im,qubit,theta[parameter++]);
+          }
+          for(let qubit=0;qubit<QNN_QUBITS-1;qubit++)qnnApplyCNOT(re,im,qubit,qubit+1);
+          qnnApplyCNOT(re,im,QNN_QUBITS-1,0);
+        }
+        const expectations=[];
+        for(let qubit=0;qubit<QNN_QUBITS;qubit++){
+          const bit=1<<qubit;let value=0;
+          for(let basis=0;basis<size;basis++){
+            const probability=re[basis]*re[basis]+im[basis]*im[basis];
+            value+=(basis&bit)?-probability:probability;
+          }
+          expectations.push(qnnClamp(value,-1,1));
+        }
+        return expectations;
+      }
+      function qnnSigmoid(value){
+        if(value>=0)return 1/(1+Math.exp(-Math.min(value,700)));
+        const e=Math.exp(Math.max(value,-700));return e/(1+e);
+      }
+      function qnnPredict(features,model){
+        if(!qnnIsValid(model))return {probability:0.5,expectations:[0,0,0,0]};
+        const expectations=qnnExpectations(features,model.theta);
+        const logit=model.bias+expectations.reduce((sum,value,index)=>sum+model.weights[index]*value,0);
+        return {probability:qnnSigmoid(logit),expectations};
+      }
+      function qnnFeatureVector(unit,budget){
+        const benefit=Math.max(0,Number(unit.benefit)||0),cost=Math.max(0,Number(unit.resourceCost)||0);
+        const density=benefit/(benefit+cost+1);
+        const budgetMargin=budget<=0?(cost===0?1:0):qnnClamp(1-cost/budget);
+        const dependencySimplicity=1-qnnClamp((unit.dependencies||[]).length/3);
+        return [benefit/(benefit+10),density,budgetMargin,dependencySimplicity];
+      }
+      function qnnLoss(examples,model){
+        const epsilon=1e-12;
+        return examples.reduce((sum,item)=>{
+          const p=qnnClamp(qnnPredict(item.features,model).probability,epsilon,1-epsilon);
+          return sum-item.label*Math.log(p)-(1-item.label)*Math.log(1-p);
+        },0)/examples.length;
+      }
+      function qnnTrain(examples){
+        let model=qnnIsValid(store.qnnModel)?{
+          ...store.qnnModel,theta:store.qnnModel.theta.slice(),weights:store.qnnModel.weights.slice()
+        }:qnnInitialModel();
+        const initialLoss=qnnLoss(examples,model),learningRate=0.08;
+        for(let epoch=0;epoch<QNN_EPOCHS;epoch++){
+          const thetaGradient=new Array(QNN_PARAMETER_COUNT).fill(0);
+          const weightGradient=new Array(QNN_QUBITS).fill(0);let biasGradient=0;
+          for(const item of examples){
+            const expectation=qnnExpectations(item.features,model.theta);
+            const logit=model.bias+expectation.reduce((sum,value,index)=>sum+model.weights[index]*value,0);
+            const error=qnnSigmoid(logit)-item.label;biasGradient+=error;
+            for(let q=0;q<QNN_QUBITS;q++)weightGradient[q]+=error*expectation[q];
+            for(let p=0;p<QNN_PARAMETER_COUNT;p++){
+              const plus=model.theta.slice(),minus=model.theta.slice();
+              plus[p]+=Math.PI/2;minus[p]-=Math.PI/2;
+              const ep=qnnExpectations(item.features,plus),em=qnnExpectations(item.features,minus);
+              let derivative=0;
+              for(let q=0;q<QNN_QUBITS;q++)derivative+=model.weights[q]*0.5*(ep[q]-em[q]);
+              thetaGradient[p]+=error*derivative;
+            }
+          }
+          const scale=1/examples.length;
+          const clip=(value)=>Math.max(-5,Math.min(5,value*scale));
+          model.bias-=learningRate*clip(biasGradient);
+          model.weights=model.weights.map((value,index)=>value-learningRate*clip(weightGradient[index]));
+          model.theta=model.theta.map((value,index)=>{
+            const next=value-learningRate*clip(thetaGradient[index]);
+            return (next+Math.PI)%(2*Math.PI)-Math.PI;
+          });
+        }
+        const finalLoss=qnnLoss(examples,model);
+        const accuracy=examples.filter((item)=>Number(qnnPredict(item.features,model).probability>=0.5)===item.label).length/examples.length;
+        model.training={samples:examples.length,epochs:QNN_EPOCHS,initialLoss,finalLoss,accuracy,trainedAt:new Date().toISOString()};
+        return model;
+      }
+      const makeFresh=()=>({units:[],events:[],aiPlan:null,lastResult:null,qnnModel:null});
       let store=makeFresh();
       try{
         const saved=localStorage.getItem(STORE_KEY);
         if(saved){
           const parsed=JSON.parse(saved);
-          if(parsed&&Array.isArray(parsed.units)&&Array.isArray(parsed.events))store=parsed;
+          if(parsed&&Array.isArray(parsed.units)&&Array.isArray(parsed.events)){
+            store={...makeFresh(),...parsed};
+            store.units.forEach((unit)=>{
+              if(unit.qnnLabel!==true&&unit.qnnLabel!==false)unit.qnnLabel=null;
+              if(!Array.isArray(unit.dependencies))unit.dependencies=[];
+            });
+            if(!qnnIsValid(store.qnnModel))store.qnnModel=null;
+          }
         }
       }catch(error){store=makeFresh();}
       const uid=(prefix)=>prefix+'_'+(crypto.randomUUID?crypto.randomUUID().replace(/-/g,''):Date.now().toString(16)+Math.random().toString(16).slice(2));
@@ -381,8 +537,9 @@
         $('eligibleCount').textContent=store.units.filter(currentEligible).length;
         $('evidenceCount').textContent=store.units.reduce((sum,unit)=>sum+activeEvidence(unit).length,0);
         $('proposalCount').textContent=store.units.filter((unit)=>unit.fromAI).length;
-        if(!store.units.length){$('candidateList').innerHTML='<div class="qi-card">No candidates added yet. Create a candidate or request an AI proposal.</div>';return;}
+        if(!store.units.length){$('candidateList').innerHTML='<div class="qi-card">No candidates added yet. Create a candidate or request a language-model draft.</div>';return;}
         const eligible=store.units.filter(currentEligible);
+        const budget=numeric($('solverBudget').value)??0;
         $('candidateList').innerHTML=store.units.slice().reverse().map((unit)=>{
           const status=unit.status.toLowerCase();
           const deps=unit.dependencies.map((id)=>unitById(id)?.name||id).map(esc).join(', ')||'None';
@@ -390,7 +547,10 @@
           const recheckButton=unit.status==='POTENTIAL'&&activeEvidence(unit).some((item)=>item.value===true)?'<button class="qi-btn" data-action="recheck" data-id="'+esc(unit.id)+'">RECHECK EVIDENCE</button>':'';
           const proofs=unit.evidence.map((item)=>'<p>Evidence: '+esc(item.source)+' · '+esc(item.status)+'</p>').join('');
           const options=eligible.filter((other)=>other.id!==unit.id).map((other)=>'<option value="'+esc(other.id)+'">'+esc(other.name)+'</option>').join('');
-          return '<article class="qi-card"><div class="qi-card-top"><span class="qi-id">'+esc(unit.id)+'</span><span class="qi-state '+status+'">'+esc(unit.status)+'</span></div><h4>'+esc(unit.name)+'</h4><p>Benefit: '+esc(unit.benefit)+' · Resource cost: '+esc(unit.resourceCost)+'</p><p>Created: '+esc(new Date(unit.createdAt).toLocaleString())+(unit.fromAI?' · AI PROPOSAL':'')+'</p>'+proofs+'<p>Depends on: '+deps+'</p><p>Conflicts with: '+conflicts+'</p>'+recheckButton+'<button class="qi-btn" data-action="evidence" data-id="'+esc(unit.id)+'">＋ RECORD APPROVAL EVIDENCE</button><button class="qi-btn warn" data-action="revoke" data-id="'+esc(unit.id)+'" '+(activeEvidence(unit).length?'':'disabled')+'>REVOKE EVIDENCE</button><div class="qi-row"><select class="qi-select" data-rel="'+esc(unit.id)+'" data-kind="dependency"><option value="">Add dependency…</option>'+options+'</select><button class="qi-btn" data-action="dependency" data-id="'+esc(unit.id)+'">ADD DEPENDENCY</button></div><div class="qi-row"><select class="qi-select" data-rel="'+esc(unit.id)+'" data-kind="conflict"><option value="">Add conflict…</option>'+options+'</select><button class="qi-btn" data-action="conflict" data-id="'+esc(unit.id)+'">ADD CONFLICT</button></div></article>';
+          const qnnPrediction=qnnIsValid(store.qnnModel)?qnnPredict(qnnFeatureVector(unit,budget),store.qnnModel):null;
+          const qnnMarkup=qnnPrediction?'<p>Quantum Neural suitability: <strong>'+ (qnnPrediction.probability*100).toFixed(1)+'%</strong> · Pauli-Z readout: '+qnnPrediction.expectations.map((value)=>value.toFixed(2)).join(', ')+'</p>':'<p class="qi-small">Quantum Neural score: train the QNN to enable predictions</p>';
+          const labelText=unit.qnnLabel===true?'SUITABLE':unit.qnnLabel===false?'NOT SUITABLE':'NOT LABELLED';
+          return '<article class="qi-card"><div class="qi-card-top"><span class="qi-id">'+esc(unit.id)+'</span><span class="qi-state '+status+'">'+esc(unit.status)+'</span></div><h4>'+esc(unit.name)+'</h4><p>Benefit: '+esc(unit.benefit)+' · Resource cost: '+esc(unit.resourceCost)+'</p><p>Created: '+esc(new Date(unit.createdAt).toLocaleString())+(unit.fromAI?' · LANGUAGE DRAFT':'')+'</p>'+qnnMarkup+'<p>QNN training label: <strong>'+labelText+'</strong></p><button class="qi-btn" data-action="qnn-suitable" data-id="'+esc(unit.id)+'">LABEL: SUITABLE</button><button class="qi-btn subtle" data-action="qnn-unsuitable" data-id="'+esc(unit.id)+'">LABEL: NOT SUITABLE</button>'+proofs+'<p>Depends on: '+deps+'</p><p>Conflicts with: '+conflicts+'</p>'+recheckButton+'<button class="qi-btn" data-action="evidence" data-id="'+esc(unit.id)+'">＋ RECORD APPROVAL EVIDENCE</button><button class="qi-btn warn" data-action="revoke" data-id="'+esc(unit.id)+'" '+(activeEvidence(unit).length?'':'disabled')+'>REVOKE EVIDENCE</button><div class="qi-row"><select class="qi-select" data-rel="'+esc(unit.id)+'" data-kind="dependency"><option value="">Add dependency…</option>'+options+'</select><button class="qi-btn" data-action="dependency" data-id="'+esc(unit.id)+'">ADD DEPENDENCY</button></div><div class="qi-row"><select class="qi-select" data-rel="'+esc(unit.id)+'" data-kind="conflict"><option value="">Add conflict…</option>'+options+'</select><button class="qi-btn" data-action="conflict" data-id="'+esc(unit.id)+'">ADD CONFLICT</button></div></article>';
         }).join('');
       }
       function renderAiPlan(){
@@ -398,7 +558,7 @@
         if(!store.aiPlan){host.hidden=true;host.innerHTML='';return;}
         host.hidden=false;
         const items=store.aiPlan.items.map((item)=>'<tr><td>'+esc(item.title)+'</td><td>'+esc(item.benefit)+'</td><td>'+esc(item.resource_cost)+'</td></tr>').join('');
-        host.innerHTML='<div class="qi-result"><h3>AI proposal · not verified evidence</h3><p class="qi-small">'+esc(store.aiPlan.goal||'')+'</p><table class="qi-table"><thead><tr><th>Candidate</th><th>Benefit</th><th>Cost</th></tr></thead><tbody>'+items+'</tbody></table><p class="qi-small">Assumptions: '+esc((store.aiPlan.assumptions||[]).join(' · ')||'None returned')+'</p><p class="qi-small">Risks: '+esc((store.aiPlan.risk_notes||[]).join(' · ')||'None returned')+'</p><button class="qi-btn primary" id="importAiPlan" type="button">IMPORT AS POTENTIAL UNITS</button><p class="qi-small">Importing creates POTENTIAL units only. Each needs separate human-reviewed evidence.</p></div>';
+        host.innerHTML='<div class="qi-result"><h3>Language-model draft · not verified evidence</h3><p class="qi-small">'+esc(store.aiPlan.goal||'')+'</p><table class="qi-table"><thead><tr><th>Candidate</th><th>Benefit</th><th>Cost</th></tr></thead><tbody>'+items+'</tbody></table><p class="qi-small">Assumptions: '+esc((store.aiPlan.assumptions||[]).join(' · ')||'None returned')+'</p><p class="qi-small">Risks: '+esc((store.aiPlan.risk_notes||[]).join(' · ')||'None returned')+'</p><button class="qi-btn primary" id="importAiPlan" type="button">IMPORT AS POTENTIAL UNITS</button><p class="qi-small">Importing creates POTENTIAL units only. Each needs separate human-reviewed evidence.</p></div>';
         $('importAiPlan').addEventListener('click',addAiProposals);
       }
       function renderResult(){
@@ -408,14 +568,26 @@
         const chosen=result.selected.map((item)=>esc(item.name)).join(', ')||'No candidates selected';
         const rows=result.top.map((row)=>'<tr><td>'+esc(row.bits)+'</td><td>'+esc(row.count)+'</td><td>'+esc(row.score.toFixed(2))+'</td><td>'+ (row.feasible?'YES':'NO')+'</td></tr>').join('');
         host.hidden=false;
-        host.innerHTML='<div class="qi-result"><h3>QAOA simulation result</h3><p class="chosen"><strong>Measured selection:</strong> '+chosen+'</p><div class="qi-stats"><div class="qi-stat"><strong>'+result.nqubits+'</strong><span>QUBITS SIMULATED</span></div><div class="qi-stat"><strong>'+result.shots+'</strong><span>MEASUREMENTS</span></div><div class="qi-stat"><strong>'+result.feasibleProbability.toFixed(1)+'%</strong><span>FEASIBLE PROBABILITY</span></div><div class="qi-stat"><strong>'+result.measuredScore.toFixed(2)+'</strong><span>MEASURED SCORE</span></div></div><p class="qi-small">Resource use: '+result.measuredCost.toFixed(2)+' / '+result.budget.toFixed(2)+' · Benefit: '+result.measuredBenefit.toFixed(2)+' · State: '+(result.measuredFeasible?'FEASIBLE':'INFEASIBLE')+'</p><p class="qi-small">QAOA expected score: '+result.expectedScore.toFixed(3)+' · Uniform baseline: '+result.uniformScore.toFixed(3)+' · Best small-case classical solution: '+result.exactSelection.map((item)=>esc(item.name)).join(', ')+'</p><p class="qi-small">Angles: γ = '+result.gamma.toFixed(3)+' · β = '+result.beta.toFixed(3)+' · Grid: 12 × 12</p><table class="qi-table"><thead><tr><th>Bit string</th><th>Count</th><th>Score</th><th>Feasible</th></tr></thead><tbody>'+rows+'</tbody></table><p class="qi-small">This is a local state-vector simulation. No real QPU was used and no NEXIST unit was realized or modified.</p></div>';
+        host.innerHTML='<div class="qi-result"><h3>QAOA simulation result</h3><p class="chosen"><strong>Measured selection:</strong> '+chosen+'</p><div class="qi-stats"><div class="qi-stat"><strong>'+result.nqubits+'</strong><span>QUBITS SIMULATED</span></div><div class="qi-stat"><strong>'+result.shots+'</strong><span>MEASUREMENTS</span></div><div class="qi-stat"><strong>'+result.feasibleProbability.toFixed(1)+'%</strong><span>FEASIBLE PROBABILITY</span></div><div class="qi-stat"><strong>'+result.measuredScore.toFixed(2)+'</strong><span>MEASURED SCORE</span></div></div><p class="qi-small">Resource use: '+result.measuredCost.toFixed(2)+' / '+result.budget.toFixed(2)+' · Declared benefit: '+result.measuredBenefit.toFixed(2)+' · QNN suitability: '+(result.measuredQnnSuitability*100).toFixed(1)+'% · QNN-adjusted utility: '+result.measuredAdjustedBenefit.toFixed(2)+' · State: '+(result.measuredFeasible?'FEASIBLE':'INFEASIBLE')+'</p><p class="qi-small">QAOA expected score: '+result.expectedScore.toFixed(3)+' · Uniform baseline: '+result.uniformScore.toFixed(3)+' · Best small-case classical solution: '+result.exactSelection.map((item)=>esc(item.name)).join(', ')+'</p><p class="qi-small">Angles: γ = '+result.gamma.toFixed(3)+' · β = '+result.beta.toFixed(3)+' · Grid: 12 × 12</p><table class="qi-table"><thead><tr><th>Bit string</th><th>Count</th><th>Score</th><th>Feasible</th></tr></thead><tbody>'+rows+'</tbody></table><p class="qi-small">This is a local state-vector simulation. No real QPU was used and no NEXIST unit was realized or modified.</p></div>';
       }
       function renderLog(){
         $('eventLog').innerHTML=store.events.length?store.events.map((item)=>'<div class="qi-log-item"><strong>'+esc(item.type)+'</strong> · '+esc(item.at)+'<br>'+esc(item.detail)+'</div>').join(''):'<p class="qi-small">No actions yet.</p>';
       }
+      function renderQnnPanel(){
+        const labelled=store.units.filter((unit)=>unit.qnnLabel===true||unit.qnnLabel===false);
+        $('qnnLabelCount').textContent=labelled.length;
+        $('qnnModelState').textContent=qnnIsValid(store.qnnModel)?'TRAINED':'NOT TRAINED';
+        const summary=store.qnnModel&&store.qnnModel.training;
+        $('qnnAccuracy').textContent=summary?Math.round(summary.accuracy*100)+'%':'—';
+        $('qnnLoss').textContent=summary?Number(summary.finalLoss).toFixed(3):'—';
+        if(summary){
+          $('qnnMessage').textContent='Last training: '+summary.samples+' labelled examples · '+summary.epochs+' epochs · loss '+Number(summary.initialLoss).toFixed(3)+' → '+Number(summary.finalLoss).toFixed(3)+'. Scores are uncalibrated experimental estimates.';
+          $('qnnMessage').className='qi-message success';
+        }
+      }
       function renderAll(){
         if($('projectContent').hidden)return;
-        renderCandidates();renderAiPlan();renderResult();renderLog();
+        renderCandidates();renderAiPlan();renderResult();renderLog();renderQnnPanel();
         $('year').textContent=new Date().getFullYear();
       }
       async function loadFreeModels(){
@@ -469,15 +641,15 @@
         const promptText=$('planningGoal').value.trim(),budget=numeric($('aiBudget').value),modelId=$('aiModel').value;
         if(!promptText){$('aiMessage').textContent='Enter a planning goal first.';$('aiMessage').className='qi-message error';return;}
         if(budget===null){$('aiMessage').textContent='Enter a valid non-negative budget.';$('aiMessage').className='qi-message error';return;}
-        const button=$('askAi');button.disabled=true;button.textContent='ASKING AI…';
+        const button=$('askAi');button.disabled=true;button.textContent='DRAFTING CANDIDATES…';
         $('aiMessage').textContent='Calling OpenRouter directly from this browser…';$('aiMessage').className='qi-message';
         try{
           const data=await requestOpenRouterPlan(promptText,budget,modelId);
           store.aiPlan=data.plan;log('AI_PLAN_RECEIVED','OpenRouter model '+data.model+' returned '+data.plan.items.length+' proposal candidates. None are evidence-verified.');
           save();renderAiPlan();renderLog();
-          $('aiMessage').textContent='AI proposal received from '+data.model+'. Importing creates POTENTIAL units only.';$('aiMessage').className='qi-message success';
+          $('aiMessage').textContent='Draft received from '+data.model+'. Importing creates POTENTIAL units only.';$('aiMessage').className='qi-message success';
         }catch(error){$('aiMessage').textContent=error.message||'AI request failed.';$('aiMessage').className='qi-message warning';}
-        finally{button.disabled=false;button.textContent='ASK AI TO BUILD A PROPOSAL ↗';}
+        finally{button.disabled=false;button.textContent='ASK LANGUAGE MODEL TO DRAFT CANDIDATES ↗';}
       });
       const openRouterKeyField=$('openRouterKey');
       if(openRouterKeyField)openRouterKeyField.addEventListener('input',function(){openRouterApiKey=this.value.trim();});
@@ -500,6 +672,12 @@
       $('candidateList').addEventListener('click',function(event){
         const button=event.target.closest('button[data-action]');if(!button)return;
         const unit=unitById(button.dataset.id);if(!unit)return;
+        if(button.dataset.action==='qnn-suitable'||button.dataset.action==='qnn-unsuitable'){
+          unit.qnnLabel=button.dataset.action==='qnn-suitable'?1:0;
+          store.lastResult=null;
+          log('QNN_LABEL_SET',unit.name+' labelled '+(unit.qnnLabel===1?'SUITABLE':'NOT SUITABLE')+' by the user for supervised training.');
+          save();renderAll();return;
+        }
         if(button.dataset.action==='evidence')recordApproval(unit.id);
         if(button.dataset.action==='recheck')recheckEvidence(unit.id);
         if(button.dataset.action==='revoke')revokeApproval(unit.id);
@@ -511,15 +689,55 @@
         }
       });
 
+      $('trainQnn').addEventListener('click',function(){
+        const labelled=store.units.filter((unit)=>unit.qnnLabel===1||unit.qnnLabel===0).slice(-40);
+        const positive=labelled.filter((unit)=>unit.qnnLabel===1).length;
+        const negative=labelled.length-positive;
+        if(labelled.length<4||!positive||!negative){
+          $('qnnMessage').textContent='Add at least four labelled candidates, including at least one SUITABLE and one NOT SUITABLE example.';
+          $('qnnMessage').className='qi-message warning';return;
+        }
+        const budget=numeric($('solverBudget').value)??0;
+        const examples=labelled.map((unit)=>({features:qnnFeatureVector(unit,budget),label:unit.qnnLabel}));
+        const button=$('trainQnn');button.disabled=true;button.textContent='TRAINING QUANTUM CIRCUIT…';
+        try{
+          store.qnnModel=qnnTrain(examples);
+          store.lastResult=null;
+          log('QNN_TRAINED','Variational quantum classifier trained on '+examples.length+' user-labelled examples; training accuracy '+(store.qnnModel.training.accuracy*100).toFixed(1)+'%.');
+          save();renderAll();
+          $('qnnMessage').textContent='Training completed. Quantum Neural predictions now influence the QAOA objective. Validate the model with separate unseen examples before relying on its scores.';
+          $('qnnMessage').className='qi-message success';
+        }catch(error){
+          $('qnnMessage').textContent=error.message||'Quantum Neural training failed.';
+          $('qnnMessage').className='qi-message error';
+        }finally{button.disabled=false;button.textContent='TRAIN QUANTUM NEURAL AI · 80 EPOCHS';}
+      });
+      $('resetQnn').addEventListener('click',function(){
+        store.qnnModel=null;store.lastResult=null;
+        log('QNN_RESET','Quantum Neural parameters were reset; user labels were retained.');
+        save();renderAll();
+        $('qnnMessage').textContent='QNN parameters reset. Your human labels are retained; train again when ready.';
+        $('qnnMessage').className='qi-message';
+      });
       function scoreMask(candidates,mask,budget,dependencies,conflicts){
-        let benefit=0,cost=0,violations=0;
+        let rawBenefit=0,adjustedBenefit=0,cost=0,violations=0,suitabilityTotal=0,selectedCount=0;
         const ids=new Set();
-        candidates.forEach((item,index)=>{if(mask&(1<<index)){benefit+=item.benefit;cost+=item.resourceCost;ids.add(item.id);}});
+        candidates.forEach((item,index)=>{
+          if(mask&(1<<index)){
+            const suitability=qnnClamp(Number.isFinite(item.qnnSuitability)?item.qnnSuitability:0.5);
+            rawBenefit+=item.benefit;
+            adjustedBenefit+=item.benefit*(0.5+suitability);
+            suitabilityTotal+=suitability;selectedCount++;
+            cost+=item.resourceCost;ids.add(item.id);
+          }
+        });
         if(cost>budget)violations++;
         if(dependencies.some((pair)=>ids.has(pair[0])&&!ids.has(pair[1])))violations++;
         if(conflicts.some((pair)=>ids.has(pair[0])&&ids.has(pair[1])))violations++;
-        const penalty=Math.max(1,candidates.reduce((sum,item)=>sum+item.benefit,0)+1);
-        return {score:benefit-penalty*violations,benefit,cost,feasible:violations===0};
+        const fullAdjustedBenefit=candidates.reduce((sum,item)=>sum+item.benefit*(0.5+qnnClamp(Number.isFinite(item.qnnSuitability)?item.qnnSuitability:0.5)),0);
+        const penalty=Math.max(1,fullAdjustedBenefit+1);
+        return {score:adjustedBenefit-penalty*violations,benefit:rawBenefit,adjustedBenefit,cost,feasible:violations===0,
+          meanQnnSuitability:selectedCount?suitabilityTotal/selectedCount:0.5};
       }
       function qaoa(candidates,budget,shots,dependencies,conflicts){
         const n=candidates.length,size=1<<n;
@@ -579,7 +797,7 @@
           nqubits:n,shots,budget,gamma:bestGamma,beta:bestBeta,expectedScore:bestExpected,
           uniformScore,feasibleProbability:feasibleProbability*100,
           selected:candidates.filter((item,index)=>chosen.mask&(1<<index)),
-          measuredScore:chosen.score,measuredCost:chosen.cost,measuredBenefit:chosen.benefit,
+          measuredScore:chosen.score,measuredCost:chosen.cost,measuredBenefit:chosen.benefit,measuredAdjustedBenefit:chosen.adjustedBenefit,measuredQnnSuitability:chosen.meanQnnSuitability,
           measuredFeasible:chosen.feasible,exactSelection:candidates.filter((item,index)=>exact.mask&(1<<index)),top
         };
       }
@@ -590,15 +808,18 @@
         if(!eligible.length){$('quantumMessage').textContent='No candidates have a current active approval evidence record.';$('quantumMessage').className='qi-message warning';return;}
         if(eligible.length>8){$('quantumMessage').textContent='The browser simulator is limited to 8 qubits. Reduce the eligible candidates.';$('quantumMessage').className='qi-message error';return;}
         const eligibleIds=new Set(eligible.map((unit)=>unit.id));
-        const candidates=eligible.map((unit)=>({id:unit.id,name:unit.name,benefit:unit.benefit,resourceCost:unit.resourceCost}));
+        const candidates=eligible.map((unit)=>{
+          const prediction=qnnIsValid(store.qnnModel)?qnnPredict(qnnFeatureVector(unit,budget),store.qnnModel):{probability:0.5};
+          return {id:unit.id,name:unit.name,benefit:unit.benefit,resourceCost:unit.resourceCost,qnnSuitability:prediction.probability};
+        });
         const dependencies=dependencyPairs().filter((pair)=>eligibleIds.has(pair[0])&&eligibleIds.has(pair[1]));
         const conflicts=conflictPairs().filter((pair)=>eligibleIds.has(pair[0])&&eligibleIds.has(pair[1]));
         try{
-          $('runQuantum').disabled=true;$('quantumMessage').textContent='Simulating the state vector and searching QAOA angles…';$('quantumMessage').className='qi-message';
+          $('runQuantum').disabled=true;$('quantumMessage').textContent='Running the QNN-weighted QAOA state-vector simulation and searching circuit angles…';$('quantumMessage').className='qi-message';
           const result=qaoa(candidates,budget,shots,dependencies,conflicts);
-          store.lastResult=result;log('QAOA_COMPLETED',result.nqubits+' qubits simulated; measured '+result.selected.length+' project(s).');
+          store.lastResult=result;log('QNN_QAOA_COMPLETED',result.nqubits+' qubits simulated; measured '+result.selected.length+' project(s).');
           save();renderResult();renderLog();
-          $('quantumMessage').textContent='QAOA simulation completed. Compare its sample with the exact classical small-case reference.';$('quantumMessage').className='qi-message success';
+          $('quantumMessage').textContent='QNN-weighted QAOA simulation completed. Compare the sample with the exact classical reference; no physical QPU was used.';$('quantumMessage').className='qi-message success';
         }catch(error){$('quantumMessage').textContent=error.message||'Quantum simulation failed.';$('quantumMessage').className='qi-message error';}
         finally{$('runQuantum').disabled=false;}
       });
