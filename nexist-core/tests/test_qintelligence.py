@@ -115,6 +115,20 @@ class QIntelligenceTests(unittest.TestCase):
         with self.assertRaises(NXValidationError):
             solve_selection(candidates, budget=13)
 
+    def test_trained_qnn_suitability_changes_qaoa_utility(self):
+        candidates = [
+            SelectionCandidate("high-raw-benefit", 10, 1, qnn_suitability=0.0),
+            SelectionCandidate("high-qnn-suitability", 8, 1, qnn_suitability=1.0),
+        ]
+        result = solve_selection(candidates, budget=1, shots=256, seed=3)
+        self.assertEqual(result.exact_classical_unit_ids, ("high-qnn-suitability",))
+        self.assertAlmostEqual(result.measured_ai_adjusted_benefit, 0.0)
+        self.assertGreater(result.measured_qnn_suitability, 0.5)
+
+    def test_qnn_suitability_must_be_a_probability(self):
+        with self.assertRaises(NXValidationError):
+            SelectionCandidate("bad", 5, 1, qnn_suitability=1.1)
+
 
 if __name__ == "__main__":
     unittest.main()
