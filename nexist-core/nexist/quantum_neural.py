@@ -25,14 +25,15 @@ class QuantumTrainingExample:
     label: int
 
     def __post_init__(self) -> None:
-        if not isinstance(self.features, tuple) or not self.features:
-            raise NXValidationError("Training features must be a non-empty tuple.")
+        if not isinstance(self.features, (tuple, list)) or not self.features:
+            raise NXValidationError("Training features must be a non-empty list or tuple.")
+        object.__setattr__(self, "features", tuple(self.features))
         for index, value in enumerate(self.features):
             if isinstance(value, bool) or not isinstance(value, (int, float)):
                 raise NXValidationError(f"Feature {index} must be numeric.")
             if not math.isfinite(float(value)) or not 0.0 <= float(value) <= 1.0:
                 raise NXValidationError(f"Feature {index} must be finite and in [0, 1].")
-        if isinstance(self.label, bool) or self.label not in (0, 1):
+        if isinstance(self.label, bool) or not isinstance(self.label, int) or self.label not in (0, 1):
             raise NXValidationError("Training label must be integer 0 or 1.")
 
 
@@ -260,8 +261,8 @@ class QuantumNeuralNetwork:
         return expectations
 
     def _validate_features(self, features: Sequence[float]) -> tuple[float, ...]:
-        if isinstance(features, (str, bytes)) or not isinstance(features, Sequence):
-            raise NXValidationError("Features must be a numeric sequence.")
+        if not isinstance(features, (tuple, list)):
+            raise NXValidationError("Features must be a numeric list or tuple.")
         if len(features) != self.qubits:
             raise NXValidationError(f"Expected exactly {self.qubits} features.")
         clean = []
