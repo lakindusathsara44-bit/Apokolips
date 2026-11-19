@@ -1,8 +1,9 @@
-"""Evidence-gated QAOA selection for the NEXIST experimental model.
+"""Evidence-gated QAOA selection with optional QNN suitability weighting.
 
-This module contains a small, dependency-free state-vector simulator. It is a
-research/demo implementation for at most 12 binary decisions, not a quantum
-hardware driver and not evidence of quantum advantage.
+The dependency-free state-vector implementation is a small research demo for
+at most 12 binary decisions. It accepts predictions from the variational QNN
+module but does not train the QNN itself. Neither simulator is a quantum
+hardware driver or evidence of quantum advantage.
 """
 from __future__ import annotations
 
