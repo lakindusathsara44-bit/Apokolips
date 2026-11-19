@@ -26,6 +26,7 @@ class SelectionCandidate:
     unit_id: str
     benefit: float
     resource_cost: float
+    qnn_suitability: float = 0.5
 
     def __post_init__(self) -> None:
         if not isinstance(self.unit_id, str) or not self.unit_id.strip():
@@ -35,6 +36,13 @@ class SelectionCandidate:
                 raise NXValidationError(f"Candidate {name} must be numeric.")
             if not math.isfinite(float(value)) or value < 0:
                 raise NXValidationError(f"Candidate {name} must be finite and non-negative.")
+        if (
+            isinstance(self.qnn_suitability, bool)
+            or not isinstance(self.qnn_suitability, (int, float))
+            or not math.isfinite(float(self.qnn_suitability))
+            or not 0.0 <= float(self.qnn_suitability) <= 1.0
+        ):
+            raise NXValidationError("Candidate qnn_suitability must be finite and in [0, 1].")
 
 
 @dataclass(frozen=True)
@@ -51,6 +59,8 @@ class QAOAResult:
     measured_score: float
     measured_resource_cost: float
     measured_benefit: float
+    measured_ai_adjusted_benefit: float
+    measured_qnn_suitability: float
     measured_feasible: bool
     measured_count: int
     exact_classical_unit_ids: tuple[str, ...]
@@ -75,6 +85,8 @@ class _Problem:
     scores: tuple[float, ...]
     resource_costs: tuple[float, ...]
     benefits: tuple[float, ...]
+    adjusted_benefits: tuple[float, ...]
+    qnn_suitability: tuple[float, ...]
     feasible: tuple[bool, ...]
 
 
@@ -132,13 +144,24 @@ def _prepare_problem(
 
     for node in dependency_graph:
         visit(node)
-    benefit_total = sum(float(item.benefit) for item in items)
-    penalty = max(1.0, benefit_total + 1.0)
-    scores, costs, benefits, feasible = [], [], [], []
+    adjusted_total = sum(
+        float(item.benefit) * (0.5 + float(item.qnn_suitability)) for item in items
+    )
+    penalty = max(1.0, adjusted_total + 1.0)
+    scores, costs, benefits, adjusted_benefits, qnn_means, feasible = [], [], [], [], [], []
     for mask in range(1 << len(items)):
         selected = {items[i].unit_id for i in range(len(items)) if mask & (1 << i)}
-        total_cost = sum(float(items[i].resource_cost) for i in range(len(items)) if mask & (1 << i))
-        total_benefit = sum(float(items[i].benefit) for i in range(len(items)) if mask & (1 << i))
+        selected_items = [items[i] for i in range(len(items)) if mask & (1 << i)]
+        total_cost = sum(float(item.resource_cost) for item in selected_items)
+        total_benefit = sum(float(item.benefit) for item in selected_items)
+        adjusted_benefit = sum(
+            float(item.benefit) * (0.5 + float(item.qnn_suitability))
+            for item in selected_items
+        )
+        mean_qnn = (
+            sum(float(item.qnn_suitability) for item in selected_items) / len(selected_items)
+            if selected_items else 0.5
+        )
         violations = 0
         if total_cost > float(budget):
             violations += 1
@@ -146,13 +169,18 @@ def _prepare_problem(
             violations += 1
         if any(left in selected and right in selected for left, right in conflict_pairs):
             violations += 1
-        score = total_benefit - penalty * violations
+        score = adjusted_benefit - penalty * violations
         scores.append(score)
         costs.append(total_cost)
         benefits.append(total_benefit)
+        adjusted_benefits.append(adjusted_benefit)
+        qnn_means.append(mean_qnn)
         feasible.append(violations == 0)
-    return _Problem(items, float(budget), deps, conflict_pairs, penalty,
-                    tuple(scores), tuple(costs), tuple(benefits), tuple(feasible))
+    return _Problem(
+        items, float(budget), deps, conflict_pairs, penalty,
+        tuple(scores), tuple(costs), tuple(benefits), tuple(adjusted_benefits),
+        tuple(qnn_means), tuple(feasible),
+    )
 
 
 def _run_statevector(problem: _Problem, gamma: float, beta: float) -> list[complex]:
@@ -261,6 +289,7 @@ def solve_selection(
         "p=1 QAOA-style circuit: Hadamard superposition, diagonal cost phase, and RX mixer.",
         "Local exact state-vector simulation only; this run did not use a physical quantum processor.",
         "A grid search selects circuit angles; sampling is probabilistic and may miss the exact optimum.",
+        "A trained QNN suitability probability scales each candidate benefit by (0.5 + probability); the neutral default 0.5 leaves raw benefit unchanged.",
         "The exhaustive classical optimum is reported as a correctness baseline, not as a quantum disadvantage claim.",
     )
     return QAOAResult(
@@ -276,6 +305,8 @@ def solve_selection(
         measured_score=problem.scores[chosen],
         measured_resource_cost=problem.resource_costs[chosen],
         measured_benefit=problem.benefits[chosen],
+        measured_ai_adjusted_benefit=problem.adjusted_benefits[chosen],
+        measured_qnn_suitability=problem.qnn_suitability[chosen],
         measured_feasible=problem.feasible[chosen],
         measured_count=counts[chosen],
         exact_classical_unit_ids=_mask_ids(problem, exact),
