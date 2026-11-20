@@ -31,7 +31,7 @@ button{border:0;border-radius:10px;padding:12px 17px;font-weight:750;cursor:poin
 </section>
 <section class="panel hidden" id="uploaderPanel">
 <div class="row"><div><h1>Create a post.</h1><p class="sub">Publish directly to the Apokolips blog.</p></div><button class="secondary" id="logoutButton" type="button">Log out</button></div>
-<div class="warning hidden" id="setupWarning">Neon media storage is not ready yet. Publishing will be enabled automatically when the storage service is available.</div>
+<div class="warning hidden" id="setupWarning" role="status" aria-live="polite"><strong id="setupTitle">Checking media storage…</strong><div id="setupMessage">Connecting to the secure upload service.</div><div class="actions"><button class="secondary" id="retryHealthButton" type="button">Retry connection check</button></div></div>
 <label>Post type</label><div class="types"><button class="type active" type="button" data-type="image">▧ Image</button><button class="type" type="button" data-type="video">▶ Video</button><button class="type" type="button" data-type="text">≡ Text</button></div>
 <div id="mediaField"><label for="media" id="fileLabel">Choose image</label><div class="drop">Select a media file<input id="media" type="file" accept="image/*"></div><div class="hint" id="fileHint">JPG, PNG, WebP, AVIF or GIF · Maximum 80 MB</div></div>
 <label for="description">Description / Post text</label><textarea id="description" maxlength="20000" placeholder="Write your post description..."></textarea>
@@ -55,15 +55,43 @@ async function rpc(name,args){const {data,error}=await client.rpc(name,args);if(
 async function validSession(token){const value=await rpc('bloguploader_check_session',{input_token:token});return value===true||(Array.isArray(value)&&value[0]===true)}
 function showUploader(){$('loginPanel').classList.add('hidden');$('uploaderPanel').classList.remove('hidden')}
 function showLogin(){$('uploaderPanel').classList.add('hidden');$('loginPanel').classList.remove('hidden');$('password').focus()}
-async function checkBackend(){try{const r=await fetch(API+'/health',{cache:'no-store'});const d=await r.json();storageReady=r.ok&&d.storageConfigured===true}catch(_){storageReady=false}$('setupWarning').classList.toggle('hidden',storageReady);$('publishButton').disabled=!storageReady}
+async function checkBackend(){
+ const retry=$('retryHealthButton');
+ retry.disabled=true;
+ $('setupWarning').classList.remove('hidden');
+ $('setupTitle').textContent='Checking media storage…';
+ $('setupMessage').textContent='Contacting the secure upload service.';
+ try{
+  const response=await fetch(API+'/health',{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Accept':'application/json'}});
+  const data=await response.json().catch(()=>({}));
+  storageReady=response.ok&&data.storageConfigured===true;
+  if(storageReady){
+   $('setupWarning').classList.add('hidden');
+   return true;
+  }
+  let detail=typeof data.error==='string'&&data.error?data.error:'';
+  if(response.status===403)detail='The upload service rejected this website origin (HTTP 403). Check the allowed website origins in the Neon Function settings.';
+  else if(!detail&&data.storageConfigured===false)detail='The upload service is responding, but its Neon Object Storage credentials are not available to the function.';
+  else if(!detail)detail='The upload service returned HTTP '+response.status+'.';
+  $('setupTitle').textContent='Media storage is not ready';
+  $('setupMessage').textContent=detail+' You can still press Publish; the server will return the actual publishing error instead of the button being blocked.';
+  return false;
+ }catch(error){
+  storageReady=false;
+  $('setupTitle').textContent='Cannot verify media storage';
+  $('setupMessage').textContent='The health check could not reach the upload service ('+(error?.message||'network or CORS error')+'). Publishing is not blocked; press Publish to test the actual upload request, or retry this check.';
+  return false;
+ }finally{retry.disabled=false;}
+}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();const pwd=$('password').value;if(!pwd)return;const b=$('loginButton');b.disabled=true;b.textContent='Checking…';setStatus('loginStatus','Verifying password…');try{const data=await rpc('bloguploader_login',{input_password:pwd});const row=Array.isArray(data)?data[0]:data;if(!row?.session_token)throw new Error('Incorrect password or login temporarily locked. Try again later.');session=row.session_token;sessionStorage.setItem(KEY,session);$('password').value='';showUploader();await checkBackend();setStatus('loginStatus','')}catch(err){setStatus('loginStatus',err.message||'Login failed.',true)}finally{b.disabled=false;b.textContent='Log in'}});
+$('retryHealthButton').addEventListener('click',checkBackend);
 $('logoutButton').addEventListener('click',async()=>{const old=session;session='';sessionStorage.removeItem(KEY);try{await rpc('bloguploader_logout',{input_token:old})}catch(_){}showLogin();setStatus('loginStatus','You have been logged out.')});
 document.querySelectorAll('.type').forEach(b=>b.addEventListener('click',()=>{kind=b.dataset.type;document.querySelectorAll('.type').forEach(x=>x.classList.toggle('active',x===b));$('mediaField').classList.toggle('hidden',kind==='text');$('media').accept=specs[kind].accept;$('fileLabel').textContent=specs[kind].label;$('media').value='';file=null}));
 $('media').addEventListener('change',e=>{file=e.target.files?.[0]||null});
 $('publishButton').addEventListener('click',async()=>{
  const description=$('description').value.trim();
  if(!session){showLogin();return setStatus('loginStatus','Log in with the uploader password before publishing.',true)}
- if(!storageReady)return setStatus('publishStatus','Neon media storage is not ready yet. Please try again shortly.',true);
+ // Do not block publishing based on a separate health probe: the actual POST is authoritative.
  if(!description)return setStatus('publishStatus','Add a description or text for this post.',true);
  if(kind!=='text'&&!file)return setStatus('publishStatus','Choose a media file first.',true);
  if(file&&file.size>80*1024*1024)return setStatus('publishStatus','Media file is too large (maximum 80 MB).',true);
@@ -84,7 +112,7 @@ $('publishButton').addEventListener('click',async()=>{
   kind='image';document.querySelectorAll('.type').forEach(x=>x.classList.toggle('active',x.dataset.type==='image'));
   $('mediaField').classList.remove('hidden');$('media').accept=specs.image.accept;$('fileLabel').textContent=specs.image.label;
  }catch(err){$('publishStatus').classList.remove('success');if(!session){showLogin();setStatus('loginStatus',err.message||'Your login session expired. Please log in again.',true)}else{setStatus('publishStatus',err.message||'Publishing failed. Please try again.',true)}}
- finally{b.textContent='Publish post';b.disabled=!storageReady;}
+ finally{b.textContent='Publish post';b.disabled=false;}
 });
 try{localStorage.removeItem(KEY)}catch(_){}
 (async()=>{const saved=sessionStorage.getItem(KEY);if(!saved){setStatus('loginStatus','Enter the uploader password to unlock publishing.');return}setStatus('loginStatus','Restoring your secure tab session…');try{if(await validSession(saved)){session=saved;showUploader();await checkBackend();setStatus('loginStatus','')}else{sessionStorage.removeItem(KEY);setStatus('loginStatus','Your session expired. Please log in again.')}}catch(err){setStatus('loginStatus','Could not verify your session. Check your connection and reload this page.',true)}})();
