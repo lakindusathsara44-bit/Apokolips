@@ -17,7 +17,7 @@ const POSTS = [
 const UPLOADER_REPOSITORY = 'lakindusathsara44-bit/BlogUploader';
 const UPLOADER_RAW_BASE = 'https://raw.githubusercontent.com/' + UPLOADER_REPOSITORY + '/main/';
 
-async function fetchUploadedPosts() {
+async function fetchLegacyUploadedPosts() {
   const response = await fetch(UPLOADER_RAW_BASE + 'posts/index.json?cache=' + Date.now());
   if (response.status === 404) return [];
   if (!response.ok) throw new Error('Could not read the BlogUploader post index (' + response.status + ').');
@@ -71,7 +71,37 @@ async function fetchUploadedPosts() {
     };
   }));
   return results.filter(Boolean).sort((a, b) => b.date.localeCompare(a.date));
-} {
+}
+
+async function fetchUploadedPosts() {
+  const [legacy, stored] = await Promise.all([
+    fetchLegacyUploadedPosts().catch(() => []),
+    fetch('https://br-silent-frost-b3chnc64-bloguploader.compute.c-4.ap-southeast-1.aws.neon.tech/posts?cache=' + Date.now(), { cache: 'no-store' })
+      .then(async response => {
+        if (!response.ok) throw new Error('Blog storage API returned ' + response.status + '.');
+        const body = await response.json();
+        return (Array.isArray(body.posts) ? body.posts : []).map(post => {
+          const date = post.date || new Date(post.created_at || Date.now()).toISOString().slice(0, 10);
+          return {
+            id: post.id || post.slug,
+            slug: post.slug || post.id,
+            title: post.title || 'A new memory',
+            date,
+            dateLabel: post.dateLabel || new Date(date + 'T00:00:00Z').toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC' }),
+            description: post.description || '',
+            src: post.mediaUrl || post.src || '',
+            alt: post.title || 'Apokolips Blog post',
+            type: post.type === 'image' ? 'photo' : post.type
+          };
+        });
+      }).catch(() => [])
+  ]);
+  const ids = new Set(stored.map(post => post.slug || post.id));
+  return [...stored, ...legacy.filter(post => !ids.has(post.slug || post.id))]
+    .sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+}
+
+function RainCanvas() {
   useEffect(() => {
     const canvas = document.getElementById('blogRain');
     if (!canvas) return undefined;
