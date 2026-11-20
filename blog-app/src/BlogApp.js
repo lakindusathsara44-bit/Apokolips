@@ -17,7 +17,7 @@ const POSTS = [
 const UPLOADER_REPOSITORY = 'lakindusathsara44-bit/BlogUploader';
 const UPLOADER_RAW_BASE = 'https://raw.githubusercontent.com/' + UPLOADER_REPOSITORY + '/main/';
 
-async function fetchUploadedPosts() {
+async function fetchLegacyUploadedPosts() {
   const response = await fetch(UPLOADER_RAW_BASE + 'posts/index.json?cache=' + Date.now());
   if (response.status === 404) return [];
   if (!response.ok) throw new Error('Could not read the BlogUploader post index (' + response.status + ').');
@@ -71,7 +71,38 @@ async function fetchUploadedPosts() {
     };
   }));
   return results.filter(Boolean).sort((a, b) => b.date.localeCompare(a.date));
-} {
+}
+
+async function fetchNeonUploadedPosts() {
+  const { data, error } = await blogClient.from('bloguploader_posts')
+    .select('id,slug,post_type,title,description,media_url,created_at')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data || []).map(row => {
+    const parsed = new Date(row.created_at);
+    const date = Number.isNaN(parsed.getTime()) ? new Date().toISOString().slice(0, 10) : parsed.toISOString().slice(0, 10);
+    const dateLabel = new Date(date + 'T00:00:00Z').toLocaleDateString('en-GB', {
+      day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC'
+    });
+    return {
+      id: row.slug, slug: row.slug, title: row.title, date, dateLabel,
+      description: row.description, src: row.media_url || '', alt: row.title,
+      type: row.post_type === 'image' ? 'photo' : row.post_type
+    };
+  });
+}
+async function fetchUploadedPosts() {
+  const [oldResult, liveResult] = await Promise.allSettled([fetchLegacyUploadedPosts(), fetchNeonUploadedPosts()]);
+  if (oldResult.status === 'rejected' && liveResult.status === 'rejected') throw new Error('The archive and Neon post feed are unavailable.');
+  const oldPosts = oldResult.status === 'fulfilled' ? oldResult.value : [];
+  const livePosts = liveResult.status === 'fulfilled' ? liveResult.value : [];
+  const unique = new Map();
+  [...oldPosts, ...livePosts].forEach(post => { if (!unique.has(post.slug)) unique.set(post.slug, post); });
+  return [...unique.values()].sort((a, b) => b.date.localeCompare(a.date));
+}
+
+
+function RainCanvas() {
   useEffect(() => {
     const canvas = document.getElementById('blogRain');
     if (!canvas) return undefined;
