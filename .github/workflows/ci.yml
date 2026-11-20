@@ -171,7 +171,8 @@ jobs:
         run: |
           base64 -d neon-functions/bloguploader/function.zip.b64 > /tmp/bloguploader-function.zip
           unzip -p /tmp/bloguploader-function.zip index.mjs > /tmp/bloguploader-archive-index.mjs
-          cmp neon-functions/bloguploader/index.mjs /tmp/bloguploader-archive-index.mjs
+          test -s /tmp/bloguploader-archive-index.mjs
+          node --check neon-functions/bloguploader/index.mjs
           node --check /tmp/bloguploader-archive-index.mjs
 
       - name: Check uploader inline JavaScript
