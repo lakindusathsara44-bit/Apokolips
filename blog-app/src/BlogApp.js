@@ -14,7 +14,63 @@ const POSTS = [
   { id: 'travel-photo-20261110-wa0021', slug: 'travel-photo-2026-11-10-wa0021', title: 'A new moment to remember', date: '2026-11-10', dateLabel: '10 November 2026', description: 'Another captured moment, added to the Apokolips travel memories.', src: 'https://raw.githubusercontent.com/lakindusathsara44-bit/Apokolips/main/IMG-20261110-WA0021.jpg', alt: 'Travel photograph shared by Lakindu Sathsara on 10 November 2026', type: 'photo' }
 ];
 
-function RainCanvas() {
+const UPLOADER_REPOSITORY = 'lakindusathsara44-bit/BlogUploader';
+const UPLOADER_RAW_BASE = 'https://raw.githubusercontent.com/' + UPLOADER_REPOSITORY + '/main/';
+
+async function fetchUploadedPosts() {
+  const response = await fetch('https://api.github.com/repos/' + UPLOADER_REPOSITORY + '/contents/posts?ref=main', {
+    headers: { Accept: 'application/vnd.github+json' }
+  });
+  if (response.status === 404) return [];
+  if (!response.ok) throw new Error('Could not read BlogUploader posts (' + response.status + ').');
+  const files = (await response.json()).filter(file => file.type === 'file' && file.name.endsWith('.md'));
+  const results = await Promise.all(files.map(async file => {
+    const postResponse = await fetch(file.download_url || (UPLOADER_RAW_BASE + 'posts/' + encodeURIComponent(file.name)));
+    if (!postResponse.ok) return null;
+    const source = (await postResponse.text()).trim();
+    const isText = source.startsWith('[Text]');
+    if (!isText && !source.startsWith('[Media]')) return null;
+
+    const filename = file.name.replace(/\\.md$/i, '');
+    const dateMatch = filename.match(/(\\d{4}-\\d{2}-\\d{2})/);
+    const date = dateMatch ? dateMatch[1] : new Date().toISOString().slice(0, 10);
+    const dateLabel = new Date(date + 'T00:00:00Z').toLocaleDateString('en-GB', {
+      day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC'
+    });
+
+    let type = 'text';
+    let src = '';
+    let description = source.replace(/^\\[Text\\]\\s*/, '').trim();
+    if (!isText) {
+      const imageMatch = source.match(/!\\[[^\\]]*\\]\\(([^)]+)\\)/);
+      const videoMatch = source.match(/\\[Watch video\\]\\(([^)]+)\\)/);
+      const mediaMatch = imageMatch || videoMatch;
+      if (!mediaMatch) return null;
+      const reference = mediaMatch[1].trim();
+      const mediaName = reference.split('/').pop().split('?')[0];
+      src = UPLOADER_RAW_BASE + 'uploads/' + encodeURIComponent(decodeURIComponent(mediaName));
+      type = /\\.(mp4|webm|mov|m4v|ogv)$/i.test(mediaName) ? 'video' : 'photo';
+      const afterMedia = source.slice(mediaMatch.index + mediaMatch[0].length);
+      description = afterMedia.replace(/^\\s*\\n\\s*/, '').trim();
+      if (!description) description = source.replace(/^\\[Media\\]\\s*/, '').replace(mediaMatch[0], '').trim();
+    }
+    const firstLine = description.split(/\\r?\\n/)[0].trim();
+    const title = (firstLine.split(/[.!?]/)[0].trim().slice(0, 72)) || (type === 'text' ? 'A new note' : 'A new memory');
+    const slug = 'uploaded-' + filename.replace(/[^a-zA-Z0-9_-]/g, '-');
+    return {
+      id: slug,
+      slug,
+      title,
+      date,
+      dateLabel,
+      description,
+      src,
+      alt: title,
+      type
+    };
+  }));
+  return results.filter(Boolean).sort((a, b) => b.date.localeCompare(a.date));
+} {
   useEffect(() => {
     const canvas = document.getElementById('blogRain');
     if (!canvas) return undefined;
@@ -261,14 +317,18 @@ function PostCard({ post, index, onOpen, hidden }) {
     event.currentTarget.style.setProperty('--card-rotate-y', '0deg');
   };
   return h('article', { className: 'photo-post blog-post reveal-card', id: post.id, 'data-post-slug': post.slug, style: { display: hidden ? 'none' : undefined, '--card-delay': (index % 6 * 75) + 'ms' }, onPointerMove: tilt, onPointerLeave: reset },
-    h('button', { className: 'post-image-button', type: 'button', onClick: () => onOpen(post), 'aria-label': 'Open ' + post.title },
-      h('img', { src: post.src, alt: post.alt, loading: 'lazy', decoding: 'async' }),
-      h('span', { className: 'image-open-hint' }, 'VIEW MEMORY ↗'),
-      h('span', { className: 'image-index' }, String(index + 1).padStart(2, '0'))
-    ),
+    post.type === 'photo'
+      ? h('button', { className: 'post-image-button', type: 'button', onClick: () => onOpen(post), 'aria-label': 'Open ' + post.title },
+          h('img', { src: post.src, alt: post.alt, loading: 'lazy', decoding: 'async' }),
+          h('span', { className: 'image-open-hint' }, 'VIEW IMAGE ↗'),
+          h('span', { className: 'image-index' }, String(index + 1).padStart(2, '0'))
+        )
+      : post.type === 'video'
+        ? h('video', { className: 'uploaded-post-video', src: post.src, controls: true, preload: 'metadata', playsInline: true })
+        : h('div', { className: 'uploaded-post-text' }, h('p', null, post.description)),
     h('div', { className: 'post-content' },
       h('h3', { className: 'post-title' }, post.title),
-      h('div', { className: 'post-date' }, post.dateLabel + ' · Personal photo'),
+      h('div', { className: 'post-date' }, post.dateLabel + ' · ' + (post.type === 'text' ? 'Text post' : post.type === 'video' ? 'Video' : 'Photo')),
       h('p', { className: 'post-description' }, post.description),
       h(SocialCard, { post })
     )
@@ -296,6 +356,8 @@ function Lightbox({ post, onClose, onMove }) {
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [posts, setPosts] = useState(POSTS);
+  const [postsStatus, setPostsStatus] = useState('');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [sort, setSort] = useState('newest');
@@ -305,12 +367,19 @@ function App() {
   const [showTop, setShowTop] = useState(false);
   const [stats, setStats] = useState({ reactions: '—', comments: '—' });
   const searchRef = useRef(null);
+  useEffect(() => {
+    let active = true;
+    fetchUploadedPosts()
+      .then(items => { if (active) setPosts([...POSTS, ...items]); })
+      .catch(error => { console.warn('Could not load BlogUploader posts:', error); if (active) setPostsStatus('Some recently uploaded posts may be temporarily unavailable.'); });
+    return () => { active = false; };
+  }, []);
   const currentPosts = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return [...POSTS].filter(post => (filter === 'all' || post.type === filter) &&
+    return [...posts].filter(post => (filter === 'all' || post.type === filter) &&
       (!query || [post.title, post.description, post.dateLabel].join(' ').toLowerCase().includes(query)))
       .sort((a, b) => sort === 'newest' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date));
-  }, [search, filter, sort]);
+  }, [posts, search, filter, sort]);
 
   useEffect(() => {
     let alive = true;
@@ -357,8 +426,8 @@ function App() {
   const openPost = post => setLightboxPost(post);
   const moveLightbox = direction => {
     if (!lightboxPost) return;
-    const index = POSTS.findIndex(item => item.id === lightboxPost.id);
-    setLightboxPost(POSTS[(index + direction + POSTS.length) % POSTS.length]);
+    const index = posts.findIndex(item => item.id === lightboxPost.id);
+    setLightboxPost(posts[(index + direction + posts.length) % posts.length]);
   };
   const copyPageLink = async () => {
     const url = window.location.href.split('#')[0] + '#memories';
@@ -399,13 +468,13 @@ function App() {
         h(NotificationCenter)
       ),
       h('section', { className: 'blog-stats blog-reveal', 'aria-label': 'Blog activity' },
-        h('div', null, h('span', null, 'MEMORIES'), h('strong', null, String(POSTS.length))),
+        h('div', null, h('span', null, 'MEMORIES'), h('strong', null, String(posts.length))),
         h('div', null, h('span', null, 'COMMUNITY REACTIONS'), h('strong', null, stats.reactions)),
         h('div', null, h('span', null, 'COMMENTS & REPLIES'), h('strong', null, stats.comments))
       ),
       h('section', { className: 'blog-section', id: 'memories' },
         h('div', { className: 'blog-section-heading blog-reveal' },
-          h('div', null, h('div', { className: 'small-label' }, 'MY TRIPS'), h('h2', null, 'Photo & Video Memories')),
+          h('div', null, h('div', { className: 'small-label' }, 'COMMUNITY JOURNAL'), h('h2', null, 'Latest Posts')),
           h('span', { className: 'memory-count' }, String(currentPosts.length).padStart(2, '0') + ' / ' + String(POSTS.length).padStart(2, '0') + ' SHOWN')
         ),
         h('div', { className: 'blog-controls blog-reveal' },
@@ -416,7 +485,7 @@ function App() {
           ),
           h('div', { className: 'blog-control-group' },
             h('select', { value: filter, onChange: e => setFilter(e.target.value), 'aria-label': 'Filter media type' },
-              h('option', { value: 'all' }, 'All media'), h('option', { value: 'photo' }, 'Photos'), h('option', { value: 'video' }, 'Videos')
+              h('option', { value: 'all' }, 'All posts'), h('option', { value: 'photo' }, 'Photos'), h('option', { value: 'video' }, 'Videos'), h('option', { value: 'text' }, 'Text')
             ),
             h('select', { value: sort, onChange: e => setSort(e.target.value), 'aria-label': 'Sort memories' },
               h('option', { value: 'newest' }, 'Newest first'), h('option', { value: 'oldest' }, 'Oldest first')
@@ -424,6 +493,7 @@ function App() {
             h('button', { className: 'layout-toggle', type: 'button', onClick: () => setLayout(v => v === 'grid' ? 'list' : 'grid'), 'aria-label': layout === 'grid' ? 'Switch to list view' : 'Switch to grid view' }, layout === 'grid' ? '☷' : '▦')
           )
         ),
+        postsStatus ? h('p', { className: 'interaction-note', role: 'status' }, postsStatus) : null,
         h('div', { className: 'media-grid ' + (layout === 'list' ? 'media-grid-list' : ''), id: 'mediaGrid' },
           currentPosts.map((post, index) => h(PostCard, { key: post.id, post, index, onOpen: openPost }))
         ),
