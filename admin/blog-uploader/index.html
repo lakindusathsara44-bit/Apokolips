@@ -31,7 +31,7 @@ button{border:0;border-radius:10px;padding:12px 17px;font-weight:750;cursor:poin
 </section>
 <section class="panel hidden" id="uploaderPanel">
 <div class="row"><div><h1>Create a post.</h1><p class="sub">Publish directly to the Apokolips blog.</p></div><button class="secondary" id="logoutButton" type="button">Log out</button></div>
-<div class="warning hidden" id="setupWarning">The owner still needs to complete the one-time GitHub publishing connection. Login is ready, but publishing is not enabled yet.</div>
+<div class="warning hidden" id="setupWarning">Permanent media storage is temporarily unavailable. Please try again later.</div>
 <label>Post type</label><div class="types"><button class="type active" type="button" data-type="image">▧ Image</button><button class="type" type="button" data-type="video">▶ Video</button><button class="type" type="button" data-type="text">≡ Text</button></div>
 <div id="mediaField"><label for="media" id="fileLabel">Choose image</label><div class="drop">Select a media file<input id="media" type="file" accept="image/*"></div><div class="hint" id="fileHint">JPG, PNG, WebP, AVIF or GIF · Maximum 80 MB</div></div>
 <label for="description">Description / Post text</label><textarea id="description" maxlength="20000" placeholder="Write your post description..."></textarea>
@@ -44,22 +44,81 @@ button{border:0;border-radius:10px;padding:12px 17px;font-weight:750;cursor:poin
 import { getBlogClient } from './analytics.js';
 const API='https://br-silent-frost-b3chnc64-bloguploader.compute.c-4.ap-southeast-1.aws.neon.tech';
 const KEY='apokolips_bloguploader_session_v1';
-const $=id=>document.getElementById(id);
-const client=getBlogClient();
-let session='',kind='image',file=null,githubReady=false;
+const $=id=>document.getElementById(id), client=getBlogClient();
+let session='',kind='image',file=null,storageReady=false;
 const specs={image:{accept:'image/png,image/jpeg,image/webp,image/avif,image/gif',label:'Choose image'},video:{accept:'video/mp4,video/webm,video/quicktime,video/x-m4v,video/ogg',label:'Choose video'},text:{accept:'',label:'No media required'}};
 function setStatus(id,message,bad=false){$(id).textContent=message;$(id).style.color=bad?'#ff9b9b':''}
 async function rpc(name,args){const {data,error}=await client.rpc(name,args);if(error)throw new Error(error.message||'Database request failed.');return data}
-async function validSession(token){const value=await rpc('bloguploader_check_session',{input_token:token});return value===true||(Array.isArray(value)&&value[0]===true)}
+async function validSession(token){const v=await rpc('bloguploader_check_session',{input_token:token});return v===true||(Array.isArray(v)&&v[0]===true)}
 function showUploader(){$('loginPanel').classList.add('hidden');$('uploaderPanel').classList.remove('hidden')}
 function showLogin(){$('uploaderPanel').classList.add('hidden');$('loginPanel').classList.remove('hidden');$('password').focus()}
-async function checkBackend(){try{const r=await fetch(API+'/health',{cache:'no-store'});const d=await r.json();githubReady=r.ok&&d.githubConfigured===true}catch(_){githubReady=false}$('setupWarning').classList.toggle('hidden',githubReady);$('publishButton').disabled=!githubReady}
-$('loginForm').addEventListener('submit',async e=>{e.preventDefault();const pwd=$('password').value;if(!pwd)return;const b=$('loginButton');b.disabled=true;b.textContent='Checking…';setStatus('loginStatus','Verifying password…');try{const data=await rpc('bloguploader_login',{input_password:pwd});const row=Array.isArray(data)?data[0]:data;if(!row?.session_token)throw new Error('Incorrect password or login temporarily locked. Try again later.');session=row.session_token;localStorage.setItem(KEY,session);$('password').value='';showUploader();await checkBackend();setStatus('loginStatus','')}catch(err){setStatus('loginStatus',err.message||'Login failed.',true)}finally{b.disabled=false;b.textContent='Log in'}});
-$('logoutButton').addEventListener('click',async()=>{const old=session;session='';localStorage.removeItem(KEY);try{await rpc('bloguploader_logout',{input_token:old})}catch(_){}showLogin();setStatus('loginStatus','You have been logged out.')});
-document.querySelectorAll('.type').forEach(b=>b.addEventListener('click',()=>{kind=b.dataset.type;document.querySelectorAll('.type').forEach(x=>x.classList.toggle('active',x===b));$('mediaField').classList.toggle('hidden',kind==='text');$('media').accept=specs[kind].accept;$('fileLabel').textContent=specs[kind].label;$('media').value='';file=null}));
+function updatePublishAvailability(){$('publishButton').disabled=kind!=='text'&&!storageReady}
+async function checkBackend(){
+ try{const r=await fetch(API+'/health',{cache:'no-store'});const d=await r.json();storageReady=r.ok&&(d.storageReady===true||d.storageConfigured===true)}catch(_){storageReady=false}
+ $('setupWarning').classList.toggle('hidden',storageReady);updatePublishAvailability();
+}
+$('publishButton').disabled=true;
+$('loginForm').addEventListener('submit',async e=>{
+ e.preventDefault();const pwd=$('password').value;if(!pwd)return;const b=$('loginButton');
+ b.disabled=true;b.textContent='Checking…';setStatus('loginStatus','Verifying password…');
+ try{const d=await rpc('bloguploader_login',{input_password:pwd}),row=Array.isArray(d)?d[0]:d;
+  if(!row?.session_token)throw new Error('Incorrect password or login temporarily locked. Try again later.');
+  session=row.session_token;localStorage.setItem(KEY,session);$('password').value='';showUploader();await checkBackend();setStatus('loginStatus','');
+ }catch(err){setStatus('loginStatus',err.message||'Login failed.',true)}
+ finally{b.disabled=false;b.textContent='Log in'}
+});
+$('logoutButton').addEventListener('click',async()=>{
+ const old=session;session='';localStorage.removeItem(KEY);try{await rpc('bloguploader_logout',{input_token:old})}catch(_){}
+ showLogin();setStatus('loginStatus','You have been logged out.');
+});
+document.querySelectorAll('.type').forEach(b=>b.addEventListener('click',()=>{
+ kind=b.dataset.type;document.querySelectorAll('.type').forEach(x=>x.classList.toggle('active',x===b));
+ $('mediaField').classList.toggle('hidden',kind==='text');$('media').accept=specs[kind].accept;$('fileLabel').textContent=specs[kind].label;
+ $('media').value='';file=null;updatePublishAvailability();
+}));
 $('media').addEventListener('change',e=>{file=e.target.files?.[0]||null});
-async function toBase64(f){const bytes=new Uint8Array(await f.arrayBuffer());let binary='';for(let i=0;i<bytes.length;i+=32768)binary+=String.fromCharCode(...bytes.subarray(i,i+32768));return btoa(binary)}
-$('publishButton').addEventListener('click',async()=>{const description=$('description').value.trim();if(!githubReady)return setStatus('publishStatus','The owner has not finished the one-time publishing setup yet.',true);if(!description)return setStatus('publishStatus','Add a description or text for this post.',true);if(kind!=='text'&&!file)return setStatus('publishStatus','Choose a media file first.',true);if(file&&file.size>80*1024*1024)return setStatus('publishStatus','Media file is too large (maximum 80 MB).',true);const b=$('publishButton');b.disabled=true;b.textContent='Publishing…';try{const {data:auth,error}=await client.auth.getAnonymousToken();if(error||!auth?.token)throw new Error('Could not connect to the database.');const payload={type:kind,description};if(file){payload.filename=file.name;payload.mediaBase64=await toBase64(file)}const response=await fetch(API+'/publish',{method:'POST',headers:{'Authorization':'Bearer '+session,'X-Neon-Token':auth.token,'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json().catch(()=>({}));if(response.status===401){session='';localStorage.removeItem(KEY);showLogin();throw new Error('Your login session expired. Please log in again.')}if(!response.ok)throw new Error(result.error||'Upload failed ('+response.status+').');$('description').value='';$('media').value='';file=null;setStatus('publishStatus','Published successfully: '+result.filename,false);$('publishStatus').classList.add('success');kind='image';document.querySelectorAll('.type').forEach(x=>x.classList.toggle('active',x.dataset.type==='image'));$('mediaField').classList.remove('hidden');$('media').accept=specs.image.accept;$('fileLabel').textContent=specs.image.label}catch(err){$('publishStatus').classList.remove('success');setStatus('publishStatus',err.message||'Publishing failed.',true)}finally{b.textContent='Publish post';b.disabled=!githubReady}});
-(async()=>{const saved=localStorage.getItem(KEY);if(!saved)return;try{setStatus('loginStatus','Restoring your session…');if(await validSession(saved)){session=saved;showUploader();await checkBackend()}else{localStorage.removeItem(KEY);setStatus('loginStatus','Your session expired. Please log in again.')}}catch(_){setStatus('loginStatus','Could not restore your session. Please log in again.',true)}})();
+function makeSlug(){return 'uploaded-'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'-'+crypto.randomUUID().slice(0,8)}
+async function uploadMedia(authToken){
+ const endpoint=API+'/media/upload?kind='+encodeURIComponent(kind)+'&filename='+encodeURIComponent(file.name);
+ const r=await fetch(endpoint,{method:'PUT',headers:{Authorization:'Bearer '+session,'X-Neon-Token':authToken,'Content-Type':file.type||'application/octet-stream'},body:file});
+ const data=await r.json().catch(()=>({}));
+ if(r.status===401){session='';localStorage.removeItem(KEY);showLogin();throw new Error('Your login session expired. Please log in again.')}
+ if(!r.ok)throw new Error(data.error||'Media upload failed ('+r.status+').');return data;
+}
+async function removeUnusedMedia(authToken,key){try{await fetch(API+'/media/delete',{method:'DELETE',headers:{Authorization:'Bearer '+session,'X-Neon-Token':authToken,'Content-Type':'application/json'},body:JSON.stringify({key})})}catch(_){}}
+$('publishButton').addEventListener('click',async()=>{
+ const description=$('description').value.trim();
+ if(kind!=='text'&&!storageReady)return setStatus('publishStatus','Permanent media storage is not currently available. Please try again later.',true);
+ if(!description)return setStatus('publishStatus','Add a description or text for this post.',true);
+ if(kind!=='text'&&!file)return setStatus('publishStatus','Choose a media file first.',true);
+ if(file&&file.size>80*1024*1024)return setStatus('publishStatus','Media file is too large (maximum 80 MB).',true);
+ if(file&&file.size===0)return setStatus('publishStatus','Empty files cannot be uploaded.',true);
+ const b=$('publishButton');b.disabled=true;b.textContent='Publishing…';let stored=null,token='';
+ try{
+  const {data:auth,error}=await client.auth.getAnonymousToken();if(error||!auth?.token)throw new Error('Could not connect to the database.');token=auth.token;
+  if(file){setStatus('publishStatus','Uploading media to permanent storage…');stored=await uploadMedia(token)}
+  setStatus('publishStatus','Saving your post…');
+  const title=description.split(/\r?\n/)[0].split(/[.!?]/)[0].trim().slice(0,120)||(kind==='text'?'A new text post':'A new media post');
+  const {error:saveError}=await client.rpc('bloguploader_publish_post',{
+   input_token:session,p_slug:makeSlug(),p_post_type:kind,p_title:title,p_description:description,
+   p_filename:stored?.filename||null,p_media_key:stored?.key||null,p_media_url:stored?.url||null,
+   p_content_type:stored?.contentType||null,p_media_size:stored?.size||null
+  });
+  if(saveError)throw new Error(saveError.message||'Post could not be published.');
+  $('description').value='';$('media').value='';file=null;$('publishStatus').classList.add('success');
+  setStatus('publishStatus','Published successfully. Your post is now available on Apokolips Blog.');
+  kind='image';document.querySelectorAll('.type').forEach(x=>x.classList.toggle('active',x.dataset.type==='image'));
+  $('mediaField').classList.remove('hidden');$('media').accept=specs.image.accept;$('fileLabel').textContent=specs.image.label;
+ }catch(err){
+  if(stored?.key&&token)await removeUnusedMedia(token,stored.key);
+  $('publishStatus').classList.remove('success');setStatus('publishStatus',err.message||'Publishing failed.',true);
+ }finally{b.textContent='Publish post';updatePublishAvailability()}
+});
+(async()=>{
+ const saved=localStorage.getItem(KEY);if(!saved)return;
+ try{setStatus('loginStatus','Restoring your session…');if(await validSession(saved)){session=saved;showUploader();await checkBackend()}
+ else{localStorage.removeItem(KEY);setStatus('loginStatus','Your session expired. Please log in again.')}}
+ catch(_){setStatus('loginStatus','Could not restore your session. Please log in again.',true)}
+})();
 </script>
 <script defer src="./studio.js"></script></body></html>

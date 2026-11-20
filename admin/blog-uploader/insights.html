@@ -32,7 +32,7 @@ $('loginForm').addEventListener('submit',async e=>{e.preventDefault();const b=$(
 $('logout').addEventListener('click',async()=>{const token=localStorage.getItem(KEY);localStorage.removeItem(KEY);try{if(token)await rpc('bloguploader_logout',{input_token:token});}catch(_){}$('insightsPanel').classList.add('hidden');$('loginPanel').classList.remove('hidden');$('loginStatus').textContent='You have been logged out.';});
 const fmt=n=>Number(n||0).toLocaleString();
 async function refresh(){
- $('status').textContent='Updating insights from GitHub and Neon…';
+ $('status').textContent='Updating insights from Neon and the legacy archive…';
  try{
   const [posts,data]=await Promise.all([loadPosts(),loadEngagement()]);
   $('postTotal').textContent=fmt(posts.length);
@@ -48,7 +48,7 @@ async function refresh(){
   trendChart=new Chart($('trendChart'),{type:'line',data:{labels:days.map(d=>d.slice(5)),datasets:[{label:'Likes',data:days.map(d=>rows.reduce((sum,x)=>sum+(data.byDayByPost[x.post.slug]?.[d]?.likes||0),0)),borderColor:'#35d5ff',backgroundColor:'#35d5ff22',tension:.3,fill:true},{label:'Comments',data:days.map(d=>rows.reduce((sum,x)=>sum+(data.byDayByPost[x.post.slug]?.[d]?.comments||0),0)),borderColor:'#287bff',backgroundColor:'#287bff22',tension:.3,fill:true}]},options:{...common,interaction:{mode:'index',intersect:false}}});
   $('ranking').innerHTML=rows.map(x=>'<tr><td><strong>'+escapeHtml(x.post.title)+'</strong></td><td>'+x.post.type+'</td><td>'+fmt(x.m.likes)+'</td><td>'+fmt(x.m.comments)+'</td><td>'+fmt(x.m.likes+x.m.comments)+'</td></tr>').join('')||'<tr><td colspan="5">No published posts yet.</td></tr>';
   $('status').textContent='Updated '+new Date().toLocaleString()+' · Includes all comments and replies in the shared database.';
- }catch(e){$('status').textContent='Could not load insights: '+e.message+'. Check GitHub Pages, public post index and Neon anonymous read access.';}
+ }catch(e){$('status').textContent='Could not load insights: '+e.message+'. Check the legacy post archive and Neon public-read access.';}
 }
 function rowsTotal(posts,data,key){return posts.reduce((sum,p)=>sum+Number(data.byPost[p.slug]?.[key]||0),0);}
 function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
