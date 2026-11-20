@@ -54,7 +54,7 @@ function showUploader(){$('loginPanel').classList.add('hidden');$('uploaderPanel
 function showLogin(){$('uploaderPanel').classList.add('hidden');$('loginPanel').classList.remove('hidden');$('password').focus()}
 function updatePublishAvailability(){$('publishButton').disabled=kind!=='text'&&!storageReady}
 async function checkBackend(){
- try{const r=await fetch(API+'/health',{cache:'no-store'});const d=await r.json();storageReady=r.ok&&d.storageReady===true}catch(_){storageReady=false}
+ try{const r=await fetch(API+'/health',{cache:'no-store'});const d=await r.json();storageReady=r.ok&&(d.storageReady===true||d.storageConfigured===true)}catch(_){storageReady=false}
  $('setupWarning').classList.toggle('hidden',storageReady);updatePublishAvailability();
 }
 $('publishButton').disabled=true;
