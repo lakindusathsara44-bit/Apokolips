@@ -1,7 +1,7 @@
 import { createHash, createHmac, randomUUID } from "node:crypto";
 
-const BUCKET = "apokolips-blog-media";
-const DATA_API = "https://ep-icy-shadow-b3q76our.apirest.c-4.ap-southeast-1.aws.neon.tech/apokolips_blog/rest/v1";
+const BUCKET = process.env.BLOG_MEDIA_BUCKET || "apokolips-blog-media";
+const DATA_API = process.env.BLOG_DATA_API_URL || "https://ep-icy-shadow-b3q76our.apirest.c-4.ap-southeast-1.aws.neon.tech/apokolips_blog/rest/v1";
 const MAX_BYTES = 80 * 1024 * 1024;
 const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"]);
 const VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime", "video/x-m4v", "video/ogg"]);
@@ -50,7 +50,6 @@ async function neonRpc(name, args, token) {
     method: "POST",
     headers: {
       "Authorization": "Bearer " + token,
-      "apikey": token,
       "Content-Type": "application/json",
       "Accept": "application/json"
     },
@@ -127,7 +126,7 @@ async function publish(request, origin) {
   if (!sessionToken || !neonToken) return fail("Please log in again to publish.", 401, origin);
 
   const valid = await neonRpc("bloguploader_check_session", { input_token: sessionToken }, neonToken);
-  if (valid !== true) return fail("Your uploader session has expired. Please log in again.", 401, origin);
+  if (!(valid === true || (Array.isArray(valid) && valid[0] === true))) return fail("Your uploader session has expired. Please log in again.", 401, origin);
 
   let form;
   try { form = await request.formData(); }
