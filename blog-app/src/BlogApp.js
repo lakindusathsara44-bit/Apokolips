@@ -31,8 +31,8 @@ async function fetchUploadedPosts() {
     const isText = source.startsWith('[Text]');
     if (!isText && !source.startsWith('[Media]')) return null;
 
-    const filename = file.name.replace(/\\.md$/i, '');
-    const dateMatch = filename.match(/(\\d{4}-\\d{2}-\\d{2})/);
+    const filename = file.name.replace(/\.md$/i, '');
+    const dateMatch = filename.match(/(\d{4}-\d{2}-\d{2})/);
     const date = dateMatch ? dateMatch[1] : new Date().toISOString().slice(0, 10);
     const dateLabel = new Date(date + 'T00:00:00Z').toLocaleDateString('en-GB', {
       day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC'
@@ -40,21 +40,21 @@ async function fetchUploadedPosts() {
 
     let type = 'text';
     let src = '';
-    let description = source.replace(/^\\[Text\\]\\s*/, '').trim();
+    let description = source.replace(/^\[Text\]\s*/, '').trim();
     if (!isText) {
-      const imageMatch = source.match(/!\\[[^\\]]*\\]\\(([^)]+)\\)/);
-      const videoMatch = source.match(/\\[Watch video\\]\\(([^)]+)\\)/);
+      const imageMatch = source.match(/!\[[^\]]*\]\(([^)]+)\)/);
+      const videoMatch = source.match(/\[Watch video\]\(([^)]+)\)/);
       const mediaMatch = imageMatch || videoMatch;
       if (!mediaMatch) return null;
       const reference = mediaMatch[1].trim();
       const mediaName = reference.split('/').pop().split('?')[0];
       src = UPLOADER_RAW_BASE + 'uploads/' + encodeURIComponent(decodeURIComponent(mediaName));
-      type = /\\.(mp4|webm|mov|m4v|ogv)$/i.test(mediaName) ? 'video' : 'photo';
+      type = /\.(mp4|webm|mov|m4v|ogv)$/i.test(mediaName) ? 'video' : 'photo';
       const afterMedia = source.slice(mediaMatch.index + mediaMatch[0].length);
-      description = afterMedia.replace(/^\\s*\\n\\s*/, '').trim();
-      if (!description) description = source.replace(/^\\[Media\\]\\s*/, '').replace(mediaMatch[0], '').trim();
+      description = afterMedia.replace(/^\s*\n\s*/, '').trim();
+      if (!description) description = source.replace(/^\[Media\]\s*/, '').replace(mediaMatch[0], '').trim();
     }
-    const firstLine = description.split(/\\r?\\n/)[0].trim();
+    const firstLine = description.split(/\r?\n/)[0].trim();
     const title = (firstLine.split(/[.!?]/)[0].trim().slice(0, 72)) || (type === 'text' ? 'A new note' : 'A new memory');
     const slug = 'uploaded-' + filename.replace(/[^a-zA-Z0-9_-]/g, '-');
     return {
