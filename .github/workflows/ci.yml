@@ -66,6 +66,20 @@ jobs:
           print("NEXIST project pages contain no GitHub or raw source links.")
           PY
 
+      - name: Verify NEXIST Q-Intelligence is Quantum Neural only
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          page = Path("nexist-qintelligence.html").read_text(encoding="utf-8").lower()
+          forbidden = ("openrouter", "your openrouter api key", "openrouterkey", "openrouter_base")
+          found = [item for item in forbidden if item in page]
+          required = ("id=\"trainqnn\"", "function qnntrain(", "qnnfeaturevector", "function qaoa(")
+          missing = [item for item in required if item not in page]
+          if found or missing:
+              raise SystemExit(f"Forbidden adapter markers: {found}; missing quantum components: {missing}")
+          print("No OpenRouter adapter or API-key UI remains; QNN and QAOA components are present.")
+          PY
+
       - name: Test NEXIST Python core
         working-directory: nexist-core
         run: python -m unittest discover -s tests -t . -v
