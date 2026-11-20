@@ -57,12 +57,18 @@ function showUploader(){$('loginPanel').classList.add('hidden');$('uploaderPanel
 function showLogin(){$('uploaderPanel').classList.add('hidden');$('loginPanel').classList.remove('hidden');$('password').focus()}
 async function checkBackend(){
  const retry=$('retryHealthButton');
+ const controller=new AbortController();
+ let timeout;
  retry.disabled=true;
  $('setupWarning').classList.remove('hidden');
  $('setupTitle').textContent='Checking media storage…';
- $('setupMessage').textContent='Contacting the secure upload service.';
+ $('setupMessage').textContent='Contacting the secure upload service (8-second limit).';
  try{
-  const response=await fetch(API+'/health',{method:'GET',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Accept':'application/json'}});
+  timeout=setTimeout(()=>controller.abort(),8000);
+  const response=await fetch(API+'/health?check='+Date.now(),{
+   method:'GET',mode:'cors',credentials:'omit',cache:'no-store',
+   headers:{'Accept':'application/json'},signal:controller.signal
+  });
   const data=await response.json().catch(()=>({}));
   storageReady=response.ok&&data.storageConfigured===true;
   if(storageReady){
@@ -74,15 +80,18 @@ async function checkBackend(){
   else if(!detail&&data.storageConfigured===false)detail='The upload service is responding, but its Neon Object Storage credentials are not available to the function.';
   else if(!detail)detail='The upload service returned HTTP '+response.status+'.';
   $('setupTitle').textContent='Media storage is not ready';
-  $('setupMessage').textContent=detail+' You can still press Publish; the server will return the actual publishing error instead of the button being blocked.';
+  $('setupMessage').textContent=detail+' Publishing remains available; the actual Publish request will show its own error if anything is still wrong.';
   return false;
  }catch(error){
   storageReady=false;
-  $('setupTitle').textContent='Cannot verify media storage';
-  $('setupMessage').textContent='The health check could not reach the upload service ('+(error?.message||'network or CORS error')+'). Publishing is not blocked; press Publish to test the actual upload request, or retry this check.';
+  const timedOut=error?.name==='AbortError';
+  $('setupTitle').textContent=timedOut?'Health check timed out':'Cannot verify media storage';
+  $('setupMessage').textContent=(timedOut?'The health check exceeded 8 seconds. ':'The health check could not reach the upload service ('+(error?.message||'network or CORS error')+'). ')+'Publishing is not blocked. You can press Publish to test the actual upload request, or retry this check.';
   return false;
- }finally{retry.disabled=false;}
-}
+ }finally{
+  if(timeout)clearTimeout(timeout);
+  retry.disabled=false;
+ }
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();const pwd=$('password').value;if(!pwd)return;const b=$('loginButton');b.disabled=true;b.textContent='Checking…';setStatus('loginStatus','Verifying password…');try{const data=await rpc('bloguploader_login',{input_password:pwd});const row=Array.isArray(data)?data[0]:data;if(!row?.session_token)throw new Error('Incorrect password or login temporarily locked. Try again later.');session=row.session_token;sessionStorage.setItem(KEY,session);$('password').value='';showUploader();await checkBackend();setStatus('loginStatus','')}catch(err){setStatus('loginStatus',err.message||'Login failed.',true)}finally{b.disabled=false;b.textContent='Log in'}});
 $('retryHealthButton').addEventListener('click',checkBackend);
 $('logoutButton').addEventListener('click',async()=>{const old=session;session='';sessionStorage.removeItem(KEY);try{await rpc('bloguploader_logout',{input_token:old})}catch(_){}showLogin();setStatus('loginStatus','You have been logged out.')});
