@@ -18,20 +18,21 @@ const UPLOADER_REPOSITORY = 'lakindusathsara44-bit/BlogUploader';
 const UPLOADER_RAW_BASE = 'https://raw.githubusercontent.com/' + UPLOADER_REPOSITORY + '/main/';
 
 async function fetchUploadedPosts() {
-  const response = await fetch('https://api.github.com/repos/' + UPLOADER_REPOSITORY + '/contents/posts?ref=main', {
-    headers: { Accept: 'application/vnd.github+json' }
-  });
+  const response = await fetch(UPLOADER_RAW_BASE + 'posts/index.json?cache=' + Date.now());
   if (response.status === 404) return [];
-  if (!response.ok) throw new Error('Could not read BlogUploader posts (' + response.status + ').');
-  const files = (await response.json()).filter(file => file.type === 'file' && file.name.endsWith('.md'));
-  const results = await Promise.all(files.map(async file => {
-    const postResponse = await fetch(file.download_url || (UPLOADER_RAW_BASE + 'posts/' + encodeURIComponent(file.name)));
+  if (!response.ok) throw new Error('Could not read the BlogUploader post index (' + response.status + ').');
+  const entries = await response.json();
+  const files = Array.isArray(entries) ? entries : [];
+  const results = await Promise.all(files.map(async entry => {
+    const filenameWithExtension = typeof entry === 'string' ? entry : entry.file;
+    if (!filenameWithExtension || !filenameWithExtension.endsWith('.md')) return null;
+    const postResponse = await fetch(UPLOADER_RAW_BASE + 'posts/' + encodeURIComponent(filenameWithExtension));
     if (!postResponse.ok) return null;
     const source = (await postResponse.text()).trim();
     const isText = source.startsWith('[Text]');
     if (!isText && !source.startsWith('[Media]')) return null;
 
-    const filename = file.name.replace(/\.md$/i, '');
+    const filename = filenameWithExtension.replace(/\.md$/i, '');
     const dateMatch = filename.match(/(\d{4}-\d{2}-\d{2})/);
     const date = dateMatch ? dateMatch[1] : new Date().toISOString().slice(0, 10);
     const dateLabel = new Date(date + 'T00:00:00Z').toLocaleDateString('en-GB', {
