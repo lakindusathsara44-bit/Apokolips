@@ -27,7 +27,7 @@ button{border:0;border-radius:10px;padding:12px 17px;font-weight:750;cursor:poin
 <section class="panel login" id="loginPanel">
 <div class="login-icon">🔐</div><h1>Welcome back.</h1><p class="sub">Enter the uploader password to continue.</p>
 <form id="loginForm"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required maxlength="128" placeholder="Enter password"><div class="actions"><button class="primary" id="loginButton" type="submit">Log in</button></div></form>
-<div class="status" id="loginStatus" role="status" aria-live="polite"></div>
+<div class="hint">For security, your login is kept only while this uploader page remains open. Reloading the page requires the password again.</div><div class="status" id="loginStatus" role="status" aria-live="polite"></div>
 </section>
 <section class="panel hidden" id="uploaderPanel">
 <div class="row"><div><h1>Create a post.</h1><p class="sub">Publish directly to the Apokolips blog.</p></div><button class="secondary" id="logoutButton" type="button">Log out</button></div>
@@ -43,7 +43,7 @@ button{border:0;border-radius:10px;padding:12px 17px;font-weight:750;cursor:poin
 <script type="module">
 import { getBlogClient } from './analytics.js';
 const API='https://br-silent-frost-b3chnc64-bloguploader.compute.c-4.ap-southeast-1.aws.neon.tech';
-const KEY='apokolips_bloguploader_session_v1';
+// Session tokens stay in memory only; no long-lived browser storage.
 const $=id=>document.getElementById(id);
 const client=getBlogClient();
 let session='',kind='image',file=null,storageReady=false;
@@ -54,34 +54,37 @@ async function validSession(token){const value=await rpc('bloguploader_check_ses
 function showUploader(){$('loginPanel').classList.add('hidden');$('uploaderPanel').classList.remove('hidden')}
 function showLogin(){$('uploaderPanel').classList.add('hidden');$('loginPanel').classList.remove('hidden');$('password').focus()}
 async function checkBackend(){try{const r=await fetch(API+'/health',{cache:'no-store'});const d=await r.json();storageReady=r.ok&&d.storageConfigured===true}catch(_){storageReady=false}$('setupWarning').classList.toggle('hidden',storageReady);$('publishButton').disabled=!storageReady}
-$('loginForm').addEventListener('submit',async e=>{e.preventDefault();const pwd=$('password').value;if(!pwd)return;const b=$('loginButton');b.disabled=true;b.textContent='Checking…';setStatus('loginStatus','Verifying password…');try{const data=await rpc('bloguploader_login',{input_password:pwd});const row=Array.isArray(data)?data[0]:data;if(!row?.session_token)throw new Error('Incorrect password or login temporarily locked. Try again later.');session=row.session_token;localStorage.setItem(KEY,session);$('password').value='';showUploader();await checkBackend();setStatus('loginStatus','')}catch(err){setStatus('loginStatus',err.message||'Login failed.',true)}finally{b.disabled=false;b.textContent='Log in'}});
-$('logoutButton').addEventListener('click',async()=>{const old=session;session='';localStorage.removeItem(KEY);try{await rpc('bloguploader_logout',{input_token:old})}catch(_){}showLogin();setStatus('loginStatus','You have been logged out.')});
+$('loginForm').addEventListener('submit',async e=>{e.preventDefault();const pwd=$('password').value;if(!pwd)return;const b=$('loginButton');b.disabled=true;b.textContent='Checking…';setStatus('loginStatus','Verifying password…');try{const data=await rpc('bloguploader_login',{input_password:pwd});const row=Array.isArray(data)?data[0]:data;if(!row?.session_token)throw new Error('Incorrect password or login temporarily locked. Try again later.');session=row.session_token;$('password').value='';showUploader();await checkBackend();setStatus('loginStatus','')}catch(err){setStatus('loginStatus',err.message||'Login failed.',true)}finally{b.disabled=false;b.textContent='Log in'}});
+$('logoutButton').addEventListener('click',async()=>{const old=session;session='';try{await rpc('bloguploader_logout',{input_token:old})}catch(_){}showLogin();setStatus('loginStatus','You have been logged out.')});
 document.querySelectorAll('.type').forEach(b=>b.addEventListener('click',()=>{kind=b.dataset.type;document.querySelectorAll('.type').forEach(x=>x.classList.toggle('active',x===b));$('mediaField').classList.toggle('hidden',kind==='text');$('media').accept=specs[kind].accept;$('fileLabel').textContent=specs[kind].label;$('media').value='';file=null}));
 $('media').addEventListener('change',e=>{file=e.target.files?.[0]||null});
 $('publishButton').addEventListener('click',async()=>{
  const description=$('description').value.trim();
+ if(!session){showLogin();return setStatus('loginStatus','Log in with the uploader password before publishing.',true)}
  if(!storageReady)return setStatus('publishStatus','Neon media storage is not ready yet. Please try again shortly.',true);
  if(!description)return setStatus('publishStatus','Add a description or text for this post.',true);
  if(kind!=='text'&&!file)return setStatus('publishStatus','Choose a media file first.',true);
  if(file&&file.size>80*1024*1024)return setStatus('publishStatus','Media file is too large (maximum 80 MB).',true);
  const b=$('publishButton');b.disabled=true;b.textContent='Publishing…';$('publishStatus').classList.remove('success');
  try{
+  if(!(await validSession(session))){session='';showLogin();throw new Error('Your login session expired. Please log in again.')}
   const {data:auth,error}=await client.auth.getAnonymousToken();
   if(error||!auth?.token)throw new Error('Could not connect to the database.');
   const payload=new FormData();payload.append('type',kind);payload.append('description',description);
   if(file)payload.append('file',file,file.name);
   const response=await fetch(API+'/publish',{method:'POST',headers:{'Authorization':'Bearer '+session,'X-Neon-Token':auth.token},body:payload});
   const result=await response.json().catch(()=>({}));
-  if(response.status===401){session='';localStorage.removeItem(KEY);showLogin();throw new Error(result.error||'Your login session expired. Please log in again.');}
+  if(response.status===401){session='';showLogin();throw new Error(result.error||'Your login session expired. Please log in again.');}
   if(!response.ok)throw new Error(result.error||'Upload failed ('+response.status+').');
   $('description').value='';$('media').value='';file=null;
   setStatus('publishStatus','Published successfully: '+(result.filename||result.slug),false);
   $('publishStatus').classList.add('success');
   kind='image';document.querySelectorAll('.type').forEach(x=>x.classList.toggle('active',x.dataset.type==='image'));
   $('mediaField').classList.remove('hidden');$('media').accept=specs.image.accept;$('fileLabel').textContent=specs.image.label;
- }catch(err){$('publishStatus').classList.remove('success');setStatus('publishStatus',err.message||'Publishing failed. Please try again.',true);}
+ }catch(err){$('publishStatus').classList.remove('success');if(!session){showLogin();setStatus('loginStatus',err.message||'Your login session expired. Please log in again.',true)}else{setStatus('publishStatus',err.message||'Publishing failed. Please try again.',true)}}
  finally{b.textContent='Publish post';b.disabled=!storageReady;}
 });
-(async()=>{const saved=localStorage.getItem(KEY);if(!saved)return;try{setStatus('loginStatus','Restoring your session…');if(await validSession(saved)){session=saved;showUploader();await checkBackend()}else{localStorage.removeItem(KEY);setStatus('loginStatus','Your session expired. Please log in again.')}}catch(_){setStatus('loginStatus','Could not restore your session. Please log in again.',true)}})();
+try{localStorage.removeItem('apokolips_bloguploader_session_v1')}catch(_){}
+setStatus('loginStatus','Enter the uploader password to unlock publishing.');
 </script>
 <script defer src="./studio.js"></script></body></html>
