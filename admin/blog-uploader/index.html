@@ -47,7 +47,7 @@ const KEY='apokolips_bloguploader_session_v1';
 const $=id=>document.getElementById(id);
 const client=getBlogClient();
 let session='',kind='image',file=null,backendReady=false;
-const specs={image:{accept:'image/png,image/jpeg,image/webp,image/avif,image/gif',label:'Choose image'},video:{accept:'video/mp4,video/webm,video/quicktime,video/x-m4v,video/ogg',label:'Choose video'},text:{accept:'',label:'No media required'}};
+const specs={image:{accept:'image/png,image/jpeg,image/webp,image/avif,image/gif',label:'Choose image',hint:'JPG, PNG, WebP, AVIF or GIF · Maximum 80 MB'},video:{accept:'video/mp4,video/webm,video/quicktime,video/x-m4v,video/ogg',label:'Choose video',hint:'MP4, WebM, MOV, M4V or OGG · Maximum 80 MB'},text:{accept:'',label:'No media required',hint:'Text-only post · No file required'}};
 function setStatus(id,message,bad=false){$(id).textContent=message;$(id).style.color=bad?'#ff9b9b':''}
 async function rpc(name,args){const {data,error}=await client.rpc(name,args);if(error)throw new Error(error.message||'Database request failed.');return data}
 async function validSession(token){const value=await rpc('bloguploader_check_session',{input_token:token});return value===true||(Array.isArray(value)&&value[0]===true)}
@@ -88,11 +88,11 @@ $('logoutButton').addEventListener('click',async()=>{
 document.querySelectorAll('.type').forEach(button=>button.addEventListener('click',()=>{
  kind=button.dataset.type;document.querySelectorAll('.type').forEach(item=>item.classList.toggle('active',item===button));
  $('mediaField').classList.toggle('hidden',kind==='text');$('media').accept=specs[kind].accept;
- $('fileLabel').textContent=specs[kind].label;$('media').value='';file=null;
+ $('fileLabel').textContent=specs[kind].label;$('fileHint').textContent=specs[kind].hint;$('media').value='';file=null;
 }));
 $('media').addEventListener('change',event=>{
  file=event.target.files?.[0]||null;
- $('fileHint').textContent=file?(file.name+' · '+(file.size/1024/1024).toFixed(2)+' MB selected · Maximum 80 MB'):'JPG, PNG, WebP, AVIF or GIF · Maximum 80 MB';
+ $('fileHint').textContent=file?(file.name+' · '+(file.size/1024/1024).toFixed(2)+' MB selected · Maximum 80 MB'):specs[kind].hint;
 });
 $('publishButton').addEventListener('click',async()=>{
  const description=$('description').value.trim();
@@ -114,7 +114,7 @@ $('publishButton').addEventListener('click',async()=>{
   }
   if(!response.ok)throw new Error(result.error||'Upload failed ('+response.status+').');
   $('description').value='';$('media').value='';file=null;
-  $('fileHint').textContent='JPG, PNG, WebP, AVIF or GIF · Maximum 80 MB';
+  $('fileHint').textContent=specs.image.hint;
   setStatus('publishStatus','Published successfully: '+(result.post?.title||result.post?.filename||'new post'));
   $('publishStatus').classList.add('success');
   kind='image';document.querySelectorAll('.type').forEach(item=>item.classList.toggle('active',item.dataset.type==='image'));
