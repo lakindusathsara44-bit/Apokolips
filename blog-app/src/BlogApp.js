@@ -17,61 +17,92 @@ const POSTS = [
 const UPLOADER_REPOSITORY = 'lakindusathsara44-bit/BlogUploader';
 const UPLOADER_RAW_BASE = 'https://raw.githubusercontent.com/' + UPLOADER_REPOSITORY + '/main/';
 
-async function fetchUploadedPosts() {
+function uploaderDateLabel(date) {
+  return new Date(date + 'T00:00:00Z').toLocaleDateString('en-GB', {
+    day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC'
+  });
+}
+
+async function fetchLegacyUploadedPosts() {
   const response = await fetch(UPLOADER_RAW_BASE + 'posts/index.json?cache=' + Date.now());
   if (response.status === 404) return [];
-  if (!response.ok) throw new Error('Could not read the BlogUploader post index (' + response.status + ').');
+  if (!response.ok) throw new Error('Could not read the legacy BlogUploader index (' + response.status + ').');
   const entries = await response.json();
   const files = Array.isArray(entries) ? entries : [];
   const results = await Promise.all(files.map(async entry => {
-    const filenameWithExtension = typeof entry === 'string' ? entry : entry.file;
+    const filenameWithExtension = typeof entry === 'string' ? entry : entry?.file;
     if (!filenameWithExtension || !filenameWithExtension.endsWith('.md')) return null;
     const postResponse = await fetch(UPLOADER_RAW_BASE + 'posts/' + encodeURIComponent(filenameWithExtension));
     if (!postResponse.ok) return null;
     const source = (await postResponse.text()).trim();
     const isText = source.startsWith('[Text]');
     if (!isText && !source.startsWith('[Media]')) return null;
-
     const filename = filenameWithExtension.replace(/\.md$/i, '');
     const dateMatch = filename.match(/(\d{4}-\d{2}-\d{2})/);
     const date = dateMatch ? dateMatch[1] : new Date().toISOString().slice(0, 10);
-    const dateLabel = new Date(date + 'T00:00:00Z').toLocaleDateString('en-GB', {
-      day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC'
-    });
-
-    let type = 'text';
-    let src = '';
-    let description = source.replace(/^\[Text\]\s*/, '').trim();
+    let type = 'text', src = '', description = source.replace(/^\[Text\]\s*/, '').trim();
     if (!isText) {
       const imageMatch = source.match(/!\[[^\]]*\]\(([^)]+)\)/);
       const videoMatch = source.match(/\[Watch video\]\(([^)]+)\)/);
       const mediaMatch = imageMatch || videoMatch;
       if (!mediaMatch) return null;
-      const reference = mediaMatch[1].trim();
-      const mediaName = reference.split('/').pop().split('?')[0];
+      const mediaName = mediaMatch[1].trim().split('/').pop().split('?')[0];
       src = UPLOADER_RAW_BASE + 'uploads/' + encodeURIComponent(decodeURIComponent(mediaName));
       type = /\.(mp4|webm|mov|m4v|ogv)$/i.test(mediaName) ? 'video' : 'photo';
-      const afterMedia = source.slice(mediaMatch.index + mediaMatch[0].length);
-      description = afterMedia.replace(/^\s*\n\s*/, '').trim();
+      description = source.slice(mediaMatch.index + mediaMatch[0].length).replace(/^\s*\n\s*/, '').trim();
       if (!description) description = source.replace(/^\[Media\]\s*/, '').replace(mediaMatch[0], '').trim();
     }
     const firstLine = description.split(/\r?\n/)[0].trim();
-    const title = (firstLine.split(/[.!?]/)[0].trim().slice(0, 72)) || (type === 'text' ? 'A new note' : 'A new memory');
+    const title = firstLine.split(/[.!?]/)[0].trim().slice(0, 72) || (type === 'text' ? 'A new note' : 'A new memory');
     const slug = 'uploaded-' + filename.replace(/[^a-zA-Z0-9_-]/g, '-');
-    return {
-      id: slug,
-      slug,
-      title,
-      date,
-      dateLabel,
-      description,
-      src,
-      alt: title,
-      type
-    };
+    return { id: slug, slug, title, date, dateLabel: uploaderDateLabel(date), description, src, alt: title, type };
   }));
-  return results.filter(Boolean).sort((a, b) => b.date.localeCompare(a.date));
-} {
+  return results.filter(Boolean);
+}
+
+async function fetchNeonUploadedPosts() {
+  const pageSize = 500, rows = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await blogClient.from('bloguploader_posts')
+      .select('slug,post_type,title,description,media_url,created_at')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + pageSize - 1);
+    if (error) throw error;
+    rows.push(...(data || []));
+    if (!data || data.length < pageSize) break;
+  }
+  return rows.map(row => {
+    const date = String(row.created_at || '').slice(0, 10) || new Date().toISOString().slice(0, 10);
+    return {
+      id: row.slug,
+      slug: row.slug,
+      title: row.title,
+      date,
+      dateLabel: uploaderDateLabel(date),
+      description: row.description,
+      src: row.media_url || '',
+      alt: row.title,
+      type: row.post_type === 'image' ? 'photo' : row.post_type === 'video' ? 'video' : 'text'
+    };
+  });
+}
+
+async function fetchUploadedPosts() {
+  const [database, legacy] = await Promise.allSettled([
+    fetchNeonUploadedPosts(),
+    fetchLegacyUploadedPosts()
+  ]);
+  if (database.status === 'rejected' && legacy.status === 'rejected') throw database.reason;
+  const combined = [
+    ...(database.status === 'fulfilled' ? database.value : []),
+    ...(legacy.status === 'fulfilled' ? legacy.value : [])
+  ];
+  const unique = new Map();
+  combined.forEach(post => unique.set(post.slug, post));
+  return Array.from(unique.values()).sort((a, b) => b.date.localeCompare(a.date));
+}
+
+function RainCanvas() {
   useEffect(() => {
     const canvas = document.getElementById('blogRain');
     if (!canvas) return undefined;
@@ -211,7 +242,8 @@ function SocialCard({ post }) {
   };
 
   const share = async () => {
-    const url = post.slug.startsWith('uploaded-') ? new URL('./blog.html#' + post.id, window.location.href).href : new URL('./share/' + post.slug + '.html', window.location.href).href;
+    const isUploaderPost = post.slug.startsWith('uploaded-') || post.slug.startsWith('post-');
+    const url = isUploaderPost ? new URL('./blog.html#' + post.id, window.location.href).href : new URL('./share/' + post.slug + '.html', window.location.href).href;
     try {
       if (navigator.share) await navigator.share({ title: post.title + ' | Apokolips', text: 'Check out this travel memory on Apokolips.', url });
       else { await navigator.clipboard.writeText(url); setStatus('Link copied. Share it with your friends.'); }

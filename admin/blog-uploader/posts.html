@@ -12,7 +12,7 @@ main{max-width:1120px;margin:34px auto;padding:0 18px}.eyebrow{color:var(--cyan)
 </style><link rel="stylesheet" href="./studio.css"></head>
 <body>
 <header><div><div class="brand">APOKOLIPS<span>.</span> BLOG</div><div class="meta">PUBLISHED CONTENT LIBRARY</div></div><nav><a href="../../Apokolips.Blog.html">Studio home</a><a href="./index.html">Uploader</a><a href="./insights.html">Insights</a><a href="./posts.html">All posts</a></nav></header>
-<main><div class="eyebrow">YOUR CONTENT</div><h1>Published posts.</h1><p class="sub">Browse every post published through this uploader, with live Like and Comment totals from the Apokolips community service.</p>
+<main><div class="eyebrow">YOUR CONTENT</div><h1>Published posts.</h1><p class="sub">Browse posts saved in Neon, including older imported uploads, with live Like and Comment totals from the Apokolips community service.</p>
 <div class="toolbar"><input id="search" type="search" placeholder="Search posts…" aria-label="Search posts"><select id="filter" aria-label="Filter posts"><option value="all">All types</option><option value="image">Images</option><option value="video">Videos</option><option value="text">Text</option></select><button class="btn" id="refresh">Refresh</button></div>
 <div id="status" class="status" role="status">Loading published posts…</div><section id="posts" class="grid" aria-live="polite"></section></main>
 <div class="foot">APOKOLIPS · Ideas become something real.</div>
@@ -33,7 +33,7 @@ function render(){
 async function refresh(){
  $('status').textContent='Refreshing posts and community metrics…';
  try{[posts,metrics]=await Promise.all([loadPosts(),loadEngagement()]);render();}
- catch(e){$('status').textContent='Could not load all data: '+e.message+' · Check the public post index and Neon anonymous read access.';}
+ catch(e){$('status').textContent='Could not load posts: '+e.message+' · Check Neon anonymous read access.';}
 }
 $('search').addEventListener('input',render);$('filter').addEventListener('change',render);$('refresh').addEventListener('click',refresh);refresh();
 </script><script defer src="./studio.js"></script></body></html>

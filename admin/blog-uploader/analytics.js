@@ -70,10 +70,10 @@ function parsePost(filename, source) {
   return { id, slug: id, filename, date, title, description, type, mediaUrl };
 }
 
-export async function loadPosts() {
+async function loadLegacyPosts() {
   const response = await fetch(RAW_BASE + 'posts/index.json?cache=' + Date.now());
   if (response.status === 404) return [];
-  if (!response.ok) throw new Error('Unable to load post index (' + response.status + ').');
+  if (!response.ok) throw new Error('Unable to load the legacy post index (' + response.status + ').');
   const entries = await response.json();
   const names = (Array.isArray(entries) ? entries : [])
     .map(item => typeof item === 'string' ? item : item?.file)
@@ -85,9 +85,45 @@ export async function loadPosts() {
       return parsePost(filename, (await result.text()).trim());
     } catch (_) { return null; }
   }));
-  return posts.filter(Boolean).sort((a, b) => b.date.localeCompare(a.date) || b.filename.localeCompare(a.filename));
+  return posts.filter(Boolean);
 }
 
+async function loadDatabasePosts() {
+  const pageSize = 500;
+  const rows = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await client.from('bloguploader_posts')
+      .select('id,slug,post_type,title,description,filename,media_url,created_at')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + pageSize - 1);
+    if (error) throw error;
+    rows.push(...(data || []));
+    if (!data || data.length < pageSize) break;
+  }
+  return rows.map(row => ({
+    id: row.slug,
+    slug: row.slug,
+    filename: row.filename || row.slug,
+    date: String(row.created_at || '').slice(0, 10),
+    title: row.title,
+    description: row.description,
+    type: row.post_type,
+    mediaUrl: row.media_url || ''
+  }));
+}
+
+export async function loadPosts() {
+  const [database, legacy] = await Promise.allSettled([loadDatabasePosts(), loadLegacyPosts()]);
+  if (database.status === 'rejected' && legacy.status === 'rejected') throw database.reason;
+  const combined = [
+    ...(database.status === 'fulfilled' ? database.value : []),
+    ...(legacy.status === 'fulfilled' ? legacy.value : [])
+  ];
+  const unique = new Map();
+  combined.forEach(post => unique.set(post.slug, post));
+  return Array.from(unique.values())
+    .sort((a, b) => b.date.localeCompare(a.date) || String(b.filename).localeCompare(String(a.filename)));
+}
 async function readAllRows(table, columns) {
   const pageSize = 1000;
   const rows = [];
