@@ -70,13 +70,12 @@ function parsePost(filename, source) {
   return { id, slug: id, filename, date, title, description, type, mediaUrl };
 }
 
-export async function loadPosts() {
+async function loadLegacyPosts() {
   const response = await fetch(RAW_BASE + 'posts/index.json?cache=' + Date.now());
   if (response.status === 404) return [];
-  if (!response.ok) throw new Error('Unable to load post index (' + response.status + ').');
+  if (!response.ok) throw new Error('Unable to load the legacy post index (' + response.status + ').');
   const entries = await response.json();
-  const names = (Array.isArray(entries) ? entries : [])
-    .map(item => typeof item === 'string' ? item : item?.file)
+  const names = (Array.isArray(entries) ? entries : []).map(item => typeof item === 'string' ? item : item?.file)
     .filter(name => typeof name === 'string' && name.endsWith('.md'));
   const posts = await Promise.all(names.map(async filename => {
     try {
@@ -85,7 +84,27 @@ export async function loadPosts() {
       return parsePost(filename, (await result.text()).trim());
     } catch (_) { return null; }
   }));
-  return posts.filter(Boolean).sort((a, b) => b.date.localeCompare(a.date) || b.filename.localeCompare(a.filename));
+  return posts.filter(Boolean);
+}
+async function loadNeonPosts() {
+  const { data, error } = await client.from('bloguploader_posts')
+    .select('id,slug,post_type,title,description,filename,media_url,created_at')
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message || 'Could not load posts from Neon.');
+  return (data || []).map(row => ({
+    id: row.slug, slug: row.slug, filename: row.filename || '',
+    date: String(row.created_at || '').slice(0, 10), title: row.title,
+    description: row.description, type: row.post_type, mediaUrl: row.media_url || ''
+  }));
+}
+export async function loadPosts() {
+  const [oldResult, liveResult] = await Promise.allSettled([loadLegacyPosts(), loadNeonPosts()]);
+  if (oldResult.status === 'rejected' && liveResult.status === 'rejected') throw new Error('Both the legacy archive and Neon post library are unavailable.');
+  const oldPosts = oldResult.status === 'fulfilled' ? oldResult.value : [];
+  const livePosts = liveResult.status === 'fulfilled' ? liveResult.value : [];
+  const unique = new Map();
+  [...oldPosts, ...livePosts].forEach(post => { if (!unique.has(post.slug)) unique.set(post.slug, post); });
+  return [...unique.values()].sort((a, b) => b.date.localeCompare(a.date) || b.filename.localeCompare(a.filename));
 }
 
 async function readAllRows(table, columns) {
