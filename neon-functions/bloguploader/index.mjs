@@ -58,17 +58,24 @@ function sessionToken(req){
  const legacy=req.headers.get("Authorization")||"";
  return legacy.startsWith("Bearer ")?legacy.slice(7).trim():"";
 }
+export function extractPublishCredentials(req,form){
+ const token=sessionToken(req)||String(form.get("session_token")||"").trim();
+ const jwt=(req.headers.get("X-Neon-Token")||String(form.get("database_token")||"")).trim();
+ return {token,jwt};
+}
 function safeFilename(value){
  return String(value||"upload").split("/").pop().split("\\").pop().replace(/[^A-Za-z0-9._ -]/g,"_").slice(0,220)||"upload";
 }
 async function publish(req){
- const token=sessionToken(req),jwt=req.headers.get("X-Neon-Token")||"";
+ // Parse multipart data before authentication: the browser sends both short-lived
+ // credentials as form fields so no custom Authorization headers are required.
+ let form;
+ try{form=await req.formData();}catch{return json({error:"Could not read the upload form. Please try again."},400);}
+ const {token,jwt}=extractPublishCredentials(req,form);
  if(!token||token.length!==64)return json({error:"Uploader session token is missing or malformed. Please log in again."},401);
  if(!jwt)return json({error:"Database access token is missing. Please reload the page and log in again."},401);
  const ok=await rpc("bloguploader_check_session",{input_token:token},jwt);
  if(!(ok===true||(Array.isArray(ok)&&ok[0]===true)))return json({error:"Your login session has expired. Please log in again."},401);
- let form;
- try{form=await req.formData();}catch{return json({error:"Could not read the upload form. Please try again."},400);}
  const type=String(form.get("type")||""),description=String(form.get("description")||"").trim();
  if(!["image","video","text"].includes(type))return json({error:"Choose a valid post type."},400);
  if(!description||description.length>20000)return json({error:"Add a description (maximum 20,000 characters)."},400);

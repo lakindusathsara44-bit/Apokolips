@@ -167,6 +167,9 @@ jobs:
           }
           NODE
 
+      - name: Test Blog uploader session credential transport
+        run: node --test neon-functions/bloguploader/tests/*.test.mjs
+
       - name: Verify deployable Blog uploader function archive
         run: |
           base64 -d neon-functions/bloguploader/function.zip.b64 > /tmp/bloguploader-function.zip
