@@ -70,7 +70,8 @@ function parsePost(filename, source) {
   return { id, slug: id, filename, date, title, description, type, mediaUrl };
 }
 
-export async function loadPosts() {
+
+async function loadLegacyPosts() {
   const response = await fetch(RAW_BASE + 'posts/index.json?cache=' + Date.now());
   if (response.status === 404) return [];
   if (!response.ok) throw new Error('Unable to load post index (' + response.status + ').');
@@ -85,8 +86,24 @@ export async function loadPosts() {
       return parsePost(filename, (await result.text()).trim());
     } catch (_) { return null; }
   }));
-  return posts.filter(Boolean).sort((a, b) => b.date.localeCompare(a.date) || b.filename.localeCompare(a.filename));
+  return posts.filter(Boolean);
 }
+
+export async function loadPosts() {
+  const [legacy, stored] = await Promise.all([
+    loadLegacyPosts().catch(() => []),
+    fetch('https://br-silent-frost-b3chnc64-bloguploader.compute.c-4.ap-southeast-1.aws.neon.tech/posts?cache=' + Date.now(), { cache: 'no-store' })
+      .then(async response => {
+        if (!response.ok) throw new Error('Blog storage API returned ' + response.status + '.');
+        const body = await response.json();
+        return Array.isArray(body.posts) ? body.posts : [];
+      }).catch(() => [])
+  ]);
+  const ids = new Set(stored.map(post => post.slug || post.id));
+  return [...stored, ...legacy.filter(post => !ids.has(post.slug || post.id))]
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.filename || '').localeCompare(String(a.filename || '')));
+}
+
 
 async function readAllRows(table, columns) {
   const pageSize = 1000;
