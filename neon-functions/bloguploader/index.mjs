@@ -7,7 +7,7 @@ const IMAGES = new Set(["image/jpeg","image/png","image/webp","image/avif","imag
 const VIDEOS = new Set(["video/mp4","video/webm","video/quicktime","video/x-m4v","video/ogg"]);
 const EXT = {"image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/avif":"avif","image/gif":"gif","video/mp4":"mp4","video/webm":"webm","video/quicktime":"mov","video/x-m4v":"m4v","video/ogg":"ogv"};
 function cors(origin) {
- const h={"Access-Control-Allow-Methods":"GET, POST, OPTIONS","Access-Control-Allow-Headers":"Authorization, Content-Type, X-Neon-Token","Access-Control-Max-Age":"86400","Vary":"Origin"};
+ const h={"Access-Control-Allow-Methods":"GET, POST, OPTIONS","Access-Control-Allow-Headers":"Content-Type, X-Blog-Session, X-Neon-Token","Access-Control-Max-Age":"86400","Vary":"Origin"};
  if(origin&&ORIGINS.includes(origin))h["Access-Control-Allow-Origin"]=origin;
  return h;
 }
@@ -53,15 +53,15 @@ async function rpc(name,body,jwt){
  try{return JSON.parse(t);}catch{return t;}
 }
 function sessionToken(req){
- const h=req.headers.get("Authorization")||"";
- return h.startsWith("Bearer ")?h.slice(7).trim():"";
+ return (req.headers.get("X-Blog-Session")||"").trim();
 }
 function safeFilename(value){
  return String(value||"upload").split("/").pop().split("\\").pop().replace(/[^A-Za-z0-9._ -]/g,"_").slice(0,220)||"upload";
 }
 async function publish(req){
  const token=sessionToken(req),jwt=req.headers.get("X-Neon-Token")||"";
- if(!token||token.length!==64||!jwt)return json({error:"Your login session is missing. Please log in again."},401);
+ if(!token||token.length!==64)return json({error:"Uploader session token is missing or malformed. Please log in again."},401);
+ if(!jwt)return json({error:"Database access token is missing. Please reload the page and log in again."},401);
  const ok=await rpc("bloguploader_check_session",{input_token:token},jwt);
  if(!(ok===true||(Array.isArray(ok)&&ok[0]===true)))return json({error:"Your login session has expired. Please log in again."},401);
  let form;
