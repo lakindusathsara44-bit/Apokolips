@@ -1,18 +1,12 @@
-import { Pool } from "pg";
 import { createHash, createHmac, randomUUID } from "node:crypto";
 
 const BUCKET = "apokolips-blog-media";
+const DATA_API = "https://ep-icy-shadow-b3q76our.apirest.c-4.ap-southeast-1.aws.neon.tech/apokolips_blog/rest/v1";
 const MAX_BYTES = 80 * 1024 * 1024;
 const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"]);
 const VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime", "video/x-m4v", "video/ogg"]);
 const DEFAULT_ORIGINS = ["https://apokolips.xyz", "https://www.apokolips.xyz"];
-let pool;
 
-function db() {
-  if (!process.env.DATABASE_URL) throw new Error("Database connection is not configured.");
-  if (!pool) pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 4, idleTimeoutMillis: 30000, connectionTimeoutMillis: 10000 });
-  return pool;
-}
 function origins() {
   const configured = (process.env.ALLOWED_ORIGINS || "").split(",").map(value => value.trim()).filter(Boolean);
   return new Set(configured.length ? configured : DEFAULT_ORIGINS);
@@ -23,20 +17,23 @@ function headersFor(origin) {
     "Cache-Control": "no-store",
     "Vary": "Origin",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Authorization, Content-Type",
+    "Access-Control-Allow-Headers": "Authorization, Content-Type, X-Neon-Token",
     "Access-Control-Max-Age": "86400"
   };
   if (origin && origins().has(origin)) headers["Access-Control-Allow-Origin"] = origin;
   return headers;
 }
-function json(data, status, origin) {
-  return new Response(JSON.stringify(data), { status: status || 200, headers: headersFor(origin) });
+function json(data, status = 200, origin = "") {
+  return new Response(JSON.stringify(data), { status, headers: headersFor(origin) });
 }
-function fail(message, status, origin) {
-  return json({ error: message }, status || 400, origin);
+function fail(message, status = 400, origin = "") {
+  return json({ error: message }, status, origin);
 }
-function hash(value) {
+function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
+}
+function hmac(key, value) {
+  return createHmac("sha256", key).update(value).digest();
 }
 function safeFilename(value) {
   const original = String(value || "upload").split(/[\\/]/).pop();
@@ -48,11 +45,27 @@ function makeTitle(description, type) {
   const first = String(description || "").split(/\r?\n/).map(line => line.trim()).find(Boolean) || "";
   return first.split(/[.!?]/)[0].trim().slice(0, 80) || (type === "text" ? "A new note" : "A new memory");
 }
-function dateLabel(value) {
-  return new Date(value).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric", timeZone: "UTC" });
-}
-function hmac(key, value) {
-  return createHmac("sha256", key).update(value).digest();
+async function neonRpc(name, args, token) {
+  const response = await fetch(DATA_API + "/rpc/" + name, {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + token,
+      "apikey": token,
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    body: JSON.stringify(args)
+  });
+  const body = await response.text();
+  let parsed;
+  try { parsed = body ? JSON.parse(body) : null; } catch (_) { parsed = body; }
+  if (!response.ok) {
+    const message = typeof parsed === "string" ? parsed : parsed?.message || parsed?.hint || parsed?.details || "Neon database request failed (" + response.status + ").";
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
+  }
+  return parsed;
 }
 async function storageRequest(method, key, body, contentType) {
   const endpoint = process.env.AWS_ENDPOINT_URL_S3;
@@ -64,7 +77,7 @@ async function storageRequest(method, key, body, contentType) {
   const objectPath = "/" + BUCKET + "/" + key.split("/").map(encodeURIComponent).join("/");
   const url = new URL(base + objectPath);
   const payload = body || new Uint8Array(0);
-  const payloadHash = hash(Buffer.from(payload));
+  const payloadHash = sha256(Buffer.from(payload));
   const now = new Date();
   const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, "");
   const day = amzDate.slice(0, 8);
@@ -79,14 +92,17 @@ async function storageRequest(method, key, body, contentType) {
   const signedHeaders = names.join(";");
   const canonicalRequest = [method, url.pathname, "", canonicalHeaders, signedHeaders, payloadHash].join("\n");
   const scope = day + "/" + region + "/s3/aws4_request";
-  const stringToSign = "AWS4-HMAC-SHA256\n" + amzDate + "\n" + scope + "\n" + hash(canonicalRequest);
+  const stringToSign = "AWS4-HMAC-SHA256\n" + amzDate + "\n" + scope + "\n" + sha256(canonicalRequest);
   const dateKey = hmac(Buffer.from("AWS4" + secretKey, "utf8"), day);
   const regionKey = hmac(dateKey, region);
   const serviceKey = hmac(regionKey, "s3");
   const signingKey = hmac(serviceKey, "aws4_request");
   const signature = createHmac("sha256", signingKey).update(stringToSign).digest("hex");
-  const authorization = "AWS4-HMAC-SHA256 Credential=" + accessKey + "/" + scope + ", SignedHeaders=" + signedHeaders + ", Signature=" + signature;
-  const requestHeaders = { "x-amz-content-sha256": payloadHash, "x-amz-date": amzDate, Authorization: authorization };
+  const requestHeaders = {
+    "x-amz-content-sha256": payloadHash,
+    "x-amz-date": amzDate,
+    Authorization: "AWS4-HMAC-SHA256 Credential=" + accessKey + "/" + scope + ", SignedHeaders=" + signedHeaders + ", Signature=" + signature
+  };
   if (contentType) requestHeaders["content-type"] = contentType;
   const response = await fetch(url.toString(), {
     method,
@@ -99,37 +115,19 @@ async function storageRequest(method, key, body, contentType) {
   }
   return url.toString();
 }
-function toPost(row) {
-  const date = new Date(row.created_at).toISOString().slice(0, 10);
-  return {
-    id: row.slug,
-    slug: row.slug,
-    type: row.post_type,
-    title: row.title,
-    date,
-    dateLabel: dateLabel(row.created_at),
-    description: row.description,
-    filename: row.filename || "",
-    mediaUrl: row.media_url || "",
-    src: row.media_url || ""
-  };
-}
-async function listPosts(origin) {
-  const result = await db().query(
-    "SELECT slug, post_type, title, description, filename, media_url, created_at FROM public.bloguploader_posts ORDER BY created_at DESC LIMIT 500"
-  );
-  return json({ posts: result.rows.map(toPost) }, 200, origin);
+function makeDatePath() {
+  const now = new Date();
+  return { year: String(now.getUTCFullYear()), month: String(now.getUTCMonth() + 1).padStart(2, "0"), day: now.toISOString().slice(0, 10) };
 }
 async function publish(request, origin) {
   const authorization = request.headers.get("authorization") || "";
   const match = authorization.match(/^Bearer ([a-f0-9]{64})$/i);
-  if (!match) return fail("Please log in again to publish.", 401, origin);
-  const tokenHash = hash(match[1]);
-  const session = await db().query(
-    "UPDATE public.bloguploader_sessions SET last_seen_at = now() WHERE token_hash = $1 AND expires_at > now() RETURNING token_hash",
-    [tokenHash]
-  );
-  if (!session.rowCount) return fail("Your uploader session has expired. Please log in again.", 401, origin);
+  const sessionToken = match?.[1] || "";
+  const neonToken = request.headers.get("x-neon-token") || "";
+  if (!sessionToken || !neonToken) return fail("Please log in again to publish.", 401, origin);
+
+  const valid = await neonRpc("bloguploader_check_session", { input_token: sessionToken }, neonToken);
+  if (valid !== true) return fail("Your uploader session has expired. Please log in again.", 401, origin);
 
   let form;
   try { form = await request.formData(); }
@@ -140,8 +138,10 @@ async function publish(request, origin) {
   if (!["image", "video", "text"].includes(type)) return fail("Choose a valid post type.", 400, origin);
   if (!description || description.length > 20000) return fail("Add a description (up to 20,000 characters).", 400, origin);
 
+  const date = makeDatePath();
+  const slug = "uploaded-" + date.day + "-" + randomUUID().slice(0, 8);
   let mediaKey = null, mediaUrl = null, filename = null, contentType = null, mediaSize = null;
-  const slug = "uploaded-" + new Date().toISOString().slice(0, 10) + "-" + randomUUID().slice(0, 8);
+
   if (type === "text") {
     if (file && typeof file.arrayBuffer === "function" && file.size > 0) return fail("Text posts do not need a media file.", 400, origin);
   } else {
@@ -153,20 +153,33 @@ async function publish(request, origin) {
     if (type === "video" && !VIDEO_TYPES.has(contentType)) return fail("Unsupported video format.", 415, origin);
     filename = safeFilename(file.name);
     mediaSize = file.size;
-    mediaKey = "uploads/" + slug + "/" + filename;
+    mediaKey = "posts/" + date.year + "/" + date.month + "/" + slug + "/" + filename;
+    mediaUrl = process.env.AWS_ENDPOINT_URL_S3.replace(/\/+$/, "") + "/" + BUCKET + "/" + mediaKey.split("/").map(encodeURIComponent).join("/");
     const bytes = new Uint8Array(await file.arrayBuffer());
-    mediaUrl = await storageRequest("PUT", mediaKey, bytes, contentType);
+    await storageRequest("PUT", mediaKey, bytes, contentType);
   }
+
   try {
-    const inserted = await db().query(
-      "INSERT INTO public.bloguploader_posts (slug, post_type, title, description, filename, media_key, media_url, content_type, media_size) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING slug, post_type, title, description, filename, media_url, created_at",
-      [slug, type, makeTitle(description, type), description, filename, mediaKey, mediaUrl, contentType, mediaSize]
-    );
-    return json({ success: true, post: toPost(inserted.rows[0]) }, 201, origin);
+    const saved = await neonRpc("bloguploader_publish_post", {
+      input_token: sessionToken,
+      p_slug: slug,
+      p_post_type: type,
+      p_title: makeTitle(description, type),
+      p_description: description,
+      p_filename: filename,
+      p_media_key: mediaKey,
+      p_media_url: mediaUrl,
+      p_content_type: contentType,
+      p_media_size: mediaSize
+    }, neonToken);
+    const row = Array.isArray(saved) ? saved[0] : saved;
+    return json({ success: true, post: row }, 201, origin);
   } catch (error) {
     if (mediaKey) {
-      try { await storageRequest("DELETE", mediaKey, new Uint8Array(0), null); } catch (_) {}
+      try { await storageRequest("DELETE", mediaKey, new Uint8Array(0), null); } catch (cleanupError) { console.error("[bloguploader] Media cleanup failed:", cleanupError); }
     }
+    if (error.status === 401 || error.status === 403) return fail("Your uploader session could not be verified. Please log in again.", 401, origin);
+    if (/session|invalid/i.test(error.message || "")) return fail("Your uploader session has expired. Please log in again.", 401, origin);
     throw error;
   }
 }
@@ -180,12 +193,9 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: headersFor(origin) });
     try {
       if (path === "/health" && request.method === "GET") {
-        let databaseReady = false;
-        try { await db().query("SELECT 1"); databaseReady = true; } catch (_) {}
         const storageReady = Boolean(process.env.AWS_ENDPOINT_URL_S3 && process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY);
-        return json({ ready: databaseReady && storageReady, databaseConfigured: databaseReady, storageConfigured: storageReady }, 200, origin);
+        return json({ ready: storageReady, storageConfigured: storageReady }, 200, origin);
       }
-      if ((path === "/posts" || path === "/api/posts") && request.method === "GET") return await listPosts(origin);
       if ((path === "/publish" || path === "/api/publish") && request.method === "POST") return await publish(request, origin);
       return fail("Not found.", 404, origin);
     } catch (error) {
