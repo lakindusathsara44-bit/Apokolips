@@ -152,7 +152,7 @@ jobs:
           import re
           from pathlib import Path
           source = Path("admin/blog-uploader/index.html").read_text(encoding="utf-8")
-          match = re.search(r'<script type="module">\\s*(.*?)\\s*</script>', source, re.DOTALL)
+          match = re.search(r'<script type="module">\s*(.*?)\s*</script>', source, re.DOTALL)
           if not match:
               raise SystemExit("Uploader module script was not found.")
           Path("/tmp/blog-uploader-inline.mjs").write_text(match.group(1), encoding="utf-8")
