@@ -210,7 +210,7 @@ function SocialCard({ post }) {
   };
 
   const share = async () => {
-    const url = new URL('./share/' + post.slug + '.html', window.location.href).href;
+    const url = post.slug.startsWith('uploaded-') ? new URL('./blog.html#' + post.id, window.location.href).href : new URL('./share/' + post.slug + '.html', window.location.href).href;
     try {
       if (navigator.share) await navigator.share({ title: post.title + ' | Apokolips', text: 'Check out this travel memory on Apokolips.', url });
       else { await navigator.clipboard.writeText(url); setStatus('Link copied. Share it with your friends.'); }
@@ -426,8 +426,9 @@ function App() {
   const openPost = post => setLightboxPost(post);
   const moveLightbox = direction => {
     if (!lightboxPost) return;
-    const index = posts.findIndex(item => item.id === lightboxPost.id);
-    setLightboxPost(posts[(index + direction + posts.length) % posts.length]);
+    const photoPosts = posts.filter(item => item.type === 'photo');
+    const index = photoPosts.findIndex(item => item.id === lightboxPost.id);
+    setLightboxPost(photoPosts[(index + direction + photoPosts.length) % photoPosts.length]);
   };
   const copyPageLink = async () => {
     const url = window.location.href.split('#')[0] + '#memories';
@@ -475,7 +476,7 @@ function App() {
       h('section', { className: 'blog-section', id: 'memories' },
         h('div', { className: 'blog-section-heading blog-reveal' },
           h('div', null, h('div', { className: 'small-label' }, 'COMMUNITY JOURNAL'), h('h2', null, 'Latest Posts')),
-          h('span', { className: 'memory-count' }, String(currentPosts.length).padStart(2, '0') + ' / ' + String(POSTS.length).padStart(2, '0') + ' SHOWN')
+          h('span', { className: 'memory-count' }, String(currentPosts.length).padStart(2, '0') + ' / ' + String(posts.length).padStart(2, '0') + ' SHOWN')
         ),
         h('div', { className: 'blog-controls blog-reveal' },
           h('label', { className: 'blog-search-wrap' },
