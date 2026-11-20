@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { blogClient, visitorId } from './neon.js';
+import { loadPosts as loadUploaderPosts } from '../../admin/blog-uploader/analytics.js';
 
 const h = React.createElement;
 const REACTIONS = [
@@ -14,64 +15,28 @@ const POSTS = [
   { id: 'travel-photo-20261110-wa0021', slug: 'travel-photo-2026-11-10-wa0021', title: 'A new moment to remember', date: '2026-11-10', dateLabel: '10 November 2026', description: 'Another captured moment, added to the Apokolips travel memories.', src: 'https://raw.githubusercontent.com/lakindusathsara44-bit/Apokolips/main/IMG-20261110-WA0021.jpg', alt: 'Travel photograph shared by Lakindu Sathsara on 10 November 2026', type: 'photo' }
 ];
 
-const UPLOADER_REPOSITORY = 'lakindusathsara44-bit/BlogUploader';
-const UPLOADER_RAW_BASE = 'https://raw.githubusercontent.com/' + UPLOADER_REPOSITORY + '/main/';
-
 async function fetchUploadedPosts() {
-  const response = await fetch(UPLOADER_RAW_BASE + 'posts/index.json?cache=' + Date.now());
-  if (response.status === 404) return [];
-  if (!response.ok) throw new Error('Could not read the BlogUploader post index (' + response.status + ').');
-  const entries = await response.json();
-  const files = Array.isArray(entries) ? entries : [];
-  const results = await Promise.all(files.map(async entry => {
-    const filenameWithExtension = typeof entry === 'string' ? entry : entry.file;
-    if (!filenameWithExtension || !filenameWithExtension.endsWith('.md')) return null;
-    const postResponse = await fetch(UPLOADER_RAW_BASE + 'posts/' + encodeURIComponent(filenameWithExtension));
-    if (!postResponse.ok) return null;
-    const source = (await postResponse.text()).trim();
-    const isText = source.startsWith('[Text]');
-    if (!isText && !source.startsWith('[Media]')) return null;
-
-    const filename = filenameWithExtension.replace(/\.md$/i, '');
-    const dateMatch = filename.match(/(\d{4}-\d{2}-\d{2})/);
-    const date = dateMatch ? dateMatch[1] : new Date().toISOString().slice(0, 10);
+  const items = await loadUploaderPosts();
+  return items.map(post => {
+    const date = post.date || new Date().toISOString().slice(0, 10);
     const dateLabel = new Date(date + 'T00:00:00Z').toLocaleDateString('en-GB', {
       day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC'
     });
-
-    let type = 'text';
-    let src = '';
-    let description = source.replace(/^\[Text\]\s*/, '').trim();
-    if (!isText) {
-      const imageMatch = source.match(/!\[[^\]]*\]\(([^)]+)\)/);
-      const videoMatch = source.match(/\[Watch video\]\(([^)]+)\)/);
-      const mediaMatch = imageMatch || videoMatch;
-      if (!mediaMatch) return null;
-      const reference = mediaMatch[1].trim();
-      const mediaName = reference.split('/').pop().split('?')[0];
-      src = UPLOADER_RAW_BASE + 'uploads/' + encodeURIComponent(decodeURIComponent(mediaName));
-      type = /\.(mp4|webm|mov|m4v|ogv)$/i.test(mediaName) ? 'video' : 'photo';
-      const afterMedia = source.slice(mediaMatch.index + mediaMatch[0].length);
-      description = afterMedia.replace(/^\s*\n\s*/, '').trim();
-      if (!description) description = source.replace(/^\[Media\]\s*/, '').replace(mediaMatch[0], '').trim();
-    }
-    const firstLine = description.split(/\r?\n/)[0].trim();
-    const title = (firstLine.split(/[.!?]/)[0].trim().slice(0, 72)) || (type === 'text' ? 'A new note' : 'A new memory');
-    const slug = 'uploaded-' + filename.replace(/[^a-zA-Z0-9_-]/g, '-');
     return {
-      id: slug,
-      slug,
-      title,
+      id: post.id || post.slug,
+      slug: post.slug,
+      title: post.title,
       date,
       dateLabel,
-      description,
-      src,
-      alt: title,
-      type
+      description: post.description,
+      src: post.mediaUrl || '',
+      alt: post.title,
+      type: post.type === 'image' ? 'photo' : post.type === 'video' ? 'video' : 'text'
     };
-  }));
-  return results.filter(Boolean).sort((a, b) => b.date.localeCompare(a.date));
-} {
+  });
+}
+
+function RainCanvas() {
   useEffect(() => {
     const canvas = document.getElementById('blogRain');
     if (!canvas) return undefined;
