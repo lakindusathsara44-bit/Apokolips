@@ -76,25 +76,24 @@ async function fetchLegacyUploadedPosts() {
 async function fetchUploadedPosts() {
   const [legacy, stored] = await Promise.all([
     fetchLegacyUploadedPosts().catch(() => []),
-    fetch('https://br-silent-frost-b3chnc64-bloguploader.compute.c-4.ap-southeast-1.aws.neon.tech/posts?cache=' + Date.now(), { cache: 'no-store' })
-      .then(async response => {
-        if (!response.ok) throw new Error('Blog storage API returned ' + response.status + '.');
-        const body = await response.json();
-        return (Array.isArray(body.posts) ? body.posts : []).map(post => {
-          const date = post.date || new Date(post.created_at || Date.now()).toISOString().slice(0, 10);
-          return {
-            id: post.id || post.slug,
-            slug: post.slug || post.id,
-            title: post.title || 'A new memory',
-            date,
-            dateLabel: post.dateLabel || new Date(date + 'T00:00:00Z').toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC' }),
-            description: post.description || '',
-            src: post.mediaUrl || post.src || '',
-            alt: post.title || 'Apokolips Blog post',
-            type: post.type === 'image' ? 'photo' : post.type
-          };
-        });
-      }).catch(() => [])
+    (async () => {
+      const { data, error } = await blogClient.rpc('bloguploader_list_posts', {});
+      if (error) throw error;
+      return (Array.isArray(data) ? data : []).map(post => {
+        const date = String(post.created_at || '').slice(0, 10);
+        return {
+          id: post.slug,
+          slug: post.slug,
+          title: post.title || 'A new memory',
+          date,
+          dateLabel: new Date(date + 'T00:00:00Z').toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC' }),
+          description: post.description || '',
+          src: post.media_url || '',
+          alt: post.title || 'Apokolips Blog post',
+          type: post.post_type === 'image' ? 'photo' : post.post_type
+        };
+      });
+    })().catch(() => [])
   ]);
   const ids = new Set(stored.map(post => post.slug || post.id));
   return [...stored, ...legacy.filter(post => !ids.has(post.slug || post.id))]
