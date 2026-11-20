@@ -70,7 +70,8 @@ function parsePost(filename, source) {
   return { id, slug: id, filename, date, title, description, type, mediaUrl };
 }
 
-export async function loadPosts() {
+
+async function loadLegacyPosts() {
   const response = await fetch(RAW_BASE + 'posts/index.json?cache=' + Date.now());
   if (response.status === 404) return [];
   if (!response.ok) throw new Error('Unable to load post index (' + response.status + ').');
@@ -85,7 +86,35 @@ export async function loadPosts() {
       return parsePost(filename, (await result.text()).trim());
     } catch (_) { return null; }
   }));
-  return posts.filter(Boolean).sort((a, b) => b.date.localeCompare(a.date) || b.filename.localeCompare(a.filename));
+  return posts.filter(Boolean);
+}
+
+export async function loadPosts() {
+  const [legacy, stored] = await Promise.all([
+    loadLegacyPosts().catch(() => []),
+    (async () => {
+      const { data, error } = await client.rpc('bloguploader_list_posts', {});
+      if (error) throw error;
+      return (Array.isArray(data) ? data : []).map(row => {
+        const date = String(row.created_at || '').slice(0, 10);
+        const type = row.post_type;
+        return {
+          id: row.slug,
+          slug: row.slug,
+          type,
+          title: row.title,
+          date,
+          description: row.description,
+          filename: row.filename || '',
+          mediaUrl: row.media_url || '',
+          src: row.media_url || ''
+        };
+      });
+    })().catch(() => [])
+  ]);
+  const ids = new Set(stored.map(post => post.slug || post.id));
+  return [...stored, ...legacy.filter(post => !ids.has(post.slug || post.id))]
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.filename || '').localeCompare(String(a.filename || '')));
 }
 
 async function readAllRows(table, columns) {

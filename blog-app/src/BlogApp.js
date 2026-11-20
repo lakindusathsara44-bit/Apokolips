@@ -17,7 +17,7 @@ const POSTS = [
 const UPLOADER_REPOSITORY = 'lakindusathsara44-bit/BlogUploader';
 const UPLOADER_RAW_BASE = 'https://raw.githubusercontent.com/' + UPLOADER_REPOSITORY + '/main/';
 
-async function fetchUploadedPosts() {
+async function fetchLegacyUploadedPosts() {
   const response = await fetch(UPLOADER_RAW_BASE + 'posts/index.json?cache=' + Date.now());
   if (response.status === 404) return [];
   if (!response.ok) throw new Error('Could not read the BlogUploader post index (' + response.status + ').');
@@ -71,7 +71,36 @@ async function fetchUploadedPosts() {
     };
   }));
   return results.filter(Boolean).sort((a, b) => b.date.localeCompare(a.date));
-} {
+}
+
+async function fetchUploadedPosts() {
+  const [legacy, stored] = await Promise.all([
+    fetchLegacyUploadedPosts().catch(() => []),
+    (async () => {
+      const { data, error } = await blogClient.rpc('bloguploader_list_posts', {});
+      if (error) throw error;
+      return (Array.isArray(data) ? data : []).map(post => {
+        const date = String(post.created_at || '').slice(0, 10);
+        return {
+          id: post.slug,
+          slug: post.slug,
+          title: post.title || 'A new memory',
+          date,
+          dateLabel: new Date(date + 'T00:00:00Z').toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC' }),
+          description: post.description || '',
+          src: post.media_url || '',
+          alt: post.title || 'Apokolips Blog post',
+          type: post.post_type === 'image' ? 'photo' : post.post_type
+        };
+      });
+    })().catch(() => [])
+  ]);
+  const ids = new Set(stored.map(post => post.slug || post.id));
+  return [...stored, ...legacy.filter(post => !ids.has(post.slug || post.id))]
+    .sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+}
+
+function RainCanvas() {
   useEffect(() => {
     const canvas = document.getElementById('blogRain');
     if (!canvas) return undefined;
