@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { blogClient, visitorId } from './neon.js';
-import { loadPosts as loadUploaderPosts } from '../../admin/blog-uploader/analytics.js';
 
 const h = React.createElement;
 const REACTIONS = [
@@ -15,25 +14,92 @@ const POSTS = [
   { id: 'travel-photo-20261110-wa0021', slug: 'travel-photo-2026-11-10-wa0021', title: 'A new moment to remember', date: '2026-11-10', dateLabel: '10 November 2026', description: 'Another captured moment, added to the Apokolips travel memories.', src: 'https://raw.githubusercontent.com/lakindusathsara44-bit/Apokolips/main/IMG-20261110-WA0021.jpg', alt: 'Travel photograph shared by Lakindu Sathsara on 10 November 2026', type: 'photo' }
 ];
 
-async function fetchUploadedPosts() {
-  const items = await loadUploaderPosts();
-  return items.map(post => {
-    const date = post.date || new Date().toISOString().slice(0, 10);
-    const dateLabel = new Date(date + 'T00:00:00Z').toLocaleDateString('en-GB', {
-      day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC'
-    });
+const UPLOADER_REPOSITORY = 'lakindusathsara44-bit/BlogUploader';
+const UPLOADER_RAW_BASE = 'https://raw.githubusercontent.com/' + UPLOADER_REPOSITORY + '/main/';
+
+function uploaderDateLabel(date) {
+  return new Date(date + 'T00:00:00Z').toLocaleDateString('en-GB', {
+    day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC'
+  });
+}
+
+async function fetchLegacyUploadedPosts() {
+  const response = await fetch(UPLOADER_RAW_BASE + 'posts/index.json?cache=' + Date.now());
+  if (response.status === 404) return [];
+  if (!response.ok) throw new Error('Could not read the legacy BlogUploader index (' + response.status + ').');
+  const entries = await response.json();
+  const files = Array.isArray(entries) ? entries : [];
+  const results = await Promise.all(files.map(async entry => {
+    const filenameWithExtension = typeof entry === 'string' ? entry : entry?.file;
+    if (!filenameWithExtension || !filenameWithExtension.endsWith('.md')) return null;
+    const postResponse = await fetch(UPLOADER_RAW_BASE + 'posts/' + encodeURIComponent(filenameWithExtension));
+    if (!postResponse.ok) return null;
+    const source = (await postResponse.text()).trim();
+    const isText = source.startsWith('[Text]');
+    if (!isText && !source.startsWith('[Media]')) return null;
+    const filename = filenameWithExtension.replace(/\.md$/i, '');
+    const dateMatch = filename.match(/(\d{4}-\d{2}-\d{2})/);
+    const date = dateMatch ? dateMatch[1] : new Date().toISOString().slice(0, 10);
+    let type = 'text', src = '', description = source.replace(/^\[Text\]\s*/, '').trim();
+    if (!isText) {
+      const imageMatch = source.match(/!\[[^\]]*\]\(([^)]+)\)/);
+      const videoMatch = source.match(/\[Watch video\]\(([^)]+)\)/);
+      const mediaMatch = imageMatch || videoMatch;
+      if (!mediaMatch) return null;
+      const mediaName = mediaMatch[1].trim().split('/').pop().split('?')[0];
+      src = UPLOADER_RAW_BASE + 'uploads/' + encodeURIComponent(decodeURIComponent(mediaName));
+      type = /\.(mp4|webm|mov|m4v|ogv)$/i.test(mediaName) ? 'video' : 'photo';
+      description = source.slice(mediaMatch.index + mediaMatch[0].length).replace(/^\s*\n\s*/, '').trim();
+      if (!description) description = source.replace(/^\[Media\]\s*/, '').replace(mediaMatch[0], '').trim();
+    }
+    const firstLine = description.split(/\r?\n/)[0].trim();
+    const title = firstLine.split(/[.!?]/)[0].trim().slice(0, 72) || (type === 'text' ? 'A new note' : 'A new memory');
+    const slug = 'uploaded-' + filename.replace(/[^a-zA-Z0-9_-]/g, '-');
+    return { id: slug, slug, title, date, dateLabel: uploaderDateLabel(date), description, src, alt: title, type };
+  }));
+  return results.filter(Boolean);
+}
+
+async function fetchNeonUploadedPosts() {
+  const pageSize = 500, rows = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await blogClient.from('bloguploader_posts')
+      .select('slug,post_type,title,description,media_url,created_at')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + pageSize - 1);
+    if (error) throw error;
+    rows.push(...(data || []));
+    if (!data || data.length < pageSize) break;
+  }
+  return rows.map(row => {
+    const date = String(row.created_at || '').slice(0, 10) || new Date().toISOString().slice(0, 10);
     return {
-      id: post.id || post.slug,
-      slug: post.slug,
-      title: post.title,
+      id: row.slug,
+      slug: row.slug,
+      title: row.title,
       date,
-      dateLabel,
-      description: post.description,
-      src: post.mediaUrl || '',
-      alt: post.title,
-      type: post.type === 'image' ? 'photo' : post.type === 'video' ? 'video' : 'text'
+      dateLabel: uploaderDateLabel(date),
+      description: row.description,
+      src: row.media_url || '',
+      alt: row.title,
+      type: row.post_type === 'image' ? 'photo' : row.post_type === 'video' ? 'video' : 'text'
     };
   });
+}
+
+async function fetchUploadedPosts() {
+  const [database, legacy] = await Promise.allSettled([
+    fetchNeonUploadedPosts(),
+    fetchLegacyUploadedPosts()
+  ]);
+  if (database.status === 'rejected' && legacy.status === 'rejected') throw database.reason;
+  const combined = [
+    ...(database.status === 'fulfilled' ? database.value : []),
+    ...(legacy.status === 'fulfilled' ? legacy.value : [])
+  ];
+  const unique = new Map();
+  combined.forEach(post => unique.set(post.slug, post));
+  return Array.from(unique.values()).sort((a, b) => b.date.localeCompare(a.date));
 }
 
 function RainCanvas() {
