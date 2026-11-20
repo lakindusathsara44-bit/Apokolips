@@ -128,23 +128,51 @@ jobs:
         working-directory: nexist-core
         run: python -m compileall -q nexist examples benchmarks tests
 
-      - name: Diagnose live Blog uploader health (non-blocking)
+      - name: Diagnose live Blog uploader health and CORS (non-blocking)
         continue-on-error: true
         run: |
           node --input-type=module <<'NODE'
-          const endpoint = 'https://br-silent-frost-b3chnc64-bloguploader.compute.c-4.ap-southeast-1.aws.neon.tech/health';
-          for (const origin of ['https://apokolips.xyz', 'https://www.apokolips.xyz']) {
+          const endpoint = 'https://br-silent-frost-b3chnc64-bloguploader.compute.c-4.ap-southeast-1.aws.neon.tech';
+          const origins = ['https://apokolips.xyz', 'https://www.apokolips.xyz'];
+          for (const origin of origins) {
             try {
-              const response = await fetch(endpoint, {
-                headers: { Origin: origin, Accept: 'application/json' },
-                cache: 'no-store'
+              const health = await fetch(`${endpoint}/health?ci=${Date.now()}`, {
+                headers: { Origin: origin, Accept: 'application/json' }, cache: 'no-store'
               });
-              console.log(`[${origin}] HTTP ${response.status}: ${await response.text()}`);
+              const healthBody = await health.json().catch(() => ({}));
+              const healthOrigin = health.headers.get('access-control-allow-origin');
+              console.log(`[${origin}] health: HTTP ${health.status}; ACAO=${healthOrigin}; body=${JSON.stringify(healthBody)}`);
+
+              const preflight = await fetch(`${endpoint}/publish`, {
+                method: 'OPTIONS',
+                headers: {
+                  Origin: origin,
+                  'Access-Control-Request-Method': 'POST',
+                  'Access-Control-Request-Headers': 'authorization,x-neon-token'
+                }
+              });
+              const allowOrigin = preflight.headers.get('access-control-allow-origin');
+              const allowMethods = preflight.headers.get('access-control-allow-methods') || '';
+              const allowHeaders = (preflight.headers.get('access-control-allow-headers') || '').toLowerCase();
+              console.log(`[${origin}] preflight: HTTP ${preflight.status}; ACAO=${allowOrigin}; methods=${allowMethods}; headers=${allowHeaders}`);
+
+              const rejected = await fetch(`${endpoint}/publish`, {
+                method: 'POST',
+                headers: { Origin: origin, Authorization: 'Bearer invalid', 'X-Neon-Token': 'invalid' }
+              });
+              console.log(`[${origin}] unauthenticated publish route: HTTP ${rejected.status}; ACAO=${rejected.headers.get('access-control-allow-origin')}; body=${await rejected.text()}`);
             } catch (error) {
-              console.log(`[${origin}] request failed: ${error?.message || error}`);
+              console.log(`[${origin}] diagnostic request failed: ${error?.message || error}`);
             }
           }
           NODE
+
+      - name: Verify deployable Blog uploader function archive
+        run: |
+          base64 -d neon-functions/bloguploader/function.zip.b64 > /tmp/bloguploader-function.zip
+          unzip -p /tmp/bloguploader-function.zip index.mjs > /tmp/bloguploader-archive-index.mjs
+          cmp neon-functions/bloguploader/index.mjs /tmp/bloguploader-archive-index.mjs
+          node --check /tmp/bloguploader-archive-index.mjs
 
       - name: Check uploader inline JavaScript
         run: |
