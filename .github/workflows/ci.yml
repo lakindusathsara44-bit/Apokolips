@@ -148,7 +148,7 @@ jobs:
                 headers: {
                   Origin: origin,
                   'Access-Control-Request-Method': 'POST',
-                  'Access-Control-Request-Headers': 'authorization,x-neon-token'
+                  'Access-Control-Request-Headers': 'x-blog-session,x-neon-token'
                 }
               });
               const allowOrigin = preflight.headers.get('access-control-allow-origin');
@@ -158,7 +158,7 @@ jobs:
 
               const rejected = await fetch(`${endpoint}/publish`, {
                 method: 'POST',
-                headers: { Origin: origin, Authorization: 'Bearer invalid', 'X-Neon-Token': 'invalid' }
+                headers: { Origin: origin, 'X-Blog-Session': 'invalid', 'X-Neon-Token': 'invalid' }
               });
               console.log(`[${origin}] unauthenticated publish route: HTTP ${rejected.status}; ACAO=${rejected.headers.get('access-control-allow-origin')}; body=${await rejected.text()}`);
             } catch (error) {
