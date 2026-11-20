@@ -41,7 +41,7 @@ button{border:0;border-radius:10px;padding:12px 17px;font-weight:750;cursor:poin
 </main>
 <footer>APOKOLIPS · Ideas become something real.</footer>
 <script type="module">
-import { getBlogClient } from './analytics.js';
+import { getBlogClient } from './analytics.js?v=20261120-rebuild1';
 const API='https://br-silent-frost-b3chnc64-bloguploader.compute.c-4.ap-southeast-1.aws.neon.tech';
 // Keep the short-lived uploader session in this tab only. sessionStorage survives
 // Android file-picker/tab reloads, but is cleared when the tab is closed.
@@ -52,7 +52,6 @@ let session='',kind='image',file=null,storageReady=false;
 const specs={image:{accept:'image/png,image/jpeg,image/webp,image/avif,image/gif',label:'Choose image'},video:{accept:'video/mp4,video/webm,video/quicktime,video/x-m4v,video/ogg',label:'Choose video'},text:{accept:'',label:'No media required'}};
 function setStatus(id,message,bad=false){$(id).textContent=message;$(id).style.color=bad?'#ff9b9b':''}
 async function rpc(name,args){const {data,error}=await client.rpc(name,args);if(error)throw new Error(error.message||'Database request failed.');return data}
-async function validSession(token){const value=await rpc('bloguploader_check_session',{input_token:token});return value===true||(Array.isArray(value)&&value[0]===true)}
 function showUploader(){$('loginPanel').classList.add('hidden');$('uploaderPanel').classList.remove('hidden')}
 function showLogin(){$('uploaderPanel').classList.add('hidden');$('loginPanel').classList.remove('hidden');$('password').focus()}
 async function checkBackend(){
@@ -107,14 +106,16 @@ $('publishButton').addEventListener('click',async()=>{
  if(file&&file.size>80*1024*1024)return setStatus('publishStatus','Media file is too large (maximum 80 MB).',true);
  const b=$('publishButton');b.disabled=true;b.textContent='Publishing…';$('publishStatus').classList.remove('success');
  try{
-  if(!(await validSession(session))){session='';showLogin();throw new Error('Your login session expired. Please log in again.')}
   const {data:auth,error}=await client.auth.getAnonymousToken();
   if(error||!auth?.token)throw new Error('Could not connect to the database.');
   const payload=new FormData();payload.append('type',kind);payload.append('description',description);
+  // Send credentials in the multipart body. This avoids browser/proxy header
+  // normalization and CORS preflight edge cases while keeping secrets out of URLs.
+  payload.append('session_token',session);payload.append('database_token',auth.token);
   if(file)payload.append('file',file,file.name);
-  const response=await fetch(API+'/publish',{method:'POST',headers:{'X-Blog-Session':session,'X-Neon-Token':auth.token},body:payload});
+  const response=await fetch(API+'/publish',{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',body:payload});
   const result=await response.json().catch(()=>({}));
-  if(response.status===401){session='';sessionStorage.removeItem(KEY);showLogin();throw new Error(result.error||'Your login session expired. Please log in again.');}
+  if(response.status===401){const message=result.error||'Your login session expired. Please log in again.';if(/session/i.test(message)){session='';sessionStorage.removeItem(KEY);showLogin();}throw new Error(message);}
   if(!response.ok)throw new Error(result.error||'Upload failed ('+response.status+').');
   $('description').value='';$('media').value='';file=null;
   setStatus('publishStatus','Published successfully: '+(result.filename||result.slug),false);
@@ -125,6 +126,6 @@ $('publishButton').addEventListener('click',async()=>{
  finally{b.textContent='Publish post';b.disabled=false;}
 });
 try{localStorage.removeItem(KEY)}catch(_){}
-(async()=>{const saved=sessionStorage.getItem(KEY);if(!saved){setStatus('loginStatus','Enter the uploader password to unlock publishing.');return}setStatus('loginStatus','Restoring your secure tab session…');try{if(await validSession(saved)){session=saved;showUploader();await checkBackend();setStatus('loginStatus','')}else{sessionStorage.removeItem(KEY);setStatus('loginStatus','Your session expired. Please log in again.')}}catch(err){setStatus('loginStatus','Could not verify your session. Check your connection and reload this page.',true)}})();
+(async()=>{const saved=sessionStorage.getItem(KEY);if(!saved){setStatus('loginStatus','Enter the uploader password to unlock publishing.');return}session=saved;showUploader();await checkBackend();setStatus('loginStatus','')})();
 </script>
 <script defer src="./studio.js"></script></body></html>
