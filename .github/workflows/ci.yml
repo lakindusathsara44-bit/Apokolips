@@ -128,6 +128,38 @@ jobs:
         working-directory: nexist-core
         run: python -m compileall -q nexist examples benchmarks tests
 
+      - name: Diagnose live Blog uploader health (non-blocking)
+        continue-on-error: true
+        run: |
+          node --input-type=module <<'NODE'
+          const endpoint = 'https://br-silent-frost-b3chnc64-bloguploader.compute.c-4.ap-southeast-1.aws.neon.tech/health';
+          for (const origin of ['https://apokolips.xyz', 'https://www.apokolips.xyz']) {
+            try {
+              const response = await fetch(endpoint, {
+                headers: { Origin: origin, Accept: 'application/json' },
+                cache: 'no-store'
+              });
+              console.log(`[${origin}] HTTP ${response.status}: ${await response.text()}`);
+            } catch (error) {
+              console.log(`[${origin}] request failed: ${error?.message || error}`);
+            }
+          }
+          NODE
+
+      - name: Check uploader inline JavaScript
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          source = Path("admin/blog-uploader/index.html").read_text(encoding="utf-8")
+          match = re.search(r'<script type="module">\\s*(.*?)\\s*</script>', source, re.DOTALL)
+          if not match:
+              raise SystemExit("Uploader module script was not found.")
+          Path("/tmp/blog-uploader-inline.mjs").write_text(match.group(1), encoding="utf-8")
+          print("Extracted uploader module script.")
+          PY
+          node --check /tmp/blog-uploader-inline.mjs
+
       - name: Check JavaScript syntax
         run: |
           node --check script.js
