@@ -60,7 +60,7 @@ document.querySelectorAll('.type').forEach(b=>b.addEventListener('click',()=>{ki
 $('media').addEventListener('change',e=>{file=e.target.files?.[0]||null});
 $('publishButton').addEventListener('click',async()=>{
  const description=$('description').value.trim();
- if(!session){showLogin();return setStatus('publishStatus','Log in with the uploader password before publishing.',true)}
+ if(!session){showLogin();return setStatus('loginStatus','Log in with the uploader password before publishing.',true)}
  if(!storageReady)return setStatus('publishStatus','Neon media storage is not ready yet. Please try again shortly.',true);
  if(!description)return setStatus('publishStatus','Add a description or text for this post.',true);
  if(kind!=='text'&&!file)return setStatus('publishStatus','Choose a media file first.',true);
@@ -81,7 +81,7 @@ $('publishButton').addEventListener('click',async()=>{
   $('publishStatus').classList.add('success');
   kind='image';document.querySelectorAll('.type').forEach(x=>x.classList.toggle('active',x.dataset.type==='image'));
   $('mediaField').classList.remove('hidden');$('media').accept=specs.image.accept;$('fileLabel').textContent=specs.image.label;
- }catch(err){$('publishStatus').classList.remove('success');setStatus('publishStatus',err.message||'Publishing failed. Please try again.',true);}
+ }catch(err){$('publishStatus').classList.remove('success');if(!session){showLogin();setStatus('loginStatus',err.message||'Your login session expired. Please log in again.',true)}else{setStatus('publishStatus',err.message||'Publishing failed. Please try again.',true)}}
  finally{b.textContent='Publish post';b.disabled=!storageReady;}
 });
 try{localStorage.removeItem('apokolips_bloguploader_session_v1')}catch(_){}
