@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#080d18">
+<title>Post Insights · Apokolips Blog Uploader</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#080d18;--panel:#101a2b;--line:#233650;--muted:#9aacc4;--cyan:#35d5ff;--blue:#287bff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 12% 0%,#10284a 0,transparent 42%),var(--bg);color:#edf6ff;font:15px/1.55 Inter,system-ui,Segoe UI,sans-serif}
+header{padding:22px max(18px,calc((100% - 1120px)/2));border-bottom:1px solid #1b2c43;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.brand{font-weight:850;letter-spacing:.08em}.brand span{color:var(--cyan)}nav{display:flex;gap:9px;flex-wrap:wrap}nav a,.btn{color:#dceaff;text-decoration:none;border:1px solid #304967;background:#14243a;padding:9px 13px;border-radius:10px;font-size:13px;cursor:pointer}
+main{max-width:1120px;margin:34px auto;padding:0 18px}.eyebrow{color:var(--cyan);font-size:11px;letter-spacing:.18em;font-weight:800}h1{font-size:clamp(28px,5vw,42px);margin:7px 0}.sub{color:var(--muted);margin:0 0 22px}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin:22px 0}.metric{background:linear-gradient(145deg,#111e31,#0d1625);border:1px solid var(--line);border-radius:15px;padding:18px}.metric span{display:block;color:var(--muted);font-size:11px;letter-spacing:.1em}.metric strong{display:block;font-size:30px;margin-top:6px}.metric small{color:#7f95b1}.charts{display:grid;grid-template-columns:1.25fr .75fr;gap:16px}.panel{background:linear-gradient(145deg,#111e31,#0d1625);border:1px solid var(--line);border-radius:16px;padding:19px;min-width:0}.panel h2{font-size:16px;margin:0 0 14px}.canvas-wrap{height:320px;position:relative}.table-wrap{overflow:auto;margin-top:17px}table{width:100%;border-collapse:collapse;min-width:520px}th,td{text-align:left;padding:12px;border-bottom:1px solid #233650;font-size:13px}th{color:#9aacc4;font-weight:600}td strong{color:#edf6ff}.status{color:var(--muted);margin:16px 0;font-size:13px}.foot{text-align:center;color:#7186a1;font-size:12px;padding:30px}
+@media(max-width:760px){.cards{grid-template-columns:repeat(2,1fr)}.charts{grid-template-columns:1fr}.canvas-wrap{height:280px}}
+@media(max-width:390px){.cards{grid-template-columns:1fr 1fr}.metric strong{font-size:24px}}
+</style><link rel="stylesheet" href="./studio.css"></head>
+<body>
+<header><div><div class="brand">APOKOLIPS<span>.</span> BLOG</div><div style="color:var(--muted);font-size:12px">CONTENT PERFORMANCE</div></div><nav><a href="../../Apokolips.Blog.html">Studio home</a><a href="./index.html">Uploader</a><a href="./insights.html">Insights</a><a href="./posts.html">All posts</a></nav></header>
+<main><div class="eyebrow">ANALYTICS DASHBOARD</div><h1>Post insights.</h1><p class="sub">Track Likes and Comments on every post published through BlogUploader. Counts are read from the shared Apokolips community database.</p>
+<div class="cards"><div class="metric"><span>PUBLISHED POSTS</span><strong id="postTotal">—</strong><small>All uploader posts</small></div><div class="metric"><span>LIKES</span><strong id="likeTotal">—</strong><small>👍 Like reactions only</small></div><div class="metric"><span>COMMENTS</span><strong id="commentTotal">—</strong><small>Comments + replies</small></div><div class="metric"><span>ALL REACTIONS</span><strong id="reactionTotal">—</strong><small>Like · Love · Wow · Fire</small></div></div>
+<div class="charts"><section class="panel"><h2>Likes vs comments by post</h2><div class="canvas-wrap"><canvas id="postChart" aria-label="Bar chart comparing likes and comments for each post"></canvas></div></section><section class="panel"><h2>Community activity · last 14 days</h2><div class="canvas-wrap"><canvas id="trendChart" aria-label="Line chart of likes and comments over the last 14 days"></canvas></div></section></div>
+<section class="panel table-wrap"><h2>Post performance</h2><table><thead><tr><th>Post</th><th>Type</th><th>Likes</th><th>Comments</th><th>Total engagement</th></tr></thead><tbody id="ranking"></tbody></table></section>
+<div class="status" id="status" role="status">Loading insights…</div><button class="btn" id="refresh">Refresh insights</button></main>
+<div class="foot">APOKOLIPS · Ideas become something real.</div>
+<script type="module">
+import { loadPosts, loadEngagement } from './analytics.js';
+const $=id=>document.getElementById(id);let postChart,trendChart;
+const fmt=n=>Number(n||0).toLocaleString();
+async function refresh(){
+ $('status').textContent='Updating insights from GitHub and Neon…';
+ try{
+  const [posts,data]=await Promise.all([loadPosts(),loadEngagement()]);
+  $('postTotal').textContent=fmt(posts.length);
+  const uploadedLikes=rowsTotal(posts,data,'likes'),uploadedComments=rowsTotal(posts,data,'comments'),uploadedReactions=rowsTotal(posts,data,'reactions');
+  $('likeTotal').textContent=fmt(uploadedLikes);$('commentTotal').textContent=fmt(uploadedComments);$('reactionTotal').textContent=fmt(uploadedReactions);
+  const rows=posts.map(p=>({post:p,m:data.byPost[p.slug]||{likes:0,comments:0,reactions:0}}));
+  const labels=rows.map(x=>x.post.title.length>22?x.post.title.slice(0,22)+'…':x.post.title);
+  const common={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#dceaff'}},tooltip:{mode:'index',intersect:false}},scales:{x:{ticks:{color:'#9aacc4',maxRotation:35,minRotation:0},grid:{color:'#233650'}},y:{beginAtZero:true,ticks:{color:'#9aacc4',precision:0},grid:{color:'#233650'}}}};
+  if(postChart)postChart.destroy();
+  postChart=new Chart($('postChart'),{type:'bar',data:{labels,datasets:[{label:'Likes',data:rows.map(x=>x.m.likes),backgroundColor:'#35d5ff',borderRadius:5},{label:'Comments',data:rows.map(x=>x.m.comments),backgroundColor:'#287bff',borderRadius:5}]},options:common});
+  const days=[];const now=new Date();for(let i=13;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);days.push(d.toISOString().slice(0,10));}
+  if(trendChart)trendChart.destroy();
+  trendChart=new Chart($('trendChart'),{type:'line',data:{labels:days.map(d=>d.slice(5)),datasets:[{label:'Likes',data:days.map(d=>rows.reduce((sum,x)=>sum+(data.byDayByPost[x.post.slug]?.[d]?.likes||0),0)),borderColor:'#35d5ff',backgroundColor:'#35d5ff22',tension:.3,fill:true},{label:'Comments',data:days.map(d=>rows.reduce((sum,x)=>sum+(data.byDayByPost[x.post.slug]?.[d]?.comments||0),0)),borderColor:'#287bff',backgroundColor:'#287bff22',tension:.3,fill:true}]},options:{...common,interaction:{mode:'index',intersect:false}}});
+  $('ranking').innerHTML=rows.map(x=>'<tr><td><strong>'+escapeHtml(x.post.title)+'</strong></td><td>'+x.post.type+'</td><td>'+fmt(x.m.likes)+'</td><td>'+fmt(x.m.comments)+'</td><td>'+fmt(x.m.likes+x.m.comments)+'</td></tr>').join('')||'<tr><td colspan="5">No published posts yet.</td></tr>';
+  $('status').textContent='Updated '+new Date().toLocaleString()+' · Includes all comments and replies in the shared database.';
+ }catch(e){$('status').textContent='Could not load insights: '+e.message+'. Check GitHub Pages, public post index and Neon anonymous read access.';}
+}
+function rowsTotal(posts,data,key){return posts.reduce((sum,p)=>sum+Number(data.byPost[p.slug]?.[key]||0),0);}
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+$('refresh').addEventListener('click',refresh);refresh();
+</script><script defer src="./studio.js"></script></body></html>
