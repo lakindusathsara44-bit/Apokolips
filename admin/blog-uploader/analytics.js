@@ -2,6 +2,42 @@ import { createClient } from 'https://esm.sh/@neondatabase/neon-js';
 
 const REPOSITORY = 'lakindusathsara44-bit/BlogUploader';
 const RAW_BASE = 'https://raw.githubusercontent.com/' + REPOSITORY + '/main/';
+
+// Photos that were added directly to the original Blog before the uploader
+// and Insights dashboard existed. Keep their original public Blog slugs so
+// existing likes, reactions and comments are attributed to the correct photo.
+const MANUALLY_ADDED_POSTS = [
+  {
+    id: 'travel-photo-20261016',
+    slug: 'travel-memory-2026-10-16',
+    filename: 'IMG-20261016-WA0139.jpg',
+    date: '2026-10-16',
+    title: 'A moment worth remembering',
+    description: 'One of my captured moments. More travel memories will be added here.',
+    type: 'image',
+    mediaUrl: 'https://raw.githubusercontent.com/lakindusathsara44-bit/Apokolips/main/IMG-20261016-WA0139.jpg'
+  },
+  {
+    id: 'travel-photo-20261016-wa0120',
+    slug: 'travel-photo-20261016-wa0120',
+    filename: 'IMG-20261016-WA0120(1).jpg',
+    date: '2026-10-16',
+    title: 'Another moment to remember',
+    description: 'Another captured moment from the journey.',
+    type: 'image',
+    mediaUrl: 'https://raw.githubusercontent.com/lakindusathsara44-bit/Apokolips/main/IMG-20261016-WA0120%281%29.jpg'
+  },
+  {
+    id: 'travel-photo-20261110-wa0021',
+    slug: 'travel-photo-2026-11-10-wa0021',
+    filename: 'IMG-20261110-WA0021.jpg',
+    date: '2026-11-10',
+    title: 'A new moment to remember',
+    description: 'Another captured moment, added to the Apokolips travel memories.',
+    type: 'image',
+    mediaUrl: 'https://raw.githubusercontent.com/lakindusathsara44-bit/Apokolips/main/IMG-20261110-WA0021.jpg'
+  }
+];
 const AUTH_URL = 'https://ep-icy-shadow-b3q76our.neonauth.c-4.ap-southeast-1.aws.neon.tech/apokolips_blog/auth';
 const DATA_API_URL = 'https://ep-icy-shadow-b3q76our.apirest.c-4.ap-southeast-1.aws.neon.tech/apokolips_blog/rest/v1';
 
@@ -116,6 +152,7 @@ export async function loadPosts() {
   const [database, legacy] = await Promise.allSettled([loadDatabasePosts(), loadLegacyPosts()]);
   if (database.status === 'rejected' && legacy.status === 'rejected') throw database.reason;
   const combined = [
+    ...MANUALLY_ADDED_POSTS,
     ...(database.status === 'fulfilled' ? database.value : []),
     ...(legacy.status === 'fulfilled' ? legacy.value : [])
   ];
