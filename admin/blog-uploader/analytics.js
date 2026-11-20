@@ -92,18 +92,30 @@ async function loadLegacyPosts() {
 export async function loadPosts() {
   const [legacy, stored] = await Promise.all([
     loadLegacyPosts().catch(() => []),
-    fetch('https://br-silent-frost-b3chnc64-bloguploader.compute.c-4.ap-southeast-1.aws.neon.tech/posts?cache=' + Date.now(), { cache: 'no-store' })
-      .then(async response => {
-        if (!response.ok) throw new Error('Blog storage API returned ' + response.status + '.');
-        const body = await response.json();
-        return Array.isArray(body.posts) ? body.posts : [];
-      }).catch(() => [])
+    (async () => {
+      const { data, error } = await client.rpc('bloguploader_list_posts', {});
+      if (error) throw error;
+      return (Array.isArray(data) ? data : []).map(row => {
+        const date = String(row.created_at || '').slice(0, 10);
+        const type = row.post_type;
+        return {
+          id: row.slug,
+          slug: row.slug,
+          type,
+          title: row.title,
+          date,
+          description: row.description,
+          filename: row.filename || '',
+          mediaUrl: row.media_url || '',
+          src: row.media_url || ''
+        };
+      });
+    })().catch(() => [])
   ]);
   const ids = new Set(stored.map(post => post.slug || post.id));
   return [...stored, ...legacy.filter(post => !ids.has(post.slug || post.id))]
     .sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.filename || '').localeCompare(String(a.filename || '')));
 }
-
 
 async function readAllRows(table, columns) {
   const pageSize = 1000;
