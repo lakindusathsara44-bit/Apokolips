@@ -92,6 +92,7 @@ async function checkBackend(){
   if(timeout)clearTimeout(timeout);
   retry.disabled=false;
  }
+}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();const pwd=$('password').value;if(!pwd)return;const b=$('loginButton');b.disabled=true;b.textContent='Checking…';setStatus('loginStatus','Verifying password…');try{const data=await rpc('bloguploader_login',{input_password:pwd});const row=Array.isArray(data)?data[0]:data;if(!row?.session_token)throw new Error('Incorrect password or login temporarily locked. Try again later.');session=row.session_token;sessionStorage.setItem(KEY,session);$('password').value='';showUploader();await checkBackend();setStatus('loginStatus','')}catch(err){setStatus('loginStatus',err.message||'Login failed.',true)}finally{b.disabled=false;b.textContent='Log in'}});
 $('retryHealthButton').addEventListener('click',checkBackend);
 $('logoutButton').addEventListener('click',async()=>{const old=session;session='';sessionStorage.removeItem(KEY);try{await rpc('bloguploader_logout',{input_token:old})}catch(_){}showLogin();setStatus('loginStatus','You have been logged out.')});
