@@ -500,7 +500,7 @@ function App() {
           h('a', { href: 'info.html', className: 'blog-action-secondary' }, '← Back to About Me'),
           h('a', { href: '#memories', className: 'blog-action-primary' }, 'Explore memories ↓'),
           h('button', { type: 'button', className: 'blog-action-copy', onClick: copyPageLink }, '↗ Copy blog link'),
-          h('a', { href: '/admin/blog-uploader/', className: 'blog-add-post-button', 'aria-label': 'Add a new blog post', title: 'Add a new post', style: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '9px', minHeight: '46px', padding: '0 18px', border: '1px solid rgba(91, 170, 255, .55)', borderRadius: '999px', background: 'linear-gradient(135deg, rgba(23, 91, 166, .34), rgba(7, 22, 43, .82))', color: '#eaf5ff', textDecoration: 'none', fontWeight: 700, boxShadow: '0 0 22px rgba(35, 132, 255, .16)', transition: 'transform .2s ease, box-shadow .2s ease' } },
+          h('a', { href: 'https://www.apokolips.xyz/Apokolips.Blog.html', className: 'blog-add-post-button', 'aria-label': 'Add a new blog post', title: 'Add a new post', style: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '9px', minHeight: '46px', padding: '0 18px', border: '1px solid rgba(91, 170, 255, .55)', borderRadius: '999px', background: 'linear-gradient(135deg, rgba(23, 91, 166, .34), rgba(7, 22, 43, .82))', color: '#eaf5ff', textDecoration: 'none', fontWeight: 700, boxShadow: '0 0 22px rgba(35, 132, 255, .16)', transition: 'transform .2s ease, box-shadow .2s ease' } },
             h('span', { 'aria-hidden': 'true', style: { fontSize: '23px', lineHeight: 1, fontWeight: 400 } }, '+'),
             h('span', null, 'Add a post')
           )
