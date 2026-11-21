@@ -64,7 +64,7 @@ async function fetchNeonUploadedPosts() {
   const pageSize = 500, rows = [];
   for (let offset = 0; ; offset += pageSize) {
     const { data, error } = await blogClient.from('bloguploader_posts')
-      .select('slug,post_type,title,description,media_url,created_at')
+      .select('slug,post_type,title,description,media_url,uploader_name,created_at')
       .order('created_at', { ascending: false })
       .range(offset, offset + pageSize - 1);
     if (error) throw error;
@@ -80,6 +80,7 @@ async function fetchNeonUploadedPosts() {
       date,
       dateLabel: uploaderDateLabel(date),
       description: row.description,
+      uploaderName: row.uploader_name || 'Apokolips',
       src: row.media_url || '',
       alt: row.title,
       type: row.post_type === 'image' ? 'photo' : row.post_type === 'video' ? 'video' : 'text'
@@ -362,6 +363,7 @@ function PostCard({ post, index, onOpen, hidden }) {
     h('div', { className: 'post-content' },
       h('h3', { className: 'post-title' }, post.title),
       h('div', { className: 'post-date' }, post.dateLabel + ' · ' + (post.type === 'text' ? 'Text post' : post.type === 'video' ? 'Video' : 'Photo')),
+      post.uploaderName ? h('div', { className: 'post-uploader', style: { marginTop: '4px', marginBottom: '9px', color: 'rgba(176, 204, 235, .72)', fontSize: '11px', letterSpacing: '.025em' } }, 'Uploaded by ', post.uploaderName) : null,
       h('p', { className: 'post-description' }, post.description),
       h(SocialCard, { post })
     )
