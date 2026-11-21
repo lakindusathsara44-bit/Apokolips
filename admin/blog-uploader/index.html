@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#050609"><title>Publish · Apokolips.Blog</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./studio.css?v=20261121b">
+<link rel="stylesheet" href="./studio.css?v=20261121c">
 </head>
 <body>
 <header><div><div class="brand">APOKOLIPS<span>.</span> BLOG</div><div class="tag">CONTENT PUBLISHING STUDIO</div></div><nav class="top-nav"><a href="../../Apokolips.Blog.html">Studio home</a><a href="./posts.html">All posts</a><a href="./insights.html">Insights</a></nav></header>
@@ -119,4 +119,4 @@ $('publishButton').addEventListener('click',async()=>{
 try{localStorage.removeItem(KEY)}catch(_){}
 (async()=>{const saved=sessionStorage.getItem(KEY);if(!saved){setStatus('loginStatus','Enter the uploader password to unlock publishing.');return}session=saved;showUploader();await checkBackend();setStatus('loginStatus','')})();
 </script>
-<script defer src="./studio.js"></script></body></html>
+</body></html>
