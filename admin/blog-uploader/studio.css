@@ -89,3 +89,24 @@ main>.panel{display:block!important;float:none!important;clear:both;width:100%!i
 .panel .actions>*{max-width:100%}
 @media(max-width:600px){main{width:calc(100% - 28px)!important;padding:34px 0 52px!important}.panel .row{align-items:flex-start!important}.panel .row>div{flex-basis:100%}.panel .row>button{margin-left:auto}.panel .types{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:360px){.panel .types{grid-template-columns:1fr}.panel{padding:18px!important}}
+
+/* 2026-11-21: enforce a single-column uploader layout at every viewport. */
+html,body{width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:hidden!important}
+body{display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important}
+body>header{flex:0 0 auto!important;width:100%!important;max-width:var(--ap-max)!important;margin:0 auto!important}
+body>main{display:flex!important;flex:1 0 auto!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:0!important;width:calc(100% - 40px)!important;max-width:900px!important;min-width:0!important;margin:0 auto!important;padding:64px 0 76px!important}
+body>main>section#loginPanel,body>main>section#uploaderPanel{display:block!important;position:relative!important;float:none!important;clear:both!important;flex:0 0 auto!important;align-self:center!important;width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important}
+body>main>section#loginPanel.login{width:100%!important;max-width:510px!important;margin:0 auto!important}
+body>main>section#uploaderPanel{max-width:900px!important}
+body>main>section.hidden{display:none!important}
+#uploaderPanel .row{display:flex!important;flex-direction:row!important;align-items:flex-start!important;justify-content:space-between!important;flex-wrap:wrap!important;width:100%!important;gap:12px!important}
+#uploaderPanel .row>div{flex:1 1 280px!important;width:auto!important;max-width:100%!important}
+#uploaderPanel .row>button{flex:0 0 auto!important}
+#uploaderPanel label,#uploaderPanel input,#uploaderPanel textarea,#uploaderPanel .types,#uploaderPanel .drop,#uploaderPanel .warning,#uploaderPanel .status{display:block;float:none!important;width:100%!important;max-width:100%!important}
+#uploaderPanel .types{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}
+#uploaderPanel .type{width:100%!important;min-width:0!important}
+#uploaderPanel .actions{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;width:100%!important}
+#uploaderPanel .actions button{width:auto!important;max-width:100%!important}
+body>footer{flex:0 0 auto!important;width:100%!important;max-width:var(--ap-max)!important;margin:0 auto!important}
+@media(max-width:600px){body>main{width:calc(100% - 28px)!important;padding:34px 0 52px!important}#uploaderPanel .row>div{flex-basis:100%!important}#uploaderPanel .row>button{margin-left:auto!important}}
+@media(max-width:360px){#uploaderPanel .types{grid-template-columns:1fr!important}}
