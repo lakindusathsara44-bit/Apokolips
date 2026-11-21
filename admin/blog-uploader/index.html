@@ -34,6 +34,7 @@ button{border:0;border-radius:10px;padding:12px 17px;font-weight:750;cursor:poin
 <div class="warning hidden" id="setupWarning" role="status" aria-live="polite"><strong id="setupTitle">Checking media storage…</strong><div id="setupMessage">Connecting to the secure upload service.</div><div class="actions"><button class="secondary" id="retryHealthButton" type="button">Retry connection check</button></div></div>
 <label>Post type</label><div class="types"><button class="type active" type="button" data-type="image">▧ Image</button><button class="type" type="button" data-type="video">▶ Video</button><button class="type" type="button" data-type="text">≡ Text</button></div>
 <div id="mediaField"><label for="media" id="fileLabel">Choose image</label><div class="drop">Select a media file<input id="media" type="file" accept="image/*"></div><div class="hint" id="fileHint">JPG, PNG, WebP, AVIF or GIF · Maximum 80 MB</div></div>
+<label for="uploaderName">Your name (shown on the post)</label><input id="uploaderName" type="text" maxlength="40" autocomplete="name" placeholder="Enter your name" required>
 <label for="description">Description / Post text</label><textarea id="description" maxlength="20000" placeholder="Write your post description..."></textarea>
 <div class="actions"><button class="primary" id="publishButton" type="button">Publish post</button></div>
 <div class="status" id="publishStatus" role="status" aria-live="polite">Ready to publish.</div>
@@ -46,9 +47,11 @@ const API='https://br-silent-frost-b3chnc64-bloguploader.compute.c-4.ap-southeas
 // Keep the short-lived uploader session in this tab only. sessionStorage survives
 // Android file-picker/tab reloads, but is cleared when the tab is closed.
 const KEY='apokolips_bloguploader_session_v1';
+const NAME_KEY='apokolips_blog_uploader_name_v1';
 const $=id=>document.getElementById(id);
 const client=getBlogClient();
 let session='',kind='image',file=null,storageReady=false;
+try{$('uploaderName').value=localStorage.getItem(NAME_KEY)||''}catch(_){}
 const specs={image:{accept:'image/png,image/jpeg,image/webp,image/avif,image/gif',label:'Choose image'},video:{accept:'video/mp4,video/webm,video/quicktime,video/x-m4v,video/ogg',label:'Choose video'},text:{accept:'',label:'No media required'}};
 function setStatus(id,message,bad=false){$(id).textContent=message;$(id).style.color=bad?'#ff9b9b':''}
 async function rpc(name,args){const {data,error}=await client.rpc(name,args);if(error)throw new Error(error.message||'Database request failed.');return data}
@@ -99,6 +102,8 @@ document.querySelectorAll('.type').forEach(b=>b.addEventListener('click',()=>{ki
 $('media').addEventListener('change',e=>{file=e.target.files?.[0]||null});
 $('publishButton').addEventListener('click',async()=>{
  const description=$('description').value.trim();
+ const uploaderName=$('uploaderName').value.trim().slice(0,40);
+ if(!uploaderName)return setStatus('publishStatus','Enter the uploader name to show on the post.',true);
  if(!session){showLogin();return setStatus('loginStatus','Log in with the uploader password before publishing.',true)}
  // Do not block publishing based on a separate health probe: the actual POST is authoritative.
  if(!description)return setStatus('publishStatus','Add a description or text for this post.',true);
@@ -108,7 +113,7 @@ $('publishButton').addEventListener('click',async()=>{
  try{
   const {data:auth,error}=await client.auth.getAnonymousToken();
   if(error||!auth?.token)throw new Error('Could not connect to the database.');
-  const payload=new FormData();payload.append('type',kind);payload.append('description',description);
+  const payload=new FormData();payload.append('type',kind);payload.append('description',description);payload.append('uploader_name',uploaderName);
   // Send credentials in the multipart body. This avoids browser/proxy header
   // normalization and CORS preflight edge cases while keeping secrets out of URLs.
   payload.append('session_token',session);payload.append('database_token',auth.token);
@@ -118,6 +123,7 @@ $('publishButton').addEventListener('click',async()=>{
   if(response.status===401){const message=result.error||'Your login session expired. Please log in again.';if(/session/i.test(message)){session='';sessionStorage.removeItem(KEY);showLogin();}throw new Error(message);}
   if(!response.ok)throw new Error(result.error||'Upload failed ('+response.status+').');
   $('description').value='';$('media').value='';file=null;
+  try{localStorage.setItem(NAME_KEY,uploaderName)}catch(_){}
   setStatus('publishStatus','Published successfully: '+(result.filename||result.slug),false);
   $('publishStatus').classList.add('success');
   kind='image';document.querySelectorAll('.type').forEach(x=>x.classList.toggle('active',x.dataset.type==='image'));

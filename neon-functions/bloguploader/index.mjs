@@ -77,6 +77,8 @@ async function publish(req){
  const ok=await rpc("bloguploader_check_session",{input_token:token},jwt);
  if(!(ok===true||(Array.isArray(ok)&&ok[0]===true)))return json({error:"Your login session has expired. Please log in again."},401);
  const type=String(form.get("type")||""),description=String(form.get("description")||"").trim();
+ const uploaderName=String(form.get("uploader_name")||"").trim().slice(0,40);
+ if(!uploaderName)return json({error:"Enter the uploader name (maximum 40 characters)."},400);
  if(!["image","video","text"].includes(type))return json({error:"Choose a valid post type."},400);
  if(!description||description.length>20000)return json({error:"Add a description (maximum 20,000 characters)."},400);
  const file=form.get("file");
@@ -94,7 +96,7 @@ async function publish(req){
   await storage("PUT",mediaKey,new Uint8Array(await file.arrayBuffer()),contentType);
  }
  try{
-  const rows=await rpc("bloguploader_publish",{input_token:token,input_type:type,input_description:description,input_filename:filename,input_media_key:mediaKey,input_media_url:mediaUrl,input_content_type:contentType,input_media_size:mediaSize},jwt);
+  const rows=await rpc("bloguploader_publish_v2",{input_token:token,input_type:type,input_description:description,input_filename:filename,input_media_key:mediaKey,input_media_url:mediaUrl,input_content_type:contentType,input_media_size:mediaSize,input_uploader_name:uploaderName},jwt);
   const row=Array.isArray(rows)?rows[0]:rows;
   if(!row||!row.slug)throw new Error("The database did not return the saved post record.");
   return json({ok:true,slug:row.slug,filename:row.filename||row.slug},201);
