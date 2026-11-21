@@ -72,3 +72,20 @@ main>*{animation:apUploaderEnter .65s cubic-bezier(.2,.75,.25,1) both}
 }
 @media(max-width:390px){.top-nav a{font-size:8px!important;letter-spacing:0}.types{grid-template-columns:1fr}.type{min-height:42px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+
+/* Layout integrity: one centered column, no legacy split/grid overflow. */
+html,body{width:100%;max-width:100%;min-width:0}
+body{display:block!important}
+header{width:100%;max-width:var(--ap-max);margin-inline:auto;min-width:0}
+main{display:block!important;width:min(100% - 36px,900px)!important;max-width:900px!important;min-width:0!important;margin-inline:auto!important}
+main>.panel{display:block!important;float:none!important;clear:both;width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:auto!important}
+.panel,.panel *{min-width:0}
+.panel .row{display:flex!important;width:100%;flex-direction:row;flex-wrap:wrap;justify-content:space-between;gap:14px}
+.panel .row>div{flex:1 1 260px;min-width:0}
+.panel .row>button{flex:0 0 auto}
+.panel form,.panel label,.panel input,.panel textarea,.panel .types,.panel .drop,.panel .actions,.panel .status{max-width:100%}
+.panel .types{grid-template-columns:repeat(3,minmax(0,1fr))}
+.panel .actions>*{max-width:100%}
+@media(max-width:600px){main{width:calc(100% - 28px)!important;padding:34px 0 52px!important}.panel .row{align-items:flex-start!important}.panel .row>div{flex-basis:100%}.panel .row>button{margin-left:auto}.panel .types{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:360px){.panel .types{grid-template-columns:1fr}.panel{padding:18px!important}}
