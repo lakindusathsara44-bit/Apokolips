@@ -100,24 +100,21 @@ class MainActivity : Activity() {
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                     val uri = request.url
-                    val scheme = uri.scheme?.lowercase() ?: return true
-
-                    // Never load cleartext HTTP inside the app or hand it off silently.
-                    // The three Apokolips services are HTTPS-only.
-                    if (scheme == "http") {
-                        Toast.makeText(this@MainActivity, "Insecure HTTP links are blocked.", Toast.LENGTH_SHORT).show()
-                        return true
+                    val allowed = urls.any { allowedUrl ->
+                        val page = Uri.parse(allowedUrl)
+                        uri.scheme.equals("https", ignoreCase = true) &&
+                            uri.host.equals(page.host, ignoreCase = true) &&
+                            uri.port == page.port &&
+                            uri.path == page.path
                     }
+                    if (allowed) return false
 
-                    // Keep only the official Apokolips HTTPS origin inside this WebView.
-                    // Other HTTPS sites and supported app links (mailto:, tel:, etc.)
-                    // are opened by Android outside the app.
-                    if (scheme != "https") return openExternal(uri)
-                    val host = uri.host.orEmpty().lowercase()
-                    // Keep the root domain and every first-party subdomain in-app.
-                    // This covers the Blog, Network Folder, Uploader, and future services.
-                    if (host == "apokolips.xyz" || host.endsWith(".apokolips.xyz")) return false
-                    return openExternal(uri)
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Only Blog, Network Folder, and Uploader pages are available in this app.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return true
                 }
             }
             webChromeClient = object : WebChromeClient() {
@@ -205,15 +202,6 @@ class MainActivity : Activity() {
             val active = i == currentTab
             button.setTextColor(if (active) WHITE else MUTED)
             button.backgroundTintList = android.content.res.ColorStateList.valueOf(if (active) BLUE else PANEL)
-        }
-    }
-
-    private fun openExternal(uri: Uri): Boolean {
-        return try {
-            startActivity(Intent(Intent.ACTION_VIEW, uri))
-            true
-        } catch (_: Exception) {
-            true
         }
     }
 
