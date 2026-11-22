@@ -56,7 +56,7 @@ import java.util.UUID
 
 class GroupChatActivity : Activity() {
     companion object {
-        private const val API_BASE = "https://br-damp-glitter-b3tcauq8-chatapi.compute.c-4.ap-southeast-1.aws.neon.tech/"
+        private const val API_BASE = "https://br-damp-glitter-b3tcauq8-chatpush.compute.c-4.ap-southeast-1.aws.neon.tech/"
         private const val AUTH_BASE = "https://ep-solitary-firefly-b3eweomh.neonauth.c-4.ap-southeast-1.aws.neon.tech/apokolips_chat/auth"
         private const val DATA_API_BASE = "https://ep-solitary-firefly-b3eweomh.apirest.c-4.ap-southeast-1.aws.neon.tech/apokolips_chat/rest/v1/"
         private const val PICK_FILE = 5101
