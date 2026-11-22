@@ -29,6 +29,7 @@ import android.webkit.WebViewClient
 import android.graphics.drawable.GradientDrawable
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import kotlin.math.cos
@@ -39,6 +40,7 @@ class MainActivity : Activity() {
     private lateinit var web: WebView
     private lateinit var subtitle: TextView
     private lateinit var tabs: LinearLayout
+    private lateinit var pageProgress: ProgressBar
     private lateinit var appRoot: FrameLayout
     private var launchOverlay: View? = null
     private var splashAnimationFinished = false
@@ -82,10 +84,18 @@ class MainActivity : Activity() {
         }
         val header = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(18), dp(20), dp(15))
+            setPadding(dp(20), dp(16), dp(20), dp(10))
             setBackgroundColor(BG)
         }
-        header.addView(TextView(this).apply {
+        val brandRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val brandStack = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        brandStack.addView(TextView(this).apply {
             text = "APOKOLIPS"
             textSize = 22f
             letterSpacing = .22f
@@ -101,8 +111,42 @@ class MainActivity : Activity() {
             typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
             setPadding(0, dp(4), 0, 0)
         }
-        header.addView(subtitle)
+        brandStack.addView(subtitle)
+        brandRow.addView(brandStack)
+        val refresh = TextView(this).apply {
+            text = "↻"
+            textSize = 24f
+            gravity = Gravity.CENTER
+            setTextColor(CYAN)
+            contentDescription = "Refresh current page"
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dp(14).toFloat()
+                setColor(Color.rgb(11, 22, 38))
+                setStroke(dp(1), Color.rgb(27, 67, 105))
+            }
+            setOnClickListener {
+                if (::web.isInitialized) {
+                    pageProgress.visibility = View.VISIBLE
+                    web.reload()
+                }
+            }
+        }
+        brandRow.addView(refresh, LinearLayout.LayoutParams(dp(46), dp(46)))
+        header.addView(brandRow)
         content.addView(header)
+
+        pageProgress = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = 100
+            progress = 0
+            isIndeterminate = false
+            progressTintList = android.content.res.ColorStateList.valueOf(CYAN)
+            progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(13, 25, 40))
+            visibility = View.VISIBLE
+        }
+        content.addView(pageProgress, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(2)
+        ))
 
         web = WebView(this).apply {
             setBackgroundColor(BG)
@@ -138,14 +182,31 @@ class MainActivity : Activity() {
                     return true
                 }
 
+                override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
+                    super.onPageStarted(view, url, favicon)
+                    pageProgress.progress = 4
+                    pageProgress.visibility = View.VISIBLE
+                }
+
                 override fun onPageFinished(view: WebView, url: String) {
                     super.onPageFinished(view, url)
                     applyNativePageTheme(view)
+                    view.animate().alpha(1f).setDuration(180L).start()
+                    pageProgress.progress = 100
+                    pageProgress.animate().alpha(0f).setDuration(220L).withEndAction {
+                        pageProgress.visibility = View.GONE
+                        pageProgress.alpha = 1f
+                    }.start()
                     firstPageLoaded = true
                     finishSplashWhenReady()
                 }
             }
             webChromeClient = object : WebChromeClient() {
+                override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                    super.onProgressChanged(view, newProgress)
+                    pageProgress.progress = newProgress
+                    if (newProgress < 100) pageProgress.visibility = View.VISIBLE
+                }
                 override fun onShowFileChooser(
                     view: WebView?,
                     callback: ValueCallback<Array<Uri>>?,
@@ -198,17 +259,31 @@ class MainActivity : Activity() {
             setPadding(dp(8), dp(7), dp(8), dp(7))
         }
         labels.indices.forEach { index ->
-            val button = TextView(this).apply {
-                text = "${icons[index]}  ${labels[index]}"
-                textSize = 10.5f
+            val item = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
-                maxLines = 1
-                setPadding(dp(5), 0, dp(5), 0)
-                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                isClickable = true
+                isFocusable = true
+                contentDescription = labels[index]
+                setPadding(dp(4), dp(5), dp(4), dp(5))
                 setOnClickListener { openTab(index) }
+                addView(TextView(this@MainActivity).apply {
+                    text = icons[index]
+                    textSize = 19f
+                    gravity = Gravity.CENTER
+                    typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                })
+                addView(TextView(this@MainActivity).apply {
+                    text = labels[index]
+                    textSize = 9.5f
+                    gravity = Gravity.CENTER
+                    maxLines = 1
+                    typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                    setPadding(0, dp(2), 0, 0)
+                })
             }
-            tabs.addView(button, LinearLayout.LayoutParams(0, dp(52), 1f).apply {
-                setMargins(dp(3), 0, dp(3), 0)
+            tabs.addView(item, LinearLayout.LayoutParams(0, dp(58), 1f).apply {
+                setMargins(dp(4), 0, dp(4), 0)
             })
         }
         content.addView(tabs)
@@ -525,25 +600,35 @@ class MainActivity : Activity() {
     private fun openTab(index: Int) {
         if (index !in urls.indices) return
         currentTab = index
-        subtitle.text = "APOKOLIPS / ${labels[index].uppercase()}"
+        subtitle.text = "IDEAS BECOME SOMETHING REAL.  /  ${labels[index].uppercase()}"
         styleTabs()
-        if (web.url != urls[index]) web.loadUrl(urls[index])
+        if (web.url != urls[index]) {
+            pageProgress.alpha = 1f
+            pageProgress.progress = 0
+            pageProgress.visibility = View.VISIBLE
+            web.alpha = 0.96f
+            web.loadUrl(urls[index])
+        } else {
+            web.animate().alpha(1f).setDuration(160L).start()
+        }
     }
 
     private fun styleTabs() {
         if (!::tabs.isInitialized) return
         for (i in 0 until tabs.childCount) {
-            val button = tabs.getChildAt(i) as? TextView ?: continue
+            val item = tabs.getChildAt(i) as? LinearLayout ?: continue
             val active = i == currentTab
-            button.setTextColor(if (active) Color.WHITE else MUTED)
-            button.background = GradientDrawable().apply {
+            item.background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
-                cornerRadius = dp(16).toFloat()
-                setColor(if (active) Color.rgb(17, 42, 72) else Color.TRANSPARENT)
-                if (active) setStroke(dp(1), Color.rgb(32, 112, 190))
+                cornerRadius = dp(15).toFloat()
+                setColor(if (active) Color.rgb(14, 39, 67) else Color.TRANSPARENT)
+                if (active) setStroke(dp(1), Color.rgb(29, 91, 145))
             }
-            if (active) button.setShadowLayer(dp(10).toFloat(), 0f, 0f, Color.argb(45, 35, 145, 255))
-            else button.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
+            val icon = item.getChildAt(0) as? TextView
+            val label = item.getChildAt(1) as? TextView
+            icon?.setTextColor(if (active) CYAN else MUTED)
+            label?.setTextColor(if (active) WHITE else MUTED)
+            item.alpha = if (active) 1f else .78f
         }
     }
 
