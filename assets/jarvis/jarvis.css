@@ -1,4 +1,4 @@
-/* Apokolips J.A.R.V.I.S — isolated assistant overlay */
+/* Apokolips APOLONIA AI — isolated assistant overlay */
 #apo-jarvis-root{--j-bg:#080c14;--j-panel:#0d1420;--j-line:rgba(142,190,255,.2);--j-blue:#78b5ff;--j-cyan:#8bd8ed;--j-text:#edf5ff;--j-muted:#91a0b4;font-family:Manrope,system-ui,sans-serif;position:relative;z-index:9998}
 #apo-jarvis-launch{position:fixed;right:22px;bottom:22px;z-index:9998;border:1px solid rgba(120,181,255,.55);border-radius:999px;padding:12px 17px;background:rgba(8,14,24,.94);color:var(--j-text);box-shadow:0 8px 35px rgba(0,0,0,.4),0 0 22px rgba(74,143,255,.16);display:flex;align-items:center;gap:10px;font:700 12px Manrope,system-ui,sans-serif;letter-spacing:1px;cursor:pointer;backdrop-filter:blur(14px);transition:transform .2s,border-color .2s}
 #apo-jarvis-launch:hover{transform:translateY(-3px);border-color:var(--j-cyan)}
