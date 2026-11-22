@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -25,6 +26,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -72,6 +75,8 @@ class GroupChatActivity : Activity() {
     private var nickname: String = ""
     private var joined = false
     private var lastRenderSignature = ""
+    private var profileAvatarImage: ImageView? = null
+    private var profileAvatarFallback: TextView? = null
     private var recorder: MediaRecorder? = null
     private var recordingFile: File? = null
     private var recordingStartedAt = 0L
@@ -247,14 +252,24 @@ class GroupChatActivity : Activity() {
             setPadding(dp(12), dp(9), dp(12), dp(9))
             background = rounded(PANEL, dp(15), Color.rgb(17, 37, 57))
         }
-        profileRow.addView(TextView(this).apply {
+        val avatarBox = FrameLayout(this)
+        profileAvatarFallback = TextView(this).apply {
             text = nickname.take(1).uppercase()
             textSize = 17f
             typeface = Typeface.DEFAULT_BOLD
             gravity = Gravity.CENTER
             setTextColor(CYAN)
             background = rounded(Color.rgb(8, 30, 51), dp(24), Color.rgb(24, 85, 135))
-        }, LinearLayout.LayoutParams(dp(38), dp(38)))
+        }
+        avatarBox.addView(profileAvatarFallback, FrameLayout.LayoutParams(dp(38), dp(38)))
+        profileAvatarImage = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = rounded(Color.rgb(8, 30, 51), dp(24), Color.rgb(24, 85, 135))
+            clipToOutline = true
+            visibility = View.GONE
+        }
+        avatarBox.addView(profileAvatarImage, FrameLayout.LayoutParams(dp(38), dp(38)))
+        profileRow.addView(avatarBox, LinearLayout.LayoutParams(dp(38), dp(38)))
         val profileInfo = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(10), 0, 0, 0)
@@ -465,12 +480,28 @@ class GroupChatActivity : Activity() {
                 if (mine) Color.rgb(21, 78, 121) else Color.rgb(27, 38, 51)
             )
         }
-        card.addView(TextView(this).apply {
+        val authorRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val messageAvatarUrl = message.optString("avatarUrl")
+        if (messageAvatarUrl.isNotBlank() && messageAvatarUrl != "null") {
+            val avatar = ImageView(this).apply {
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                background = rounded(Color.rgb(8, 30, 51), dp(20), Color.rgb(24, 85, 135))
+                clipToOutline = true
+            }
+            authorRow.addView(avatar, LinearLayout.LayoutParams(dp(28), dp(28)).apply { rightMargin = dp(8) })
+            loadAvatar(messageAvatarUrl, avatar)
+            if (mine) showProfileAvatar(messageAvatarUrl)
+        }
+        authorRow.addView(TextView(this).apply {
             text = message.optString("author_nickname", "Guest")
             textSize = 12f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(if (mine) CYAN else Color.rgb(155, 190, 220))
-        })
+        }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        card.addView(authorRow)
         val body = message.optString("body")
         if (body.isNotBlank() && body != "null") {
             card.addView(TextView(this).apply {
@@ -510,6 +541,26 @@ class GroupChatActivity : Activity() {
             setPadding(0, dp(5), 0, 0)
         })
         return card
+    }
+
+    private fun showProfileAvatar(url: String) {
+        val image = profileAvatarImage ?: return
+        if (image.tag == url) return
+        image.tag = url
+        image.visibility = View.VISIBLE
+        profileAvatarFallback?.visibility = View.GONE
+        loadAvatar(url, image)
+    }
+
+    private fun loadAvatar(url: String, image: ImageView) {
+        Thread {
+            val bitmap = try {
+                URL(url).openStream().use { BitmapFactory.decodeStream(it) }
+            } catch (_: Exception) { null }
+            if (bitmap != null) runOnUiThread {
+                if (image.tag == null || image.tag == url) image.setImageBitmap(bitmap)
+            }
+        }.start()
     }
 
     private fun playVoice(url: String, button: Button) {
