@@ -96,7 +96,7 @@ class GroupChatActivity : Activity() {
         super.onCreate(savedInstanceState)
         window.statusBarColor = BG
         window.navigationBarColor = BG
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
+        window.decorView.systemUiVisibility = 0
         identityStore = GuestIdentityStore(this)
         root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
