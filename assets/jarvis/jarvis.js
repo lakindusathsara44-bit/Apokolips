@@ -165,7 +165,7 @@
             hidePanel(true);
             continue;
           }
-          const wake = lower.match(/\b(?:hey\s+)?jarvis\b/);
+          const wake = lower.match(/\b(?:hey\s+)?(?:apolonia(?:\s+ai)?|jarvis)\b/);
           if (wake) {
             open();
             const command = lower.slice(wake.index + wake[0].length).replace(/^[\s,]+/, '').trim();
