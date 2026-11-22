@@ -311,6 +311,14 @@ class MainActivity : Activity() {
             canvas.drawOval(RectF(cx - core * 1.95f, cy - core * 1.12f, cx + core * 1.95f, cy + core * 1.12f), paint)
             canvas.restore()
 
+            // Four small rotating gears lock into the orbital assembly.
+            for (i in 0..3) {
+                val angle = Math.toRadians((i * 90f + 45f + 300f * p).toDouble())
+                val gearX = cx + cos(angle).toFloat() * core * 1.55f
+                val gearY = cy + sin(angle).toFloat() * core * 1.55f
+                drawGear(canvas, gearX, gearY, core * .19f, -420f * p + i * 22f)
+            }
+
             val glowAlpha = (45 + 150 * p).toInt().coerceIn(0, 195)
             paint.style = Paint.Style.FILL
             paint.color = Color.argb(glowAlpha, 20, 135, 230)
@@ -357,6 +365,35 @@ class MainActivity : Activity() {
             paint.alpha = (220 * p).toInt()
             canvas.drawText("IDEAS BECOME SOMETHING REAL.", cx, cy + core * 3.55f, paint)
             paint.alpha = 255
+        }
+
+        private fun drawGear(canvas: Canvas, x: Float, y: Float, radius: Float, rotation: Float) {
+            canvas.save()
+            canvas.rotate(rotation, x, y)
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = dp(2).toFloat()
+            paint.color = Color.rgb(95, 125, 153)
+            canvas.drawCircle(x, y, radius * .72f, paint)
+            for (tooth in 0 until 8) {
+                val angle = Math.toRadians(tooth * 45.0)
+                val inner = radius * .72f
+                val outer = radius
+                canvas.drawLine(
+                    x + cos(angle).toFloat() * inner,
+                    y + sin(angle).toFloat() * inner,
+                    x + cos(angle).toFloat() * outer,
+                    y + sin(angle).toFloat() * outer,
+                    paint
+                )
+            }
+            paint.style = Paint.Style.FILL
+            paint.color = Color.rgb(22, 36, 52)
+            canvas.drawCircle(x, y, radius * .34f, paint)
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = dp(1).toFloat()
+            paint.color = CYAN
+            canvas.drawCircle(x, y, radius * .34f, paint)
+            canvas.restore()
         }
 
         private fun drawMechanicalArm(canvas: Canvas, start: Float, length: Float, core: Float) {
