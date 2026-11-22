@@ -620,6 +620,7 @@ class MainActivity : Activity() {
             } catch (_: Exception) {
                 chatLaunchPending = false
                 currentTab = lastWebTab
+                subtitle.text = "IDEAS BECOME SOMETHING REAL.  /  ${labels[lastWebTab].uppercase()}"
                 styleTabs()
                 Toast.makeText(this, "Group Chat could not be opened.", Toast.LENGTH_SHORT).show()
             }
