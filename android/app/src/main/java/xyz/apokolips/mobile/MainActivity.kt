@@ -26,7 +26,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.Button
+import android.graphics.drawable.GradientDrawable
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -82,21 +82,23 @@ class MainActivity : Activity() {
         }
         val header = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(14), dp(20), dp(12))
+            setPadding(dp(20), dp(18), dp(20), dp(15))
             setBackgroundColor(BG)
         }
         header.addView(TextView(this).apply {
             text = "APOKOLIPS"
-            textSize = 18f
-            letterSpacing = .18f
-            setTextColor(WHITE)
-            typeface = Typeface.DEFAULT_BOLD
+            textSize = 22f
+            letterSpacing = .22f
+            setTextColor(CYAN)
+            typeface = Typeface.create("sans-serif-black", Typeface.NORMAL)
+            setShadowLayer(dp(12).toFloat(), 0f, 0f, Color.argb(85, 55, 190, 255))
         })
         subtitle = TextView(this).apply {
             text = "IDEAS BECOME SOMETHING REAL."
             textSize = 9f
-            letterSpacing = .13f
+            letterSpacing = .18f
             setTextColor(MUTED)
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
             setPadding(0, dp(4), 0, 0)
         }
         header.addView(subtitle)
@@ -138,6 +140,7 @@ class MainActivity : Activity() {
 
                 override fun onPageFinished(view: WebView, url: String) {
                     super.onPageFinished(view, url)
+                    applyNativePageTheme(view)
                     firstPageLoaded = true
                     finishSplashWhenReady()
                 }
@@ -195,12 +198,13 @@ class MainActivity : Activity() {
             setPadding(dp(8), dp(7), dp(8), dp(7))
         }
         labels.indices.forEach { index ->
-            val button = Button(this).apply {
+            val button = TextView(this).apply {
                 text = "${icons[index]}  ${labels[index]}"
-                textSize = 10f
-                isAllCaps = false
-                minHeight = dp(48)
-                setPadding(dp(3), 0, dp(3), 0)
+                textSize = 10.5f
+                gravity = Gravity.CENTER
+                maxLines = 1
+                setPadding(dp(5), 0, dp(5), 0)
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
                 setOnClickListener { openTab(index) }
             }
             tabs.addView(button, LinearLayout.LayoutParams(0, dp(52), 1f).apply {
@@ -455,6 +459,69 @@ class MainActivity : Activity() {
         }
     }
 
+    /**
+     * Applies the Apokolips app visual language to approved website screens.
+     * Presentation-only: no website source files or page data are modified.
+     */
+    private fun applyNativePageTheme(view: WebView) {
+        val css = """
+            :root {
+              color-scheme: dark !important;
+              --apo-line: rgba(76, 157, 235, .22);
+            }
+            html, body {
+              background: #070a10 !important;
+              color: #edf5ff !important;
+              color-scheme: dark !important;
+              font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif !important;
+              -webkit-font-smoothing: antialiased !important;
+            }
+            body {
+              min-height: 100vh !important;
+              background-image: radial-gradient(ellipse at 50% -18%, rgba(22,139,255,.13), transparent 48%), linear-gradient(180deg, #080d16 0%, #070a10 58%, #06080d 100%) !important;
+            }
+            h1, h2, h3, h4, strong, b { color: #f4f8ff !important; }
+            p, li, label, small { color: #c3d0e0; }
+            a { color: #55baff !important; text-decoration-color: rgba(85,186,255,.45) !important; }
+            a:hover { color: #9bdcff !important; }
+            header, nav, footer, aside, .card, .post, .blog-post, .folder, .file-card, .upload-card, article, section, main, .container, .content, .panel, .box, form, fieldset, table, pre, blockquote {
+              border-color: var(--apo-line) !important;
+            }
+            .card, .post, .blog-post, .folder, .file-card, .upload-card, article, section, .panel, .box, fieldset, form {
+              background-color: rgba(13,20,33,.88) !important;
+              border-radius: 18px !important;
+              box-shadow: 0 12px 34px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.025) !important;
+            }
+            button, input[type=button], input[type=submit], .btn, [role=button] {
+              background: linear-gradient(135deg, #147ce0, #0754a7) !important;
+              color: #fff !important;
+              border: 1px solid rgba(91,180,255,.42) !important;
+              border-radius: 12px !important;
+              box-shadow: 0 5px 18px rgba(0,105,210,.18) !important;
+              transition: transform .18s ease, filter .18s ease, box-shadow .18s ease !important;
+            }
+            button:active, input[type=button]:active, input[type=submit]:active, .btn:active { transform: scale(.975) !important; filter: brightness(1.12) !important; }
+            input, textarea, select {
+              background: #080f1a !important;
+              color: #edf5ff !important;
+              border: 1px solid rgba(92,151,208,.32) !important;
+              border-radius: 11px !important;
+              outline: none !important;
+            }
+            input:focus, textarea:focus, select:focus { border-color: #168bff !important; box-shadow: 0 0 0 3px rgba(22,139,255,.13) !important; }
+            table { background: #0d1421 !important; color: #e8f2ff !important; }
+            th { background: #12243a !important; color: #fff !important; }
+            td, th { border-color: rgba(76,157,235,.18) !important; }
+            img, video, iframe { max-width: 100% !important; }
+            ::selection { background: rgba(22,139,255,.35) !important; color: #fff !important; }
+            ::-webkit-scrollbar { width: 6px; height: 6px; }
+            ::-webkit-scrollbar-thumb { background: #1b5b91; border-radius: 20px; }
+            ::-webkit-scrollbar-track { background: #080d15; }
+        """.trimIndent()
+        val script = "(function(){var id='apokolips-native-skin';var s=document.getElementById(id);if(!s){s=document.createElement('style');s.id=id;document.head.appendChild(s);}s.textContent=" + org.json.JSONObject.quote(css) + ";})();"
+        view.evaluateJavascript(script, null)
+    }
+
     private fun openTab(index: Int) {
         if (index !in urls.indices) return
         currentTab = index
@@ -466,10 +533,17 @@ class MainActivity : Activity() {
     private fun styleTabs() {
         if (!::tabs.isInitialized) return
         for (i in 0 until tabs.childCount) {
-            val button = tabs.getChildAt(i) as? Button ?: continue
+            val button = tabs.getChildAt(i) as? TextView ?: continue
             val active = i == currentTab
-            button.setTextColor(if (active) WHITE else MUTED)
-            button.backgroundTintList = android.content.res.ColorStateList.valueOf(if (active) BLUE else PANEL)
+            button.setTextColor(if (active) Color.WHITE else MUTED)
+            button.background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dp(16).toFloat()
+                setColor(if (active) Color.rgb(17, 42, 72) else Color.TRANSPARENT)
+                if (active) setStroke(dp(1), Color.rgb(32, 112, 190))
+            }
+            if (active) button.setShadowLayer(dp(10).toFloat(), 0f, 0f, Color.argb(45, 35, 145, 255))
+            else button.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
         }
     }
 
