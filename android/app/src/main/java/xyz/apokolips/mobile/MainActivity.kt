@@ -100,8 +100,19 @@ class MainActivity : Activity() {
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                     val uri = request.url
-                    val scheme = uri.scheme ?: return true
-                    if (scheme != "https" && scheme != "http") return openExternal(uri)
+                    val scheme = uri.scheme?.lowercase() ?: return true
+
+                    // Never load cleartext HTTP inside the app or hand it off silently.
+                    // The three Apokolips services are HTTPS-only.
+                    if (scheme == "http") {
+                        Toast.makeText(this@MainActivity, "Insecure HTTP links are blocked.", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+
+                    // Keep only the official Apokolips HTTPS origin inside this WebView.
+                    // Other HTTPS sites and supported app links (mailto:, tel:, etc.)
+                    // are opened by Android outside the app.
+                    if (scheme != "https") return openExternal(uri)
                     val host = uri.host.orEmpty().lowercase()
                     if (host == "apokolips.xyz" || host == "www.apokolips.xyz") return false
                     return openExternal(uri)
