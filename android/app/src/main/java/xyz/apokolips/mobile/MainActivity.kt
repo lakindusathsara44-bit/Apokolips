@@ -38,8 +38,8 @@ class MainActivity : Activity() {
     private var chooser: ValueCallback<Array<Uri>>? = null
     private val uiUpdateHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private val uiUpdateExecutor = Executors.newSingleThreadExecutor()
-    @Volatile private var remoteUiVersion = "1"
-    @Volatile private var remoteUiStylesheet = "https://www.apokolips.xyz/app-ui.css?v=1"
+    @Volatile private var remoteUiVersion = "1.0.0"
+    @Volatile private var remoteUiStylesheet = "https://www.apokolips.xyz/app-ui.css?v=1.0.0"
 
     private val uiUpdatePoll = object : Runnable {
         override fun run() {
@@ -70,6 +70,9 @@ class MainActivity : Activity() {
         super.onCreate(state)
         window.statusBarColor = BG
         window.navigationBarColor = BG
+        remoteUiVersion = getSharedPreferences("apokolips_remote_ui", MODE_PRIVATE)
+            .getString("version", "1.0.0") ?: "1.0.0"
+        remoteUiStylesheet = "https://www.apokolips.xyz/app-ui.css?v=$remoteUiVersion"
         createUi()
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(web, true)
