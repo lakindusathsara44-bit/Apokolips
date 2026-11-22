@@ -9,6 +9,26 @@ Android companion app for:
 ## Architecture
 A Kotlin Android shell with WebView reuses the existing Apokolips pages and server-side services. It adds native four-item navigation, Android file selection for upload forms, Download Manager support, external-link handling, and a native single-room public Group Chat. No website pages or backend services are copied or changed.
 
+## Remote UI updates
+
+The Android WebView loads the current website pages from Apokolips. It also checks
+`https://www.apokolips.xyz/app-ui.json` when the app resumes and every five minutes
+while it is active. The manifest selects a versioned CSS file only; the app never
+downloads or executes remote JavaScript. When the stylesheet version changes, the
+currently open WebView page reloads and receives the new appearance. If the device is
+offline, the last successfully loaded page and stylesheet remain available according
+to WebView caching.
+
+This live-update layer applies to WebView-hosted pages (currently Blog, Network Folder,
+and the uploader). Native Android screens, including Group Chat, notification handling,
+permissions, and native navigation, still require a normal Android app release when
+their layout or code changes. The remote stylesheet cannot replace native code.
+
+To publish a WebView appearance update, edit `app-ui.css` and increment the
+`version` value in `app-ui.json`. Keep `schemaVersion` at 1 unless the Android
+manifest parser is deliberately upgraded. Only the fixed same-origin `/app-ui.css`
+stylesheet path is accepted.
+
 ## Build
 Requires JDK 17, Android SDK 35, and Gradle 8.9+.
 Run from this directory: `gradle --no-daemon :app:assembleDebug`
