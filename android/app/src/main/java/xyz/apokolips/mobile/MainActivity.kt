@@ -62,7 +62,17 @@ class MainActivity : Activity() {
         createUi()
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(web, true)
-        openTab(state?.getInt("tab") ?: 0)
+        val launchTab = if (intent.getBooleanExtra("open_group_chat", false)) 0 else (state?.getInt("tab") ?: 0)
+        openTab(launchTab)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.getBooleanExtra("open_group_chat", false)) {
+            openTab(0)
+            intent.removeExtra("open_group_chat")
+        }
     }
 
     override fun onResume() {
@@ -369,7 +379,12 @@ class MainActivity : Activity() {
             }
             chatLaunchPending = true
             try {
-                startActivity(Intent(this, GroupChatActivity::class.java))
+                val chatIntent = Intent(this, GroupChatActivity::class.java)
+                intent.getStringExtra("notification_message_id")?.let { messageId ->
+                    chatIntent.putExtra("notification_message_id", messageId)
+                    intent.removeExtra("notification_message_id")
+                }
+                startActivity(chatIntent)
             } catch (_: Exception) {
                 chatLaunchPending = false
                 currentTab = lastWebTab
