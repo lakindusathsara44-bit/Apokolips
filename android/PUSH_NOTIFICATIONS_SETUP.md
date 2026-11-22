@@ -34,7 +34,8 @@ The function also requires these branch-scoped values:
 ## Delivery behavior
 
 - The native app registers one FCM token per installation against the existing guest identity.
-- Text messages and completed media/voice attachments notify other registered installations, never the sender's own installation.
+- Text messages and completed media/voice attachments sent through the updated APK notify other registered installations, never the sender's own installation.
+- Everyone who sends messages should update to the new APK. Older APKs still calling the original `chatapi` endpoint do not pass through the push dispatcher.
 - Text previews are limited to 160 characters. Media/voice notifications use generic labels; filenames are not exposed.
 - Tapping a notification opens the native Group Chat.
 - The app suppresses push banners while the Group Chat itself is visible; its existing foreground message refresh remains active.
