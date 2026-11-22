@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   if (window.__APO_APOLONIA_LOADED__) return;
-  window.__APO_JARVIS_LOADED__ = true;
+  window.__APO_APOLONIA_LOADED__ = true;
 
   const API_URL = window.APOKOLIPS_APOLONIA_API || window.APOKOLIPS_JARVIS_API || '';
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -24,7 +24,7 @@
   };
 
   function init() {
-    if (document.getElementById('apo-apolonia-root')) return;
+    if (document.getElementById('apo-jarvis-root')) return;
     const root = make('div', { id: 'apo-jarvis-root' });
     const launch = make('button', { id: 'apo-jarvis-launch', type: 'button', 'aria-label': 'Open APOLONIA AI assistant', 'aria-expanded': 'false' });
     const orb = make('span', { className: 'j-orb', 'aria-hidden': 'true' });
