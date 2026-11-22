@@ -4,14 +4,13 @@ import android.animation.ValueAnimator
 import android.app.Activity
 import android.app.DownloadManager
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -263,8 +262,8 @@ class MainActivity : Activity() {
             }
 
         private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        private val iconBitmap: Bitmap? = try {
-            BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+        private val iconDrawable: Drawable? = try {
+            getDrawable(R.drawable.ic_apokolips)?.mutate()
         } catch (_: Exception) { null }
 
         override fun onDraw(canvas: Canvas) {
@@ -333,13 +332,19 @@ class MainActivity : Activity() {
             if (p > .32f) {
                 val iconAlpha = (((p - .32f) / .68f) * 255).toInt().coerceIn(0, 255)
                 val iconRadius = core * .68f
-                if (iconBitmap != null) {
+                if (iconDrawable != null) {
                     val save = canvas.save()
                     val path = Path().apply { addCircle(cx, cy, iconRadius, Path.Direction.CW) }
                     canvas.clipPath(path)
-                    paint.alpha = iconAlpha
-                    canvas.drawBitmap(iconBitmap, null, RectF(cx - iconRadius, cy - iconRadius, cx + iconRadius, cy + iconRadius), paint)
-                    paint.alpha = 255
+                    iconDrawable.setBounds(
+                        (cx - iconRadius).toInt(),
+                        (cy - iconRadius).toInt(),
+                        (cx + iconRadius).toInt(),
+                        (cy + iconRadius).toInt()
+                    )
+                    iconDrawable.alpha = iconAlpha
+                    iconDrawable.draw(canvas)
+                    iconDrawable.alpha = 255
                     canvas.restoreToCount(save)
                 } else {
                     paint.style = Paint.Style.FILL
