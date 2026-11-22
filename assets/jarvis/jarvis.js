@@ -210,10 +210,11 @@
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && panel.classList.contains('j-open')) hidePanel();
     });
-    if (new URLSearchParams(location.search).get('assistant') === 'jarvis') {
+    const assistantRoute = new URLSearchParams(location.search).get('assistant');
+    if (assistantRoute === 'apolonia' || assistantRoute === 'jarvis') {
       open();
-      // Keep the requested /jarvis/ URL while rendering the main homepage.
-      history.replaceState({}, '', '/jarvis/');
+      // Keep the new canonical route while rendering the main homepage.
+      history.replaceState({}, '', '/apolonia/');
     }
   }
 
