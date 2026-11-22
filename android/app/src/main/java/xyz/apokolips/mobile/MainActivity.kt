@@ -114,7 +114,9 @@ class MainActivity : Activity() {
                     // are opened by Android outside the app.
                     if (scheme != "https") return openExternal(uri)
                     val host = uri.host.orEmpty().lowercase()
-                    if (host == "apokolips.xyz" || host == "www.apokolips.xyz") return false
+                    // Keep the root domain and every first-party subdomain in-app.
+                    // This covers the Blog, Network Folder, Uploader, and future services.
+                    if (host == "apokolips.xyz" || host.endsWith(".apokolips.xyz")) return false
                     return openExternal(uri)
                 }
             }
