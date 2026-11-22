@@ -109,6 +109,7 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path TO 'public', 'pg_temp'
 AS $function$
+#variable_conflict use_column
 DECLARE
   v_message public.chat_messages%ROWTYPE;
   v_media_kind text;
