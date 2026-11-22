@@ -26,6 +26,11 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.concurrent.Executors
+import org.json.JSONObject
+
 class MainActivity : Activity() {
     private lateinit var web: WebView
     private lateinit var subtitle: TextView
