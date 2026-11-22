@@ -52,11 +52,11 @@ class GroupChatActivity : Activity() {
         private const val RECORD_AUDIO_REQUEST = 5102
         private const val KEY_ALIAS = "apokolips_group_chat_identity_v1"
         private const val PREFS = "apokolips_group_chat_identity"
-        private const val BG = Color.rgb(5, 6, 8)
-        private const val PANEL = Color.rgb(10, 13, 18)
-        private const val CYAN = Color.rgb(55, 190, 255)
-        private const val WHITE = Color.rgb(239, 244, 250)
-        private const val MUTED = Color.rgb(142, 154, 171)
+        private val BG = Color.rgb(5, 6, 8)
+        private val PANEL = Color.rgb(10, 13, 18)
+        private val CYAN = Color.rgb(55, 190, 255)
+        private val WHITE = Color.rgb(239, 244, 250)
+        private val MUTED = Color.rgb(142, 154, 171)
     }
 
     private val worker = Executors.newSingleThreadExecutor()
@@ -308,7 +308,7 @@ class GroupChatActivity : Activity() {
             overScrollMode = View.OVER_SCROLL_NEVER
         }
         messagesColumn = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        messagesScroll.addView(messagesColumn, ScrollView.LayoutParams(
+        messagesScroll.addView(messagesColumn, FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ))
         root.addView(messagesScroll, LinearLayout.LayoutParams(
