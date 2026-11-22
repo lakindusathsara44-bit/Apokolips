@@ -1,14 +1,14 @@
-/* Apokolips J.A.R.V.I.S — progressive enhancement; no desktop access from browser */
+/* Apokolips APOLONIA AI — progressive enhancement; no desktop access from browser */
 (() => {
   'use strict';
   if (window.__APO_JARVIS_LOADED__) return;
   window.__APO_JARVIS_LOADED__ = true;
 
-  const API_URL = window.APOKOLIPS_JARVIS_API || '';
+  const API_URL = window.APOKOLIPS_APOLONIA_API || window.APOKOLIPS_JARVIS_API || '';
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   let recognition = null;
   let listening = false;
-  let sessionId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'apo-' + Date.now();
+  let sessionId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'apolonia-' + Date.now();
   let lastTranscript = '';
 
   const make = (tag, attrs = {}, text = '') => {
@@ -24,20 +24,20 @@
   };
 
   function init() {
-    if (document.getElementById('apo-jarvis-root')) return;
-    const root = make('div', { id: 'apo-jarvis-root' });
-    const launch = make('button', { id: 'apo-jarvis-launch', type: 'button', 'aria-label': 'Open J.A.R.V.I.S assistant', 'aria-expanded': 'false' });
+    if (document.getElementById('apo-apolonia-root')) return;
+    const root = make('div', { id: 'apo-apolonia-root' });
+    const launch = make('button', { id: 'apo-apolonia-launch', type: 'button', 'aria-label': 'Open APOLONIA AI assistant', 'aria-expanded': 'false' });
     const orb = make('span', { className: 'j-orb', 'aria-hidden': 'true' });
-    launch.append(orb, document.createTextNode('J.A.R.V.I.S'));
+    launch.append(orb, document.createTextNode('APOLONIA AI'));
 
-    const panel = make('section', { id: 'apo-jarvis-panel', role: 'dialog', 'aria-label': 'J.A.R.V.I.S assistant', 'aria-modal': 'false' });
+    const panel = make('section', { id: 'apo-apolonia-panel', role: 'dialog', 'aria-label': 'APOLONIA AI assistant', 'aria-modal': 'false' });
     const head = make('header', { className: 'j-head' });
     const brand = make('div', { className: 'j-brand' });
     brand.append(make('span', { className: 'j-brand-orb', 'aria-hidden': 'true' }, '◈'));
     const brandText = make('div');
-    brandText.append(make('strong', {}, 'J.A.R.V.I.S'), make('small', {}, 'APOKOLIPS INTELLIGENCE'));
+    brandText.append(make('strong', {}, 'APOLONIA AI'), make('small', {}, 'APOKOLIPS INTELLIGENCE'));
     brand.append(brandText);
-    const close = make('button', { className: 'j-close', type: 'button', 'aria-label': 'Hide J.A.R.V.I.S' }, '×');
+    const close = make('button', { className: 'j-close', type: 'button', 'aria-label': 'Hide APOLONIA AI' }, '×');
     head.append(brand, close);
 
     const status = make('div', { className: 'j-status' });
@@ -47,11 +47,11 @@
 
     const body = make('div', { className: 'j-body', 'aria-live': 'polite' });
     const welcome = make('div', { className: 'j-welcome' });
-    welcome.append(make('h2', {}, 'At your service.'), make('p', {}, 'I am ready when you are. Start voice listening and say “Hey Jarvis”, or type a message below.'));
+    welcome.append(make('h2', {}, 'At your service.'), make('p', {}, 'I am ready when you are. Start voice listening and say “Hey Apolonia”, or type a message below.'));
     body.append(welcome);
 
     const compose = make('form', { className: 'j-compose' });
-    const input = make('input', { type: 'text', placeholder: 'Message J.A.R.V.I.S…', autocomplete: 'off', 'aria-label': 'Message J.A.R.V.I.S' });
+    const input = make('input', { type: 'text', placeholder: 'Message APOLONIA AI…', autocomplete: 'off', 'aria-label': 'Message APOLONIA AI' });
     const send = make('button', { type: 'submit' }, 'SEND');
     compose.append(input, send);
 
@@ -88,7 +88,7 @@
       if (window.speechSynthesis) window.speechSynthesis.cancel();
       panel.classList.remove('j-open');
       launch.setAttribute('aria-expanded', 'false');
-      if (keepWakeListening && listening) setStatus('HIDDEN · SAY “HEY JARVIS” TO RETURN', true);
+      if (keepWakeListening && listening) setStatus('HIDDEN · SAY “HEY APOLONIA” TO RETURN', true);
     }
     function addMessage(message, who) {
       const item = make('div', { className: 'j-message ' + (who === 'user' ? 'j-user' : 'j-ai') }, message);
@@ -165,7 +165,7 @@
             hidePanel(true);
             continue;
           }
-          const wake = lower.match(/\b(?:hey\s+)?jarvis\b/);
+          const wake = lower.match(/\b(?:hey\s+)?apolonia\b/);
           if (wake) {
             open();
             const command = lower.slice(wake.index + wake[0].length).replace(/^[\s,]+/, '').trim();
@@ -210,10 +210,10 @@
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && panel.classList.contains('j-open')) hidePanel();
     });
-    if (new URLSearchParams(location.search).get('assistant') === 'jarvis') {
+    if (new URLSearchParams(location.search).get('assistant') === 'apolonia') {
       open();
-      // Keep the requested /jarvis/ URL while rendering the main homepage.
-      history.replaceState({}, '', '/jarvis/');
+      // Keep the requested /apolonia/ URL while rendering the main homepage.
+      history.replaceState({}, '', '/apolonia/');
     }
   }
 
