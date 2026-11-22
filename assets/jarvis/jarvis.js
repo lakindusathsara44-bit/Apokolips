@@ -1,10 +1,10 @@
 /* Apokolips APOLONIA AI — progressive enhancement; no desktop access from browser */
 (() => {
   'use strict';
-  if (window.__APO_JARVIS_LOADED__) return;
-  window.__APO_JARVIS_LOADED__ = true;
+  if (window.__APO_APOLONIA_LOADED__) return;
+  window.__APO_APOLONIA_LOADED__ = true;
 
-  const API_URL = window.APOKOLIPS_APOLONIA_API || window.APOKOLIPS_JARVIS_API || '';
+  const API_URL = window.APOKOLIPS_APOLONIA_API || window.APOKOLIPS_APOLONIA_API || '';
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   let recognition = null;
   let listening = false;
@@ -210,7 +210,8 @@
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && panel.classList.contains('j-open')) hidePanel();
     });
-    if (new URLSearchParams(location.search).(get('assistant') === 'jarvis' || new URLSearchParams(location.search).get('assistant') === 'apolonia')) {
+    const assistantRoute = new URLSearchParams(location.search).get('assistant');
+    if (assistantRoute === 'jarvis' || assistantRoute === 'apolonia') {
       open();
       // Keep the requested /jarvis/ URL while rendering the main homepage.
       history.replaceState({}, '', '/jarvis/');
