@@ -3,6 +3,8 @@ package xyz.apokolips.mobile
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -48,14 +50,21 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import org.json.JSONArray
 import org.json.JSONObject
+import com.google.firebase.FirebaseApp
+import com.google.firebase.messaging.FirebaseMessaging
+import java.util.UUID
 
 class GroupChatActivity : Activity() {
     companion object {
-        private const val API_BASE = "https://br-damp-glitter-b3tcauq8-chatapi.compute.c-4.ap-southeast-1.aws.neon.tech/"
+        private const val API_BASE = "https://br-damp-glitter-b3tcauq8-chatpush.compute.c-4.ap-southeast-1.aws.neon.tech/"
         private const val AUTH_BASE = "https://ep-solitary-firefly-b3eweomh.neonauth.c-4.ap-southeast-1.aws.neon.tech/apokolips_chat/auth"
         private const val DATA_API_BASE = "https://ep-solitary-firefly-b3eweomh.apirest.c-4.ap-southeast-1.aws.neon.tech/apokolips_chat/rest/v1/"
         private const val PICK_FILE = 5101
         private const val RECORD_AUDIO_REQUEST = 5102
+        private const val NOTIFICATION_PERMISSION_REQUEST = 5103
+        private const val PUSH_PREFS = "apokolips_push_prefs"
+        private const val PUSH_DEVICE_ID_KEY = "device_id"
+        @Volatile var isVisible = false
         private const val KEY_ALIAS = "apokolips_group_chat_identity_v1"
         private const val PREFS = "apokolips_group_chat_identity"
         private val BG = Color.rgb(5, 6, 8)
@@ -116,10 +125,15 @@ class GroupChatActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        if (joined) startPolling()
+        isVisible = true
+        if (joined) {
+            startPolling()
+            syncPushRegistration()
+        }
     }
 
     override fun onPause() {
+        isVisible = false
         mainHandler.removeCallbacks(pollTask)
         super.onPause()
     }
@@ -318,6 +332,7 @@ class GroupChatActivity : Activity() {
         ).apply { topMargin = dp(7) })
         loadMessages()
         startPolling()
+        requestPushPermissionIfNeeded()
     }
 
     private fun showProfileScreen() {
@@ -1118,6 +1133,83 @@ class GroupChatActivity : Activity() {
         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
     )
 
+    private fun requestPushPermissionIfNeeded() {
+        // Do not ask for notification permission until a Firebase project is configured.
+        if (FirebaseApp.getApps(this).isEmpty()) return
+        createPushNotificationChannel()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            val prefs = getSharedPreferences(PUSH_PREFS, Context.MODE_PRIVATE)
+            if (!prefs.getBoolean("permission_requested", false)) {
+                prefs.edit().putBoolean("permission_requested", true).apply()
+                requestPermissions(
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    NOTIFICATION_PERMISSION_REQUEST
+                )
+            }
+            return
+        }
+        syncPushRegistration()
+    }
+
+    private fun createPushNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(
+                NotificationChannel(
+                    ApokolipsMessagingService.CHANNEL_ID,
+                    "Group Chat",
+                    NotificationManager.IMPORTANCE_HIGH
+                ).apply {
+                    description = "New messages in the Apokolips public Group Chat"
+                }
+            )
+        }
+    }
+
+    private fun syncPushRegistration() {
+        val guest = guestToken ?: return
+        if (!joined) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) return
+        if (FirebaseApp.getApps(this).isEmpty()) return
+
+        try {
+            FirebaseMessaging.getInstance().token
+                .addOnSuccessListener { token ->
+                    if (token.isNullOrBlank() || isFinishing || isDestroyed) return@addOnSuccessListener
+                    val prefs = getSharedPreferences(PUSH_PREFS, Context.MODE_PRIVATE)
+                    val deviceId = prefs.getString(PUSH_DEVICE_ID_KEY, null)
+                        ?: UUID.randomUUID().toString().also {
+                            prefs.edit().putString(PUSH_DEVICE_ID_KEY, it).apply()
+                        }
+                    try {
+                        worker.execute {
+                            try {
+                                api(
+                                    "POST",
+                                    "push/register",
+                                    JSONObject().put("deviceId", deviceId).put("fcmToken", token),
+                                    guest
+                                )
+                            } catch (_: Exception) {
+                                // Registration is retried on the next app resume; chat remains available.
+                            }
+                        }
+                    } catch (_: Exception) {
+                        // Activity is closing; the next launch will register the current FCM token.
+                    }
+                }
+                .addOnFailureListener {
+                    // Firebase/network failures do not block Group Chat.
+                }
+        } catch (_: Exception) {
+            // Firebase configuration is optional until the owner adds google-services.json.
+        }
+    }
+
     private fun toast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
@@ -1133,10 +1225,17 @@ class GroupChatActivity : Activity() {
         if (requestCode == RECORD_AUDIO_REQUEST) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) startRecording()
             else toast("Microphone permission is needed for voice messages.")
+        } else if (requestCode == NOTIFICATION_PERMISSION_REQUEST) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                syncPushRegistration()
+            } else {
+                toast("Notifications are off. You can enable them in Android app settings.")
+            }
         }
     }
 
     override fun onDestroy() {
+        isVisible = false
         joined = false
         mainHandler.removeCallbacksAndMessages(null)
         try {
