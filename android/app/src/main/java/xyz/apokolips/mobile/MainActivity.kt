@@ -1,23 +1,16 @@
 package xyz.apokolips.mobile
 
-import android.animation.ValueAnimator
 import android.app.Activity
 import android.app.DownloadManager
 import android.content.Intent
-import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Path
-import android.graphics.RectF
 import android.graphics.Typeface
-import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.DecelerateInterpolator
 import android.webkit.CookieManager
 import android.webkit.DownloadListener
 import android.webkit.URLUtil
@@ -32,9 +25,6 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
-import kotlin.math.cos
-import kotlin.math.min
-import kotlin.math.sin
 
 class MainActivity : Activity() {
     private lateinit var web: WebView
@@ -42,11 +32,8 @@ class MainActivity : Activity() {
     private lateinit var tabs: LinearLayout
     private lateinit var pageProgress: ProgressBar
     private lateinit var appRoot: FrameLayout
-    private var launchOverlay: View? = null
-    private var splashAnimationFinished = false
-    private var firstPageLoaded = false
     private var currentTab = 0
-    private var lastWebTab = 0
+    private var lastWebTab = 1
     private var chatLaunchPending = false
     private var chooser: ValueCallback<Array<Uri>>? = null
 
@@ -55,8 +42,8 @@ class MainActivity : Activity() {
         "https://www.apokolips.xyz/network-folder.html",
         "https://www.apokolips.xyz/admin/blog-uploader/index.html"
     )
-    private val labels = listOf("Blog", "Network Folder", "Uploader", "Group Chat")
-    private val icons = listOf("▤", "▣", "↑", "◉")
+    private val labels = listOf("Group Chat", "Blog", "Uploader", "Network Folder")
+    private val icons = listOf("◉", "▤", "↑", "▣")
 
     companion object {
         private const val PICK_FILE = 4107
@@ -82,8 +69,8 @@ class MainActivity : Activity() {
         super.onResume()
         if (chatLaunchPending) {
             chatLaunchPending = false
-            currentTab = lastWebTab
-            subtitle.text = "IDEAS BECOME SOMETHING REAL.  /  ${labels[lastWebTab].uppercase()}"
+            currentTab = 0
+            subtitle.text = "IDEAS BECOME SOMETHING REAL.  /  GROUP CHAT"
             styleTabs()
         }
     }
@@ -209,8 +196,6 @@ class MainActivity : Activity() {
                         pageProgress.visibility = View.GONE
                         pageProgress.alpha = 1f
                     }.start()
-                    firstPageLoaded = true
-                    finishSplashWhenReady()
                 }
             }
             webChromeClient = object : WebChromeClient() {
@@ -305,245 +290,6 @@ class MainActivity : Activity() {
         ))
         setContentView(appRoot)
         styleTabs()
-        showLaunchAnimation()
-    }
-
-    private fun showLaunchAnimation() {
-        val overlay = FrameLayout(this).apply { setBackgroundColor(BG) }
-        overlay.addView(MechanicalSplashView(), FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        ))
-        appRoot.addView(overlay, FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        ))
-        launchOverlay = overlay
-
-        val animator = ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = 7000L
-            interpolator = DecelerateInterpolator(1.25f)
-            addUpdateListener { animation ->
-                (overlay.getChildAt(0) as? MechanicalSplashView)?.progress = animation.animatedValue as Float
-            }
-            addListener(object : android.animation.AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: android.animation.Animator) {
-                    splashAnimationFinished = true
-                    finishSplashWhenReady()
-                }
-            })
-        }
-        animator.start()
-    }
-
-    private fun finishSplashWhenReady() {
-        if (!splashAnimationFinished || !firstPageLoaded) return
-        val overlay = launchOverlay ?: return
-        launchOverlay = null
-        overlay.animate().alpha(0f).setDuration(450L).withEndAction {
-            appRoot.removeView(overlay)
-        }.start()
-    }
-
-    private inner class MechanicalSplashView : View(this@MainActivity) {
-        var progress: Float = 0f
-            set(value) {
-                field = value.coerceIn(0f, 1f)
-                invalidate()
-            }
-
-        private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        private val iconDrawable: Drawable? = try {
-            getDrawable(R.drawable.ic_apokolips)?.mutate()
-        } catch (_: Exception) { null }
-
-        override fun onDraw(canvas: Canvas) {
-            super.onDraw(canvas)
-            val w = width.toFloat()
-            val h = height.toFloat()
-            val cx = w / 2f
-            val cy = h * .46f
-            val unit = min(w, h)
-            val core = unit * .105f
-            val maxReach = unit * .43f
-            val armLength = unit * .19f
-            val p = progress
-
-            canvas.drawColor(BG)
-            paint.style = Paint.Style.STROKE
-            paint.strokeWidth = dp(1).toFloat()
-            paint.color = Color.argb(28, 55, 190, 255)
-            canvas.drawCircle(cx, cy, core * 2.15f, paint)
-            canvas.drawCircle(cx, cy, core * 2.55f, paint)
-
-            // Four synchronized mechanical arms enter from the four edges.
-            for (i in 0..3) {
-                val angle = i * 90f
-                val distance = maxReach * (1f - p) + core * .72f
-                canvas.save()
-                canvas.translate(cx, cy)
-                canvas.rotate(angle)
-                drawMechanicalArm(canvas, distance, armLength, core)
-                canvas.restore()
-            }
-
-            // Rotating orbital rings and gear details assemble around the core.
-            paint.color = Color.argb((55 + 150 * p).toInt(), 55, 190, 255)
-            paint.strokeWidth = dp(2).toFloat()
-            canvas.save()
-            canvas.rotate(360f * p, cx, cy)
-            canvas.drawOval(RectF(cx - core * 1.72f, cy - core * .92f, cx + core * 1.72f, cy + core * .92f), paint)
-            canvas.restore()
-            paint.color = Color.argb((45 + 125 * p).toInt(), 105, 160, 205)
-            paint.strokeWidth = dp(1).toFloat()
-            canvas.save()
-            canvas.rotate(-270f * p, cx, cy)
-            canvas.drawOval(RectF(cx - core * 1.95f, cy - core * 1.12f, cx + core * 1.95f, cy + core * 1.12f), paint)
-            canvas.restore()
-
-            // Four small rotating gears lock into the orbital assembly.
-            for (i in 0..3) {
-                val angle = Math.toRadians((i * 90f + 45f + 300f * p).toDouble())
-                val gearX = cx + cos(angle).toFloat() * core * 1.55f
-                val gearY = cy + sin(angle).toFloat() * core * 1.55f
-                drawGear(canvas, gearX, gearY, core * .19f, -420f * p + i * 22f)
-            }
-
-            val glowAlpha = (45 + 150 * p).toInt().coerceIn(0, 195)
-            paint.style = Paint.Style.FILL
-            paint.color = Color.argb(glowAlpha, 20, 135, 230)
-            canvas.drawCircle(cx, cy, core * (1.18f + .12f * sin(p * Math.PI).toFloat()), paint)
-            paint.color = Color.rgb(8, 14, 24)
-            canvas.drawCircle(cx, cy, core * .88f, paint)
-            paint.style = Paint.Style.STROKE
-            paint.strokeWidth = dp(2).toFloat()
-            paint.color = Color.argb((100 + 155 * p).toInt().coerceAtMost(255), 55, 190, 255)
-            canvas.drawCircle(cx, cy, core * .88f, paint)
-
-            if (p > .32f) {
-                val iconAlpha = (((p - .32f) / .68f) * 255).toInt().coerceIn(0, 255)
-                val iconRadius = core * .68f
-                if (iconDrawable != null) {
-                    val save = canvas.save()
-                    val path = Path().apply { addCircle(cx, cy, iconRadius, Path.Direction.CW) }
-                    canvas.clipPath(path)
-                    iconDrawable.setBounds(
-                        (cx - iconRadius).toInt(),
-                        (cy - iconRadius).toInt(),
-                        (cx + iconRadius).toInt(),
-                        (cy + iconRadius).toInt()
-                    )
-                    iconDrawable.alpha = iconAlpha
-                    iconDrawable.draw(canvas)
-                    iconDrawable.alpha = 255
-                    canvas.restoreToCount(save)
-                } else {
-                    paint.style = Paint.Style.FILL
-                    paint.color = Color.argb(iconAlpha, 55, 190, 255)
-                    paint.textAlign = Paint.Align.CENTER
-                    paint.typeface = Typeface.DEFAULT_BOLD
-                    paint.textSize = core * 1.05f
-                    canvas.drawText("A", cx, cy + core * .36f, paint)
-                }
-            }
-
-            paint.style = Paint.Style.FILL
-            paint.textAlign = Paint.Align.CENTER
-            paint.typeface = Typeface.DEFAULT_BOLD
-            paint.textSize = dp(19).toFloat()
-            paint.color = WHITE
-            paint.alpha = (255 * (0.35f + .65f * p)).toInt()
-            canvas.drawText("APOKOLIPS", cx, cy + core * 2.85f, paint)
-            paint.textSize = dp(9).toFloat()
-            paint.typeface = Typeface.DEFAULT
-            paint.letterSpacingCompat()
-            paint.color = MUTED
-            paint.alpha = (220 * p).toInt()
-            canvas.drawText("IDEAS BECOME SOMETHING REAL.", cx, cy + core * 3.55f, paint)
-            paint.alpha = 255
-        }
-
-        private fun drawGear(canvas: Canvas, x: Float, y: Float, radius: Float, rotation: Float) {
-            canvas.save()
-            canvas.rotate(rotation, x, y)
-            paint.style = Paint.Style.STROKE
-            paint.strokeWidth = dp(2).toFloat()
-            paint.color = Color.rgb(95, 125, 153)
-            canvas.drawCircle(x, y, radius * .72f, paint)
-            for (tooth in 0 until 8) {
-                val angle = Math.toRadians(tooth * 45.0)
-                val inner = radius * .72f
-                val outer = radius
-                canvas.drawLine(
-                    x + cos(angle).toFloat() * inner,
-                    y + sin(angle).toFloat() * inner,
-                    x + cos(angle).toFloat() * outer,
-                    y + sin(angle).toFloat() * outer,
-                    paint
-                )
-            }
-            paint.style = Paint.Style.FILL
-            paint.color = Color.rgb(22, 36, 52)
-            canvas.drawCircle(x, y, radius * .34f, paint)
-            paint.style = Paint.Style.STROKE
-            paint.strokeWidth = dp(1).toFloat()
-            paint.color = CYAN
-            canvas.drawCircle(x, y, radius * .34f, paint)
-            canvas.restore()
-        }
-
-        private fun drawMechanicalArm(canvas: Canvas, start: Float, length: Float, core: Float) {
-            val end = start + length
-            val y = 0f
-            paint.style = Paint.Style.STROKE
-            paint.strokeCap = Paint.Cap.ROUND
-            paint.strokeWidth = dp(11).toFloat()
-            paint.color = Color.rgb(35, 48, 64)
-            canvas.drawLine(start, y, end, y, paint)
-            paint.strokeWidth = dp(5).toFloat()
-            paint.color = Color.rgb(100, 125, 150)
-            canvas.drawLine(start + dp(5), y, end - dp(8), y, paint)
-
-            paint.style = Paint.Style.FILL
-            paint.color = Color.rgb(23, 33, 47)
-            canvas.drawRoundRect(RectF(start + length * .28f, -dp(12).toFloat(), start + length * .72f, dp(12).toFloat()), dp(5).toFloat(), dp(5).toFloat(), paint)
-            paint.color = CYAN
-            canvas.drawCircle(start + length * .5f, y, dp(3).toFloat(), paint)
-
-            paint.color = Color.rgb(115, 137, 158)
-            canvas.drawCircle(start, y, dp(9).toFloat(), paint)
-            paint.color = Color.rgb(25, 39, 55)
-            canvas.drawCircle(start, y, dp(5).toFloat(), paint)
-            paint.color = CYAN
-            canvas.drawCircle(start, y, dp(2).toFloat(), paint)
-
-            // Two-pronged gripper facing the glowing centre.
-            paint.style = Paint.Style.STROKE
-            paint.strokeWidth = dp(4).toFloat()
-            paint.strokeCap = Paint.Cap.ROUND
-            paint.color = Color.rgb(130, 153, 174)
-            val claw = Path().apply {
-                moveTo(start - dp(2), -dp(4).toFloat())
-                lineTo(start - dp(13), -dp(12).toFloat())
-                moveTo(start - dp(2), dp(4).toFloat())
-                lineTo(start - dp(13), dp(12).toFloat())
-            }
-            canvas.drawPath(claw, paint)
-
-            // Small piston and outer joint.
-            paint.strokeWidth = dp(2).toFloat()
-            paint.color = Color.rgb(55, 190, 255)
-            canvas.drawLine(start + length * .22f, -dp(5).toFloat(), start + length * .72f, -dp(5).toFloat(), paint)
-            paint.style = Paint.Style.FILL
-            paint.color = Color.rgb(75, 95, 115)
-            canvas.drawCircle(end, y, dp(7).toFloat(), paint)
-            paint.color = Color.rgb(15, 23, 34)
-            canvas.drawCircle(end, y, dp(3).toFloat(), paint)
-        }
-
-        private fun Paint.letterSpacingCompat() {
-            // Canvas text has no letter-spacing property; the tagline remains clean and centred.
-        }
     }
 
     /**
@@ -610,11 +356,18 @@ class MainActivity : Activity() {
     }
 
     private fun openTab(index: Int) {
-        if (index == 3) {
-            chatLaunchPending = true
-            currentTab = 3
+        if (index == 0) {
+            currentTab = 0
             subtitle.text = "IDEAS BECOME SOMETHING REAL.  /  GROUP CHAT"
             styleTabs()
+            // Keep Blog ready underneath the native chat screen for a clean return.
+            if (web.url.isNullOrBlank()) {
+                pageProgress.alpha = 1f
+                pageProgress.progress = 0
+                pageProgress.visibility = View.VISIBLE
+                web.loadUrl(urls[0])
+            }
+            chatLaunchPending = true
             try {
                 startActivity(Intent(this, GroupChatActivity::class.java))
             } catch (_: Exception) {
@@ -626,17 +379,25 @@ class MainActivity : Activity() {
             }
             return
         }
-        if (index !in urls.indices) return
+
+        if (index !in 1..3) return
         lastWebTab = index
         currentTab = index
         subtitle.text = "IDEAS BECOME SOMETHING REAL.  /  ${labels[index].uppercase()}"
         styleTabs()
-        if (web.url != urls[index]) {
+
+        val urlIndex = when (index) {
+            1 -> 0 // Blog
+            2 -> 2 // Uploader
+            3 -> 1 // Network Folder
+            else -> return
+        }
+        if (web.url != urls[urlIndex]) {
             pageProgress.alpha = 1f
             pageProgress.progress = 0
             pageProgress.visibility = View.VISIBLE
             web.alpha = 0.96f
-            web.loadUrl(urls[index])
+            web.loadUrl(urls[urlIndex])
         } else {
             web.animate().alpha(1f).setDuration(160L).start()
         }
@@ -675,12 +436,12 @@ class MainActivity : Activity() {
     @Deprecated("Back navigation is handled here for compatibility.")
     override fun onBackPressed() {
         if (::web.isInitialized && web.canGoBack()) web.goBack()
-        else if (currentTab != 0) openTab(0)
+        else if (currentTab != 1) openTab(1)
         else super.onBackPressed()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putInt("tab", lastWebTab)
+        outState.putInt("tab", currentTab)
         super.onSaveInstanceState(outState)
     }
 
