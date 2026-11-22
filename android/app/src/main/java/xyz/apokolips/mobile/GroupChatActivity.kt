@@ -138,6 +138,7 @@ class GroupChatActivity : Activity() {
                 runOnUiThread {
                     guestId = profile.optString("id")
                     nickname = profile.optString("nickname")
+                    profileAvatarUrl = profile.optString("avatarUrl", profile.optString("avatar_url"))
                     enterChat()
                 }
             } catch (_: Exception) {
@@ -215,6 +216,7 @@ class GroupChatActivity : Activity() {
                         guestToken = token
                         guestId = profile.optString("id")
                         nickname = profile.optString("nickname")
+                        profileAvatarUrl = profile.optString("avatarUrl", profile.optString("avatar_url"))
                         enterChat()
                     }
                 } catch (error: Exception) {
@@ -815,7 +817,13 @@ class GroupChatActivity : Activity() {
                 putFile(presign.getString("uploadUrl"), uri, mime, size)
                 if (kind == "avatar") {
                     api("POST", "profile/avatar", JSONObject().put("objectKey", objectKey), guestToken)
+                    val refreshedProfile = JSONObject(api("POST", "session", JSONObject(), guestToken))
+                    val refreshedAvatar = refreshedProfile.optString("avatarUrl", refreshedProfile.optString("avatar_url"))
                     runOnUiThread {
+                        if (refreshedAvatar.isNotBlank() && refreshedAvatar != "null") {
+                            profileAvatarUrl = refreshedAvatar
+                            showProfileAvatar(refreshedAvatar)
+                        }
                         lastRenderSignature = ""
                         toast("Profile picture updated.")
                         loadMessages()
