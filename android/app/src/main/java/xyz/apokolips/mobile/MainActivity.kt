@@ -39,11 +39,11 @@ class MainActivity : Activity() {
 
     companion object {
         private const val PICK_FILE = 4107
-        private const val BG = Color.rgb(5, 6, 9)
-        private const val PANEL = Color.rgb(12, 17, 27)
-        private const val BLUE = Color.rgb(24, 45, 73)
-        private const val WHITE = Color.rgb(242, 245, 250)
-        private const val MUTED = Color.rgb(143, 153, 170)
+        private val BG = Color.rgb(5, 6, 9)
+        private val PANEL = Color.rgb(12, 17, 27)
+        private val BLUE = Color.rgb(24, 45, 73)
+        private val WHITE = Color.rgb(242, 245, 250)
+        private val MUTED = Color.rgb(143, 153, 170)
     }
 
     override fun onCreate(state: Bundle?) {
