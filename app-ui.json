@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "version": "1.0.0",
+  "stylesheet": "/app-ui.css",
+  "releaseNotes": "Initial remotely managed Apokolips WebView appearance."
+}
