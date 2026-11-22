@@ -59,7 +59,7 @@ class MainActivity : Activity() {
     companion object {
         private const val PICK_FILE = 4107
         private val BG = Color.rgb(5, 6, 9)
-        private val PANEL = Color.rgb(12, 17, 27)
+        private val PANEL = Color.rgb(2, 3, 5)
         private val BLUE = Color.rgb(24, 45, 73)
         private val CYAN = Color.rgb(55, 190, 255)
         private val WHITE = Color.rgb(242, 245, 250)
@@ -122,8 +122,8 @@ class MainActivity : Activity() {
             background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
                 cornerRadius = dp(14).toFloat()
-                setColor(Color.rgb(11, 22, 38))
-                setStroke(dp(1), Color.rgb(27, 67, 105))
+                setColor(Color.rgb(4, 6, 10))
+                setStroke(dp(1), Color.rgb(13, 42, 72))
             }
             setOnClickListener {
                 if (::web.isInitialized) {
@@ -141,7 +141,7 @@ class MainActivity : Activity() {
             progress = 0
             isIndeterminate = false
             progressTintList = android.content.res.ColorStateList.valueOf(CYAN)
-            progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(13, 25, 40))
+            progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(3, 4, 6))
             visibility = View.VISIBLE
         }
         content.addView(pageProgress, LinearLayout.LayoutParams(
@@ -545,53 +545,53 @@ class MainActivity : Activity() {
               --apo-line: rgba(76, 157, 235, .22);
             }
             html, body {
-              background: #070a10 !important;
-              color: #edf5ff !important;
+              background: #020304 !important;
+              color: #e8edf5 !important;
               color-scheme: dark !important;
               font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif !important;
               -webkit-font-smoothing: antialiased !important;
             }
             body {
               min-height: 100vh !important;
-              background-image: radial-gradient(ellipse at 50% -18%, rgba(22,139,255,.13), transparent 48%), linear-gradient(180deg, #080d16 0%, #070a10 58%, #06080d 100%) !important;
+              background-image: radial-gradient(ellipse at 50% -22%, rgba(12,72,130,.075), transparent 48%), linear-gradient(180deg, #030405 0%, #020304 62%, #010203 100%) !important;
             }
             h1, h2, h3, h4, strong, b { color: #f4f8ff !important; }
-            p, li, label, small { color: #c3d0e0; }
+            p, li, label, small { color: #aeb8c7; }
             a { color: #55baff !important; text-decoration-color: rgba(85,186,255,.45) !important; }
             a:hover { color: #9bdcff !important; }
             header, nav, footer, aside, .card, .post, .blog-post, .folder, .file-card, .upload-card, article, section, main, .container, .content, .panel, .box, form, fieldset, table, pre, blockquote {
               border-color: var(--apo-line) !important;
             }
             .card, .post, .blog-post, .folder, .file-card, .upload-card, article, section, .panel, .box, fieldset, form {
-              background-color: rgba(13,20,33,.88) !important;
-              border-radius: 18px !important;
-              box-shadow: 0 12px 34px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.025) !important;
+              background-color: rgba(5,7,10,.97) !important;
+              border-radius: 16px !important;
+              box-shadow: 0 12px 34px rgba(0,0,0,.52), inset 0 1px 0 rgba(255,255,255,.012) !important;
             }
             button, input[type=button], input[type=submit], .btn, [role=button] {
-              background: linear-gradient(135deg, #147ce0, #0754a7) !important;
+              background: linear-gradient(135deg, #07539a, #03264b) !important;
               color: #fff !important;
               border: 1px solid rgba(91,180,255,.42) !important;
               border-radius: 12px !important;
-              box-shadow: 0 5px 18px rgba(0,105,210,.18) !important;
+              box-shadow: 0 4px 14px rgba(0,55,110,.13) !important;
               transition: transform .18s ease, filter .18s ease, box-shadow .18s ease !important;
             }
             button:active, input[type=button]:active, input[type=submit]:active, .btn:active { transform: scale(.975) !important; filter: brightness(1.12) !important; }
             input, textarea, select {
-              background: #080f1a !important;
-              color: #edf5ff !important;
-              border: 1px solid rgba(92,151,208,.32) !important;
+              background: #030507 !important;
+              color: #e8edf5 !important;
+              border: 1px solid rgba(58,91,128,.25) !important;
               border-radius: 11px !important;
               outline: none !important;
             }
             input:focus, textarea:focus, select:focus { border-color: #168bff !important; box-shadow: 0 0 0 3px rgba(22,139,255,.13) !important; }
-            table { background: #0d1421 !important; color: #e8f2ff !important; }
-            th { background: #12243a !important; color: #fff !important; }
+            table { background: #05070a !important; color: #dce5f0 !important; }
+            th { background: #080e16 !important; color: #f2f6fb !important; }
             td, th { border-color: rgba(76,157,235,.18) !important; }
             img, video, iframe { max-width: 100% !important; }
             ::selection { background: rgba(22,139,255,.35) !important; color: #fff !important; }
             ::-webkit-scrollbar { width: 6px; height: 6px; }
             ::-webkit-scrollbar-thumb { background: #1b5b91; border-radius: 20px; }
-            ::-webkit-scrollbar-track { background: #080d15; }
+            ::-webkit-scrollbar-track { background: #020304; }
         """.trimIndent()
         val script = "(function(){var id='apokolips-native-skin';var s=document.getElementById(id);if(!s){s=document.createElement('style');s.id=id;document.head.appendChild(s);}s.textContent=" + org.json.JSONObject.quote(css) + ";})();"
         view.evaluateJavascript(script, null)
@@ -621,8 +621,8 @@ class MainActivity : Activity() {
             item.background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
                 cornerRadius = dp(15).toFloat()
-                setColor(if (active) Color.rgb(14, 39, 67) else Color.TRANSPARENT)
-                if (active) setStroke(dp(1), Color.rgb(29, 91, 145))
+                setColor(if (active) Color.rgb(5, 15, 27) else Color.TRANSPARENT)
+                if (active) setStroke(dp(1), Color.rgb(15, 65, 112))
             }
             val icon = item.getChildAt(0) as? TextView
             val label = item.getChildAt(1) as? TextView
