@@ -203,7 +203,11 @@
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && panel.classList.contains('j-open')) hidePanel();
     });
-    if (new URLSearchParams(location.search).get('assistant') === 'jarvis') open();
+    if (new URLSearchParams(location.search).get('assistant') === 'jarvis') {
+      open();
+      // Keep the requested /jarvis/ URL while rendering the main homepage.
+      history.replaceState({}, '', '/jarvis/');
+    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
