@@ -683,7 +683,11 @@ class GroupChatActivity : Activity() {
                 putFile(presign.getString("uploadUrl"), uri, mime, size)
                 if (kind == "avatar") {
                     api("POST", "profile/avatar", JSONObject().put("objectKey", objectKey), guestToken)
-                    runOnUiThread { toast("Profile picture updated.") }
+                    runOnUiThread {
+                        lastRenderSignature = ""
+                        toast("Profile picture updated.")
+                        loadMessages()
+                    }
                 } else {
                     val messageType = if (kind == "voice") "voice" else "media"
                     val message = JSONObject(api(
