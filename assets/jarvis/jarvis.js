@@ -10,6 +10,7 @@
   let listening = false;
   let sessionId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'apo-' + Date.now();
   let lastTranscript = '';
+  const chatHistory = [];
 
   const make = (tag, attrs = {}, text = '') => {
     const el = document.createElement(tag);
@@ -60,7 +61,7 @@
     const stop = make('button', { type: 'button' }, 'Stop voice');
     const hide = make('button', { type: 'button' }, 'Go back');
     tools.append(listen, stop, hide);
-    const note = make('div', { className: 'j-note' }, 'Microphone access is used only after you press “Start listening”. Browser voice recognition availability varies by device. AI replies require the secure Apokolips assistant service to be connected.');
+    const note = make('div', { className: 'j-note' }, 'Microphone access is used only after you press “Start listening”. Browser voice recognition availability varies by device. AI replies require the secure APOLONIA AI backend.');
     panel.append(head, status, body, compose, tools, note);
     root.append(launch, panel);
     document.body.append(root);
@@ -108,9 +109,10 @@
       const clean = message.trim();
       if (!clean) return;
       addMessage(clean, 'user');
+      chatHistory.push({ role: 'user', content: clean });
       input.value = '';
       if (!API_URL) {
-        const reply = 'My interface is online, but the Apokolips AI service has not been connected yet. I cannot generate a real AI answer until the secure backend is deployed.';
+        const reply = 'My interface is online, but the APOLONIA AI backend is not connected yet. I cannot generate a real AI answer until the secure backend is deployed.';
         addMessage(reply, 'ai');
         setStatus('INTERFACE ONLINE · AI SERVICE NOT CONNECTED');
         return;
@@ -121,16 +123,17 @@
         const response = await fetch(API_URL.replace(/\/$/, '') + '/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: clean, sessionId })
+          body: JSON.stringify({ message: clean, sessionId, history: chatHistory.slice(-16) })
         });
         if (!response.ok) throw new Error('Assistant service returned ' + response.status);
         const data = await response.json();
         const reply = typeof data.reply === 'string' ? data.reply : 'The assistant service returned an unsupported response.';
         pending.textContent = reply;
+        chatHistory.push({ role: 'assistant', content: reply });
         setStatus('CONNECTED · READY', true);
         speak(reply);
       } catch (error) {
-        pending.textContent = 'I could not reach the Apokolips AI service. Please try again later.';
+        pending.textContent = 'I could not reach the APOLONIA AI service. Please try again later.';
         setStatus('CONNECTION ERROR');
       }
       body.scrollTop = body.scrollHeight;
