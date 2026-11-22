@@ -14,16 +14,6 @@ class ApokolipsMessagingService : FirebaseMessagingService() {
     companion object {
         const val CHANNEL_ID = "apokolips_group_chat"
         private const val CHANNEL_NAME = "Group Chat"
-        private const val PREFS = "apokolips_push_prefs"
-        private const val TOKEN_KEY = "pending_fcm_token"
-    }
-
-    override fun onNewToken(token: String) {
-        super.onNewToken(token)
-        getSharedPreferences(PREFS, MODE_PRIVATE)
-            .edit()
-            .putString(TOKEN_KEY, token)
-            .apply()
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
