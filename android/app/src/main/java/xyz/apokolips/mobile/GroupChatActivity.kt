@@ -1177,24 +1177,31 @@ class GroupChatActivity : Activity() {
         try {
             FirebaseMessaging.getInstance().token
                 .addOnSuccessListener { token ->
-                    if (token.isNullOrBlank() || isFinishing) return@addOnSuccessListener
+                    if (token.isNullOrBlank() || isFinishing || isDestroyed) return@addOnSuccessListener
                     val prefs = getSharedPreferences(PUSH_PREFS, Context.MODE_PRIVATE)
                     val deviceId = prefs.getString(PUSH_DEVICE_ID_KEY, null)
                         ?: UUID.randomUUID().toString().also {
                             prefs.edit().putString(PUSH_DEVICE_ID_KEY, it).apply()
                         }
-                    worker.execute {
-                        try {
-                            api(
-                                "POST",
-                                "push/register",
-                                JSONObject().put("deviceId", deviceId).put("fcmToken", token),
-                                guest
-                            )
-                        } catch (_: Exception) {
-                            // Registration is retried on the next app resume; chat remains available.
+                    try {
+                        worker.execute {
+                            try {
+                                api(
+                                    "POST",
+                                    "push/register",
+                                    JSONObject().put("deviceId", deviceId).put("fcmToken", token),
+                                    guest
+                                )
+                            } catch (_: Exception) {
+                                // Registration is retried on the next app resume; chat remains available.
+                            }
                         }
+                    } catch (_: Exception) {
+                        // Activity is closing; the next launch will register the current FCM token.
                     }
+                }
+                .addOnFailureListener {
+                    // Firebase/network failures do not block Group Chat.
                 }
         } catch (_: Exception) {
             // Firebase configuration is optional until the owner adds google-services.json.
