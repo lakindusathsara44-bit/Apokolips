@@ -17,7 +17,7 @@ APK: `app/build/outputs/apk/debug/app-debug.apk`
 GitHub Actions builds the debug APK and stores it as a workflow artifact.
 
 ## Security
-No database credentials or storage secrets are stored in the APK. Guest identity tokens are encrypted with an Android Keystore AES-GCM key. The chat backend stores only SHA-256 token hashes, enforces unique nicknames in PostgreSQL, and uses short-lived presigned URLs for private media. Guest identity is device-local, not a cross-device account. Network Folder authentication remains with the existing service. HTTPS only; cleartext traffic is disabled.
+No database credentials or storage secrets are stored in the APK. Guest identity tokens are encrypted with an Android Keystore AES-GCM key. The chat backend uses Neon Auth anonymous JWTs only for API transport (email/password sign-in is disabled); the app still has no login or sign-up UI. The app's separate guest identity is stored encrypted locally, while PostgreSQL stores only its SHA-256 token hash, enforces unique nicknames, and uses short-lived presigned URLs for private media. Guest identity is device-local, not a cross-device account. Network Folder authentication remains with the existing service. HTTPS only; cleartext traffic is disabled.
 
 ## Group Chat
 
