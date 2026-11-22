@@ -28,4 +28,5 @@ No database credentials or storage secrets are stored in the APK. Guest identity
 - Media storage uses a private Neon Object Storage bucket and short-lived presigned upload/download URLs.
 - Voice recording uses the microphone only after the user grants Android runtime permission.
 - The app refreshes the public message feed every three seconds; this is near-real-time polling rather than a persistent WebSocket subscription.
+- Senders can delete their own text, media, and voice messages for everyone within one hour; PostgreSQL validates ownership and the deadline using server time, and attachment metadata is removed with the message.
 - Upload limits: images/avatars 12 MB, videos 50 MB, documents 25 MB, voice 10 MB and up to 10 minutes.
