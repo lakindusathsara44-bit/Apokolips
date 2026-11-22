@@ -100,11 +100,21 @@ class MainActivity : Activity() {
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                     val uri = request.url
-                    val scheme = uri.scheme ?: return true
-                    if (scheme != "https" && scheme != "http") return openExternal(uri)
-                    val host = uri.host.orEmpty().lowercase()
-                    if (host == "apokolips.xyz" || host == "www.apokolips.xyz") return false
-                    return openExternal(uri)
+                    val allowed = urls.any { allowedUrl ->
+                        val page = Uri.parse(allowedUrl)
+                        uri.scheme.equals("https", ignoreCase = true) &&
+                            uri.host.equals(page.host, ignoreCase = true) &&
+                            uri.port == page.port &&
+                            uri.path == page.path
+                    }
+                    if (allowed) return false
+
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Only Blog, Network Folder, and Uploader pages are available in this app.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return true
                 }
             }
             webChromeClient = object : WebChromeClient() {
@@ -192,15 +202,6 @@ class MainActivity : Activity() {
             val active = i == currentTab
             button.setTextColor(if (active) WHITE else MUTED)
             button.backgroundTintList = android.content.res.ColorStateList.valueOf(if (active) BLUE else PANEL)
-        }
-    }
-
-    private fun openExternal(uri: Uri): Boolean {
-        return try {
-            startActivity(Intent(Intent.ACTION_VIEW, uri))
-            true
-        } catch (_: Exception) {
-            true
         }
     }
 
