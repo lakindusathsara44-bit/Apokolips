@@ -83,11 +83,12 @@
       listen.classList.remove('j-listen');
       setStatus('STANDBY · VOICE LISTENING OFF');
     }
-    function hidePanel() {
-      stopListening();
+    function hidePanel(keepWakeListening = false) {
+      if (!keepWakeListening) stopListening();
       if (window.speechSynthesis) window.speechSynthesis.cancel();
       panel.classList.remove('j-open');
       launch.setAttribute('aria-expanded', 'false');
+      if (keepWakeListening && listening) setStatus('HIDDEN · SAY “HEY JARVIS” TO RETURN', true);
     }
     function addMessage(message, who) {
       const item = make('div', { className: 'j-message ' + (who === 'user' ? 'j-user' : 'j-ai') }, message);
@@ -157,14 +158,20 @@
           const transcript = event.results[i][0].transcript.trim();
           if (!transcript || transcript === lastTranscript) continue;
           lastTranscript = transcript;
-          const lower = transcript.toLowerCase().replace(/[.,!?]/g, '');
+          const lower = transcript.toLowerCase().replace(/[.,!?]/g, '').trim();
+          const dismissCommand = /^(go back|hide yourself|leave|goodbye|close|dismiss)$/;
+          if (panel.classList.contains('j-open') && dismissCommand.test(lower)) {
+            speak('Certainly. I will stand by.');
+            hidePanel(true);
+            continue;
+          }
           const wake = lower.match(/\b(?:hey\s+)?jarvis\b/);
           if (wake) {
             open();
             const command = lower.slice(wake.index + wake[0].length).replace(/^[\s,]+/, '').trim();
-            if (/^(go back|hide yourself|leave|goodbye|close|dismiss)$/.test(command)) {
+            if (dismissCommand.test(command)) {
               speak('Certainly. I will stand by.');
-              hidePanel();
+              hidePanel(true);
             } else if (command) {
               sendMessage(transcript.slice(wake.index + wake[0].length).replace(/^[\s,]+/, ''));
             } else {
@@ -203,7 +210,11 @@
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && panel.classList.contains('j-open')) hidePanel();
     });
-    if (new URLSearchParams(location.search).get('assistant') === 'jarvis') open();
+    if (new URLSearchParams(location.search).get('assistant') === 'jarvis') {
+      open();
+      // Keep the requested /jarvis/ URL while rendering the main homepage.
+      history.replaceState({}, '', '/jarvis/');
+    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
