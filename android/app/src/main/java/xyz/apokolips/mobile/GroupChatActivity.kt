@@ -83,6 +83,7 @@ class GroupChatActivity : Activity() {
     private var lastRenderSignature = ""
     private var profileAvatarImage: ImageView? = null
     private var profileAvatarFallback: TextView? = null
+    private var profileAvatarUrl: String = ""
     private var recorder: MediaRecorder? = null
     private var recordingFile: File? = null
     private var recordingStartedAt = 0L
@@ -252,53 +253,6 @@ class GroupChatActivity : Activity() {
         root.removeAllViews()
         addHeader("PUBLIC GROUP CHAT", "ONE SHARED ROOM  •  NO PRIVATE MESSAGES")
 
-        val profileRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(12), dp(9), dp(12), dp(9))
-            background = rounded(PANEL, dp(15), Color.rgb(17, 37, 57))
-        }
-        val avatarBox = FrameLayout(this)
-        profileAvatarFallback = TextView(this).apply {
-            text = nickname.take(1).uppercase()
-            textSize = 17f
-            typeface = Typeface.DEFAULT_BOLD
-            gravity = Gravity.CENTER
-            setTextColor(CYAN)
-            background = rounded(Color.rgb(8, 30, 51), dp(24), Color.rgb(24, 85, 135))
-        }
-        avatarBox.addView(profileAvatarFallback, FrameLayout.LayoutParams(dp(38), dp(38)))
-        profileAvatarImage = ImageView(this).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            background = rounded(Color.rgb(8, 30, 51), dp(24), Color.rgb(24, 85, 135))
-            clipToOutline = true
-            visibility = View.GONE
-        }
-        avatarBox.addView(profileAvatarImage, FrameLayout.LayoutParams(dp(38), dp(38)))
-        profileRow.addView(avatarBox, LinearLayout.LayoutParams(dp(38), dp(38)))
-        val profileInfo = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(10), 0, 0, 0)
-        }
-        profileInfo.addView(TextView(this).apply {
-            text = nickname
-            textSize = 14f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(WHITE)
-        })
-        profileInfo.addView(TextView(this).apply {
-            text = "Guest profile"
-            textSize = 11f
-            setTextColor(MUTED)
-        })
-        profileRow.addView(profileInfo, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        val avatarButton = smallButton("PHOTO")
-        avatarButton.setOnClickListener { chooseFile("avatar") }
-        profileRow.addView(avatarButton)
-        root.addView(profileRow, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { topMargin = dp(10) })
-
         statusText = TextView(this).apply {
             text = "●  Connected to the public room"
             textSize = 11f
@@ -364,6 +318,65 @@ class GroupChatActivity : Activity() {
         startPolling()
     }
 
+    private fun showProfileScreen() {
+        mainHandler.removeCallbacks(pollTask)
+        root.removeAllViews()
+        addHeader("YOUR PROFILE", "YOUR NAME AND PROFILE PICTURE")
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(dp(22), dp(26), dp(22), dp(24))
+            background = rounded(PANEL, dp(22), Color.rgb(20, 38, 58))
+        }
+        val avatarBox = FrameLayout(this)
+        profileAvatarFallback = TextView(this).apply {
+            text = nickname.take(1).uppercase()
+            textSize = 34f
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+            setTextColor(CYAN)
+            background = rounded(Color.rgb(8, 30, 51), dp(52), Color.rgb(24, 85, 135))
+        }
+        avatarBox.addView(profileAvatarFallback, FrameLayout.LayoutParams(dp(104), dp(104)))
+        profileAvatarImage = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = rounded(Color.rgb(8, 30, 51), dp(52), Color.rgb(24, 85, 135))
+            clipToOutline = true
+            visibility = if (profileAvatarUrl.isBlank()) View.GONE else View.VISIBLE
+        }
+        avatarBox.addView(profileAvatarImage, FrameLayout.LayoutParams(dp(104), dp(104)))
+        panel.addView(avatarBox, LinearLayout.LayoutParams(dp(104), dp(104)))
+        if (profileAvatarUrl.isNotBlank()) showProfileAvatar(profileAvatarUrl)
+        panel.addView(TextView(this).apply {
+            text = nickname
+            textSize = 20f
+            typeface = Typeface.create("sans-serif-semibold", Typeface.NORMAL)
+            setTextColor(WHITE)
+            gravity = Gravity.CENTER
+            setPadding(0, dp(18), 0, dp(5))
+        }, matchWrap())
+        panel.addView(TextView(this).apply {
+            text = "Public guest profile"
+            textSize = 12f
+            setTextColor(MUTED)
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, dp(20))
+        }, matchWrap())
+        val photo = actionButton("CHANGE PROFILE PICTURE")
+        photo.setOnClickListener { chooseFile("avatar") }
+        panel.addView(photo, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(50)
+        ))
+        root.addView(panel, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { topMargin = dp(22) })
+        val back = smallButton("BACK TO GROUP CHAT")
+        back.setOnClickListener { enterChat() }
+        root.addView(back, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(46)
+        ).apply { topMargin = dp(14) })
+    }
+
     private fun addHeader(title: String, subtitle: String) {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -389,6 +402,13 @@ class GroupChatActivity : Activity() {
             letterSpacing = .08f
             setTextColor(MUTED)
         })
+        if (joined && title == "PUBLIC GROUP CHAT") {
+            val profile = smallButton("PROFILE")
+            profile.setOnClickListener { showProfileScreen() }
+            row.addView(profile, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, dp(38)
+            ).apply { topMargin = dp(10) })
+        }
         root.addView(row)
     }
 
@@ -655,6 +675,7 @@ class GroupChatActivity : Activity() {
     }
 
     private fun showProfileAvatar(url: String) {
+        profileAvatarUrl = url
         val image = profileAvatarImage ?: return
         if (image.tag == url) return
         image.tag = url
