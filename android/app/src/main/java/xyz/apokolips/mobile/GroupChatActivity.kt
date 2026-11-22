@@ -2,6 +2,7 @@ package xyz.apokolips.mobile
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -37,6 +38,9 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.security.KeyStore
 import java.security.SecureRandom
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.crypto.Cipher
@@ -48,6 +52,8 @@ import org.json.JSONObject
 class GroupChatActivity : Activity() {
     companion object {
         private const val API_BASE = "https://br-damp-glitter-b3tcauq8-chatapi.compute.c-4.ap-southeast-1.aws.neon.tech/"
+        private const val AUTH_BASE = "https://ep-solitary-firefly-b3eweomh.neonauth.c-4.ap-southeast-1.aws.neon.tech/apokolips_chat/auth"
+        private const val DATA_API_BASE = "https://ep-solitary-firefly-b3eweomh.apirest.c-4.ap-southeast-1.aws.neon.tech/apokolips_chat/rest/v1/"
         private const val PICK_FILE = 5101
         private const val RECORD_AUDIO_REQUEST = 5102
         private const val KEY_ALIAS = "apokolips_group_chat_identity_v1"
@@ -436,8 +442,9 @@ class GroupChatActivity : Activity() {
     private fun renderMessages(messages: JSONArray) {
         if (!::messagesColumn.isInitialized) return
         val signature = if (messages.length() == 0) "empty" else {
-            val last = messages.optJSONObject(messages.length() - 1)
-            messages.length().toString() + ":" + last?.optString("id")
+            (0 until messages.length()).joinToString(":") { index ->
+                messages.optJSONObject(index)?.optString("id").orEmpty()
+            }
         }
         if (signature == lastRenderSignature) {
             statusText.text = "●  Connected to the public room"
@@ -540,7 +547,111 @@ class GroupChatActivity : Activity() {
             gravity = Gravity.END
             setPadding(0, dp(5), 0, 0)
         })
+        val messageId = message.optString("id")
+        if (mine && messageId.isNotBlank() && canDeleteWithinHour(message.optString("created_at"))) {
+            val deleteButton = smallButton("DELETE FOR EVERYONE")
+            deleteButton.setTextColor(Color.rgb(255, 145, 145))
+            deleteButton.setOnClickListener {
+                AlertDialog.Builder(this)
+                    .setTitle("Delete for everyone?")
+                    .setMessage("This message or attachment will be removed for everyone in the public group. You can only do this within one hour of sending.")
+                    .setNegativeButton("CANCEL", null)
+                    .setPositiveButton("DELETE") { _, _ -> deleteMessageForEveryone(messageId) }
+                    .show()
+            }
+            card.addView(deleteButton, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(38)
+            ).apply { topMargin = dp(8) })
+        }
         return card
+    }
+
+    private fun canDeleteWithinHour(createdAt: String): Boolean {
+        return try {
+            val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+                isLenient = false
+            }
+            val sentAt = formatter.parse(createdAt.take(19))?.time ?: return false
+            val age = System.currentTimeMillis() - sentAt
+            age in 0..3_600_000L
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun deleteMessageForEveryone(messageId: String) {
+        val guest = guestToken ?: return
+        toast("Deleting message…")
+        worker.execute {
+            try {
+                val tokenConnection = (URL("$AUTH_BASE/token/anonymous").openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = 15000
+                    readTimeout = 20000
+                    setRequestProperty("Accept", "application/json")
+                }
+                val jwtResponse = try {
+                    val code = tokenConnection.responseCode
+                    val stream = if (code in 200..299) tokenConnection.inputStream else tokenConnection.errorStream
+                    val raw = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
+                    if (code !in 200..299) throw IllegalStateException("Could not authorize deletion.")
+                    val parsed = try { JSONObject(raw) } catch (_: Exception) { JSONObject() }
+                    parsed.optString("token").ifBlank {
+                        parsed.optString("accessToken").ifBlank {
+                            parsed.optString("jwt").ifBlank { raw.trim().trim('"') }
+                        }
+                    }
+                } finally {
+                    tokenConnection.disconnect()
+                }
+                if (jwtResponse.isBlank()) throw IllegalStateException("Could not authorize deletion.")
+
+                val connection = (URL(DATA_API_BASE + "rpc/chat_delete_message").openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 15000
+                    readTimeout = 25000
+                    doOutput = true
+                    setRequestProperty("Accept", "application/json")
+                    setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    setRequestProperty("Authorization", "Bearer $jwtResponse")
+                }
+                try {
+                    connection.outputStream.use {
+                        it.write(JSONObject()
+                            .put("p_guest_token", guest)
+                            .put("p_message_id", messageId)
+                            .toString().toByteArray(Charsets.UTF_8))
+                    }
+                    val code = connection.responseCode
+                    val stream = if (code in 200..299) connection.inputStream else connection.errorStream
+                    val raw = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
+                    if (code !in 200..299) {
+                        val details = try {
+                            val error = JSONObject(raw)
+                            error.optString("message").ifBlank { error.optString("details") }
+                        } catch (_: Exception) { raw }
+                        throw IllegalStateException(details.ifBlank { "Delete failed." })
+                    }
+                } finally {
+                    connection.disconnect()
+                }
+                runOnUiThread {
+                    lastRenderSignature = ""
+                    toast("Deleted for everyone.")
+                    loadMessages()
+                }
+            } catch (error: Exception) {
+                val reason = error.message.orEmpty()
+                val message = when {
+                    reason.contains("delete_window_expired") -> "The one-hour delete window has expired."
+                    reason.contains("message_not_owned") -> "You can only delete your own messages."
+                    reason.contains("message_not_found") -> "This message has already been deleted."
+                    else -> "Could not delete this message. Try again."
+                }
+                runOnUiThread { toast(message) }
+            }
+        }
     }
 
     private fun showProfileAvatar(url: String) {
