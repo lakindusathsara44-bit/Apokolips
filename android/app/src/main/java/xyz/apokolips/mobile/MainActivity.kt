@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.DownloadListener
@@ -18,6 +19,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -26,6 +28,8 @@ class MainActivity : Activity() {
     private lateinit var web: WebView
     private lateinit var subtitle: TextView
     private lateinit var tabs: LinearLayout
+    private lateinit var appRoot: FrameLayout
+    private var launchOverlay: View? = null
     private var currentTab = 0
     private var chooser: ValueCallback<Array<Uri>>? = null
 
@@ -42,6 +46,7 @@ class MainActivity : Activity() {
         private val BG = Color.rgb(5, 6, 9)
         private val PANEL = Color.rgb(12, 17, 27)
         private val BLUE = Color.rgb(24, 45, 73)
+        private val CYAN = Color.rgb(55, 190, 255)
         private val WHITE = Color.rgb(242, 245, 250)
         private val MUTED = Color.rgb(143, 153, 170)
     }
@@ -57,7 +62,8 @@ class MainActivity : Activity() {
     }
 
     private fun createUi() {
-        val root = LinearLayout(this).apply {
+        appRoot = FrameLayout(this).apply { setBackgroundColor(BG) }
+        val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(BG)
         }
@@ -81,7 +87,7 @@ class MainActivity : Activity() {
             setPadding(0, dp(4), 0, 0)
         }
         header.addView(subtitle)
-        root.addView(header)
+        content.addView(header)
 
         web = WebView(this).apply {
             setBackgroundColor(BG)
@@ -115,6 +121,12 @@ class MainActivity : Activity() {
                         Toast.LENGTH_SHORT
                     ).show()
                     return true
+                }
+
+                override fun onPageFinished(view: WebView, url: String) {
+                    super.onPageFinished(view, url)
+                    // The splash is a native Android view; website files are never modified.
+                    dismissLaunchAnimation()
                 }
             }
             webChromeClient = object : WebChromeClient() {
@@ -161,7 +173,7 @@ class MainActivity : Activity() {
                 }
             })
         }
-        root.addView(web, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
+        content.addView(web, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
 
         tabs = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -182,9 +194,84 @@ class MainActivity : Activity() {
                 setMargins(dp(3), 0, dp(3), 0)
             })
         }
-        root.addView(tabs)
-        setContentView(root)
+        content.addView(tabs)
+        appRoot.addView(content, FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        ))
+        setContentView(appRoot)
         styleTabs()
+        showLaunchAnimation()
+    }
+
+    private fun showLaunchAnimation() {
+        val overlay = FrameLayout(this).apply {
+            setBackgroundColor(BG)
+            alpha = 1f
+        }
+        val center = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+        }
+        val logo = TextView(this).apply {
+            text = "APOKOLIPS"
+            textSize = 30f
+            letterSpacing = .22f
+            setTextColor(WHITE)
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            alpha = 0f
+            scaleX = .88f
+            scaleY = .88f
+        }
+        val tagline = TextView(this).apply {
+            text = "IDEAS BECOME SOMETHING REAL."
+            textSize = 10f
+            letterSpacing = .18f
+            setTextColor(MUTED)
+            gravity = Gravity.CENTER
+            setPadding(0, dp(10), 0, 0)
+            alpha = 0f
+            translationY = dp(8).toFloat()
+        }
+        val track = View(this).apply {
+            setBackgroundColor(PANEL)
+        }
+        val progress = View(this).apply {
+            setBackgroundColor(CYAN)
+            scaleX = 0f
+            pivotX = 0f
+        }
+        val progressFrame = FrameLayout(this).apply {
+            addView(track, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(2)))
+            addView(progress, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(2)))
+        }
+        center.addView(logo)
+        center.addView(tagline)
+        center.addView(progressFrame, LinearLayout.LayoutParams(dp(156), dp(2)).apply {
+            topMargin = dp(28)
+        })
+        overlay.addView(center, FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.CENTER
+        ))
+        appRoot.addView(overlay, FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        ))
+        launchOverlay = overlay
+
+        logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(650L).start()
+        tagline.animate().alpha(1f).translationY(0f).setStartDelay(220L).setDuration(550L).start()
+        progress.animate().scaleX(1f).setStartDelay(300L).setDuration(1100L).start()
+    }
+
+    private fun dismissLaunchAnimation() {
+        val overlay = launchOverlay ?: return
+        launchOverlay = null
+        overlay.animate().alpha(0f).setDuration(420L).withEndAction {
+            appRoot.removeView(overlay)
+        }.start()
     }
 
     private fun openTab(index: Int) {
