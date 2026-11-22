@@ -1134,6 +1134,8 @@ class GroupChatActivity : Activity() {
     )
 
     private fun requestPushPermissionIfNeeded() {
+        // Do not ask for notification permission until a Firebase project is configured.
+        if (FirebaseApp.getApps(this).isEmpty()) return
         createPushNotificationChannel()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
