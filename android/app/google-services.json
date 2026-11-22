@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "477864738001",
+    "project_id": "apokolips",
+    "storage_bucket": "apokolips.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:477864738001:android:b626ad699345a3bbc919f0",
+        "android_client_info": {
+          "package_name": "xyz.apokolips.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgXulM99xAdnXnR6SEDXvhFbtFKSBRDYs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:477864738001:android:7a07459c52f346ddc919f0",
+        "android_client_info": {
+          "package_name": "xyz.apokolips.mobile.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgXulM99xAdnXnR6SEDXvhFbtFKSBRDYs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
