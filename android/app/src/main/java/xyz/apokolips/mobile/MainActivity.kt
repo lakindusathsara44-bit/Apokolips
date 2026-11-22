@@ -46,6 +46,8 @@ class MainActivity : Activity() {
     private var splashAnimationFinished = false
     private var firstPageLoaded = false
     private var currentTab = 0
+    private var lastWebTab = 0
+    private var chatLaunchPending = false
     private var chooser: ValueCallback<Array<Uri>>? = null
 
     private val urls = listOf(
@@ -53,8 +55,8 @@ class MainActivity : Activity() {
         "https://www.apokolips.xyz/network-folder.html",
         "https://www.apokolips.xyz/admin/blog-uploader/index.html"
     )
-    private val labels = listOf("Blog", "Network Folder", "Uploader")
-    private val icons = listOf("▤", "▣", "↑")
+    private val labels = listOf("Blog", "Network Folder", "Uploader", "Group Chat")
+    private val icons = listOf("▤", "▣", "↑", "◉")
 
     companion object {
         private const val PICK_FILE = 4107
@@ -74,6 +76,16 @@ class MainActivity : Activity() {
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(web, true)
         openTab(state?.getInt("tab") ?: 0)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (chatLaunchPending) {
+            chatLaunchPending = false
+            currentTab = lastWebTab
+            subtitle.text = "IDEAS BECOME SOMETHING REAL.  /  ${labels[lastWebTab].uppercase()}"
+            styleTabs()
+        }
     }
 
     private fun createUi() {
@@ -598,7 +610,23 @@ class MainActivity : Activity() {
     }
 
     private fun openTab(index: Int) {
+        if (index == 3) {
+            chatLaunchPending = true
+            currentTab = 3
+            subtitle.text = "IDEAS BECOME SOMETHING REAL.  /  GROUP CHAT"
+            styleTabs()
+            try {
+                startActivity(Intent(this, GroupChatActivity::class.java))
+            } catch (_: Exception) {
+                chatLaunchPending = false
+                currentTab = lastWebTab
+                styleTabs()
+                Toast.makeText(this, "Group Chat could not be opened.", Toast.LENGTH_SHORT).show()
+            }
+            return
+        }
         if (index !in urls.indices) return
+        lastWebTab = index
         currentTab = index
         subtitle.text = "IDEAS BECOME SOMETHING REAL.  /  ${labels[index].uppercase()}"
         styleTabs()
@@ -651,7 +679,7 @@ class MainActivity : Activity() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putInt("tab", currentTab)
+        outState.putInt("tab", lastWebTab)
         super.onSaveInstanceState(outState)
     }
 
