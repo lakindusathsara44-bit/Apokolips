@@ -83,11 +83,12 @@
       listen.classList.remove('j-listen');
       setStatus('STANDBY · VOICE LISTENING OFF');
     }
-    function hidePanel() {
-      stopListening();
+    function hidePanel(keepWakeListening = false) {
+      if (!keepWakeListening) stopListening();
       if (window.speechSynthesis) window.speechSynthesis.cancel();
       panel.classList.remove('j-open');
       launch.setAttribute('aria-expanded', 'false');
+      if (keepWakeListening && listening) setStatus('HIDDEN · SAY “HEY JARVIS” TO RETURN', true);
     }
     function addMessage(message, who) {
       const item = make('div', { className: 'j-message ' + (who === 'user' ? 'j-user' : 'j-ai') }, message);
