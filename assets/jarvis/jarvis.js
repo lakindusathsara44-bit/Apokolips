@@ -150,7 +150,7 @@
         listening = true;
         listen.textContent = '● Listening…';
         listen.classList.add('j-listen');
-        setStatus('LISTENING · SAY “HEY JARVIS”', true);
+        setStatus('LISTENING · SAY “HEY APOLONIA”', true);
       };
       recognition.onresult = event => {
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -210,10 +210,10 @@
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && panel.classList.contains('j-open')) hidePanel();
     });
-    if (new URLSearchParams(location.search).get('assistant') === 'apolonia') {
+    if (new URLSearchParams(location.search).(get('assistant') === 'jarvis' || new URLSearchParams(location.search).get('assistant') === 'apolonia')) {
       open();
-      // Keep the requested /apolonia/ URL while rendering the main homepage.
-      history.replaceState({}, '', '/apolonia/');
+      // Keep the requested /jarvis/ URL while rendering the main homepage.
+      history.replaceState({}, '', '/jarvis/');
     }
   }
 
