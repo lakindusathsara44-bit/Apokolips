@@ -8,7 +8,6 @@ if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
 }
 
-}
 android {
     namespace = "xyz.apokolips.mobile"
     compileSdk = 35
@@ -40,5 +39,4 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:35.2.0"))
     implementation("com.google.firebase:firebase-messaging")
     testImplementation("junit:junit:4.13.2")
-}
 }
