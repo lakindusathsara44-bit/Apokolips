@@ -157,6 +157,47 @@ function offlineReply(message) {
   };
 }
 
+async function callGroq(apiKey, conversation, systemInstruction) {
+  let response;
+  try {
+    response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "openai/gpt-oss-120b",
+        messages: [
+          { role: "system", content: systemInstruction },
+          ...conversation.map(({ role, content }) => ({ role, content }))
+        ],
+        max_completion_tokens: 2048,
+        temperature: 0.3
+      }),
+      signal: AbortSignal.timeout(30000)
+    });
+  } catch (error) {
+    throw new ProviderError("groq", error?.name || "network_error");
+  }
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new ProviderError(
+      "groq",
+      "http_error",
+      response.status,
+      data?.error?.code || data?.error?.type || null
+    );
+  }
+
+  const reply = data?.choices?.[0]?.message?.content;
+  if (typeof reply !== "string" || !reply.trim()) {
+    throw new ProviderError("groq", "empty_response", response.status);
+  }
+  return reply.trim();
+}
+
 async function callGemini(apiKey, conversation, systemInstruction) {
   let response;
   try {
@@ -293,6 +334,7 @@ export default async (request) => {
   const rankedPages = rankKnowledge(message);
   const knowledgeContext = buildKnowledgeContext(rankedPages);
   const systemInstruction = BASE_INSTRUCTION + "\n\nWEBSITE KNOWLEDGE:\n" + knowledgeContext;
+  const groqKey = Netlify.env.get("GROQ_API_KEY");
   const geminiKey = Netlify.env.get("GEMINI_API_KEY");
   const openAIKeys = [
     { name: "openai-fallback-1", key: Netlify.env.get("OPENAI_API_KEY") },
@@ -308,12 +350,40 @@ export default async (request) => {
 
   logDiagnostic("request_received", {
     requestId,
+    hasGroqKey: Boolean(groqKey),
     hasGeminiKey: Boolean(geminiKey),
     openAIKeysConfigured: openAIKeys.length,
     historyMessages: conversation.length,
     knowledgeVersion: KNOWLEDGE_VERSION,
     matchedPages: rankedPages.filter((page) => page.score > 0).slice(0, 4).map((page) => page.id)
   });
+
+  if (groqKey) {
+    logDiagnostic("provider_started", { requestId, provider: "groq" });
+    try {
+      const reply = await callGroq(groqKey, conversation, systemInstruction);
+      logDiagnostic("provider_succeeded", {
+        requestId,
+        provider: "groq",
+        durationMs: Date.now() - startedAt
+      });
+      return json({
+        reply,
+        provider: "groq",
+        knowledgeVersion: KNOWLEDGE_VERSION,
+        requestId
+      }, 200, headers);
+    } catch (error) {
+      logDiagnostic("provider_failed", {
+        requestId,
+        provider: "groq",
+        reason: error?.reason || error?.name || "unknown_error",
+        status: Number.isInteger(error?.status) ? error.status : null,
+        code: typeof error?.code === "string" ? error.code : null,
+        durationMs: Date.now() - startedAt
+      });
+    }
+  }
 
   if (geminiKey) {
     logDiagnostic("provider_started", { requestId, provider: "gemini" });
