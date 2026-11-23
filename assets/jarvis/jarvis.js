@@ -141,7 +141,8 @@
     brandText.append(make('strong', {}, 'APOLONIA AI'), make('small', {}, 'APOKOLIPS INTELLIGENCE'));
     brand.append(brandText);
     const close = make('button', { className: 'j-close', type: 'button', 'aria-label': 'Hide APOLONIA AI' }, '×');
-    head.append(brand, close);
+    const voiceMode = make('a', { className: 'j-voice-mode', href: '/apolonia/voice/', 'aria-label': 'Open APOLONIA Voice' }, 'VOICE');
+    head.append(brand, voiceMode, close);
 
     const status = make('div', { className: 'j-status' });
     const statusDot = make('span', { className: 'j-status-dot' });
