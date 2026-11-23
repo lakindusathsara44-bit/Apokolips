@@ -128,7 +128,7 @@ function findFaqAnswer(message) {
       const keyword = normalize(rawKeyword);
       if (!keyword) continue;
       if (query.includes(keyword)) {
-        const weight = keyword.includes(" ") ? 2 : Math.min(2, Math.max(1, keyword.length / 5));
+        const weight = keyword.includes(" ") ? 2.4 : (keyword.length >= 3 ? 1.6 : 1);
         score += weight;
         matched.push(keyword);
       }
