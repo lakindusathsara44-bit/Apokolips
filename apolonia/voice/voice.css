@@ -76,3 +76,6 @@ body:after{opacity:.24;background-image:radial-gradient(1px 3px at 17% 48%,rgba(
 @media(max-width:600px){.topbar{height:62px;padding:0 16px}.wordmark{font-size:9px}.wordmark-mark{width:29px;height:29px}.mode-label{font-size:8px}.text-mode{font-size:8px;padding:8px}.globe-wrap{width:min(59vw,38vh,330px)}.assistant-copy h1{font-size:12px}.status-line{font-size:8px}.controls{padding-top:8px;gap:8px}.start-button{min-width:162px;height:42px;font-size:9px}.control-row{gap:10px}.end-button,.mute-button{width:35px;height:35px}}
 @media(max-height:700px){.globe-wrap{width:min(43vh,60vw,330px)}.assistant-copy{margin-top:4px}.assistant-copy h1{font-size:11px}.controls{padding-top:5px;gap:6px}.topbar{height:58px}}
 @media(prefers-reduced-motion:reduce){body:before,body:after{animation:none!important}}
+
+/* Apokolips emblem in the APOLONIA Voice core. */
+.core-logo{display:block;width:62%;height:62%;object-fit:contain;position:relative;z-index:1;filter:drop-shadow(0 0 9px rgba(75,166,255,.48));}
