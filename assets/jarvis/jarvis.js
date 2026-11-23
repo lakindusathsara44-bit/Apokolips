@@ -265,12 +265,30 @@
       const pending = addMessage('Thinking…', 'ai');
       setStatus('PROCESSING REQUEST…', true);
       try {
+        const payload = { message: clean, sessionId, history: [] };
+        const encoder = new TextEncoder();
+        // Netlify rejects request bodies above 20 KB. Keep recent context within 18 KB,
+        // accounting for UTF-8 Sinhala and other multibyte text.
+        for (const entry of chatHistory.slice(-16).reverse()) {
+          const compactEntry = {
+            role: entry.role,
+            content: entry.content.slice(0, 1200)
+          };
+          const candidate = { ...payload, history: [compactEntry, ...payload.history] };
+          if (encoder.encode(JSON.stringify(candidate)).length > 18000) break;
+          payload.history.unshift(compactEntry);
+        }
         const response = await fetch(API_URL.replace(/\/$/, '') + '/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: clean, sessionId, history: chatHistory.slice(-16) })
+          body: JSON.stringify(payload)
         });
-        if (!response.ok) throw new Error('Assistant service returned ' + response.status);
+        if (!response.ok) {
+          if (response.status === 413) {
+            throw new Error('This conversation is too large. Please start a new chat to continue.');
+          }
+          throw new Error('Assistant service returned ' + response.status);
+        }
         const data = await response.json();
         const reply = typeof data.reply === 'string' ? data.reply : 'The assistant service returned an unsupported response.';
         renderMarkdown(pending, reply);
