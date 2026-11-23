@@ -293,7 +293,12 @@ export default async (request) => {
   const knowledgeContext = buildKnowledgeContext(rankedPages);
   const systemInstruction = BASE_INSTRUCTION + "\n\nWEBSITE KNOWLEDGE:\n" + knowledgeContext;
   const geminiKey = Netlify.env.get("GEMINI_API_KEY");
-  const openAIKey = Netlify.env.get("OPENAI_API_KEY");
+  const openAIKeys = [
+    { name: "openai-fallback-1", key: Netlify.env.get("OPENAI_API_KEY") },
+    { name: "openai-fallback-2", key: Netlify.env.get("OPENAI_API_KEY_2") }
+  ].filter((entry, index, all) =>
+    entry.key && all.findIndex((candidate) => candidate.key === entry.key) === index
+  );
   const requestId =
     request.headers.get("x-nf-request-id") ||
     globalThis.crypto?.randomUUID?.() ||
@@ -303,7 +308,7 @@ export default async (request) => {
   logDiagnostic("request_received", {
     requestId,
     hasGeminiKey: Boolean(geminiKey),
-    hasOpenAIKey: Boolean(openAIKey),
+    openAIKeysConfigured: openAIKeys.length,
     historyMessages: conversation.length,
     knowledgeVersion: KNOWLEDGE_VERSION,
     matchedPages: rankedPages.filter((page) => page.score > 0).slice(0, 4).map((page) => page.id)
@@ -336,25 +341,25 @@ export default async (request) => {
     }
   }
 
-  if (openAIKey) {
-    logDiagnostic("provider_started", { requestId, provider: "openai-fallback" });
+  for (const entry of openAIKeys) {
+    logDiagnostic("provider_started", { requestId, provider: entry.name });
     try {
-      const reply = await callOpenAI(openAIKey, conversation, systemInstruction);
+      const reply = await callOpenAI(entry.key, conversation, systemInstruction);
       logDiagnostic("provider_succeeded", {
         requestId,
-        provider: "openai-fallback",
+        provider: entry.name,
         durationMs: Date.now() - startedAt
       });
       return json({
         reply,
-        provider: "openai-fallback",
+        provider: entry.name,
         knowledgeVersion: KNOWLEDGE_VERSION,
         requestId
       }, 200, headers);
     } catch (error) {
       logDiagnostic("provider_failed", {
         requestId,
-        provider: "openai-fallback",
+        provider: entry.name,
         reason: error?.reason || error?.name || "unknown_error",
         status: Number.isInteger(error?.status) ? error.status : null,
         code: typeof error?.code === "string" ? error.code : null,
