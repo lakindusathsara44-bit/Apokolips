@@ -24,7 +24,108 @@
     return el;
   };
 
-  function init() {
+
+  // Render model Markdown as safe DOM nodes (no raw HTML injection).
+  function renderInline(parent, source) {
+    const pattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|\*\*([^*]+)\*\*|__([^_]+)__|~~([^~]+)~~|\*([^*]+)\*|_([^_]+)_|`([^`]+)`/g;
+    let last = 0, match;
+    while ((match = pattern.exec(source))) {
+      if (match.index > last) parent.append(document.createTextNode(source.slice(last, match.index)));
+      let node;
+      if (match[1] !== undefined) {
+        node = document.createElement('a');
+        node.href = match[2];
+        node.target = '_blank';
+        node.rel = 'noopener noreferrer';
+        node.textContent = match[1];
+      } else if (match[3] !== undefined || match[4] !== undefined) {
+        node = document.createElement('strong'); node.textContent = match[3] ?? match[4];
+      } else if (match[5] !== undefined) {
+        node = document.createElement('del'); node.textContent = match[5];
+      } else if (match[6] !== undefined || match[7] !== undefined) {
+        node = document.createElement('em'); node.textContent = match[6] ?? match[7];
+      } else {
+        node = document.createElement('code'); node.textContent = match[8];
+      }
+      parent.append(node);
+      last = pattern.lastIndex;
+    }
+    if (last < source.length) parent.append(document.createTextNode(source.slice(last)));
+  }
+
+  function renderMarkdown(container, markdown) {
+    const lines = String(markdown || '').replace(/\r\n?/g, '\n').split('\n');
+    container.replaceChildren();
+    container.classList.add('j-markdown');
+    const isTableDivider = line => /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line);
+    const cells = line => line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(cell => cell.trim());
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+      if (!line.trim()) { i++; continue; }
+      if (/^\s*```/.test(line)) {
+        const language = line.trim().slice(3).trim();
+        const code = [];
+        i++;
+        while (i < lines.length && !/^\s*```/.test(lines[i])) code.push(lines[i++]);
+        if (i < lines.length) i++;
+        const pre = document.createElement('pre'), codeEl = document.createElement('code');
+        if (language) codeEl.dataset.language = language;
+        codeEl.textContent = code.join('\n'); pre.append(codeEl); container.append(pre);
+        continue;
+      }
+      if (i + 1 < lines.length && line.includes('|') && isTableDivider(lines[i + 1])) {
+        const headers = cells(line); i += 2;
+        const table = document.createElement('table'), thead = document.createElement('thead'), tr = document.createElement('tr');
+        headers.forEach(value => { const th = document.createElement('th'); renderInline(th, value); tr.append(th); });
+        thead.append(tr); table.append(thead);
+        const tbody = document.createElement('tbody');
+        while (i < lines.length && lines[i].includes('|') && lines[i].trim()) {
+          const values = cells(lines[i++]), row = document.createElement('tr');
+          headers.forEach((_, index) => { const td = document.createElement('td'); renderInline(td, values[index] || ''); row.append(td); });
+          tbody.append(row);
+        }
+        table.append(tbody); container.append(table); continue;
+      }
+      const heading = line.match(/^\s*(#{1,6})\s+(.+)$/);
+      if (heading) {
+        const el = document.createElement('h' + heading[1].length); renderInline(el, heading[2]); container.append(el); i++; continue;
+      }
+      if (/^\s*(---+|___+|\*\*\*+)\s*$/.test(line)) { container.append(document.createElement('hr')); i++; continue; }
+      if (/^\s*>/.test(line)) {
+        const quote = document.createElement('blockquote');
+        while (i < lines.length && /^\s*>/.test(lines[i])) { const p = document.createElement('p'); renderInline(p, lines[i++].replace(/^\s*>\s?/, '')); quote.append(p); }
+        container.append(quote); continue;
+      }
+      const listMatch = line.match(/^\s*([-*+] |\d+\. )(.*)$/);
+      if (listMatch) {
+        const ordered = /^\s*\d+\./.test(line), list = document.createElement(ordered ? 'ol' : 'ul');
+        while (i < lines.length) {
+          const item = lines[i].match(/^\s*(?:[-*+] |\d+\. )(.*)$/);
+          if (!item) break;
+          const li = document.createElement('li'); renderInline(li, item[1]); list.append(li); i++;
+        }
+        container.append(list); continue;
+      }
+      const paragraph = [];
+      while (i < lines.length && lines[i].trim() &&
+        !/^\s*(#{1,6}\s|>|\`\`\`|---+\s*$|___+\s*$|\*\*\*+\s*$|[-*+] |\d+\. )/.test(lines[i]) &&
+        !(i + 1 < lines.length && lines[i].includes('|') && isTableDivider(lines[i + 1]))) {
+        paragraph.push(lines[i++].trim());
+      }
+      const p = document.createElement('p'); renderInline(p, paragraph.join(' ')); container.append(p);
+    }
+  }
+
+  function plainText(markdown) {
+    return String(markdown || '')
+      .replace(/```[\s\S]*?```/g, ' code block ')
+      .replace(/\[([^\]]+)\]\(https?:\/\/[^\s)]+\)/g, '$1')
+      .replace(/[*_~#>|]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+\n  function init() {
     if (document.getElementById('apo-jarvis-root')) return;
     const root = make('div', { id: 'apo-jarvis-root' });
     const launch = make('button', { id: 'apo-jarvis-launch', type: 'button', 'aria-label': 'Open APOLONIA AI assistant', 'aria-expanded': 'false' });
@@ -128,10 +229,10 @@
         if (!response.ok) throw new Error('Assistant service returned ' + response.status);
         const data = await response.json();
         const reply = typeof data.reply === 'string' ? data.reply : 'The assistant service returned an unsupported response.';
-        pending.textContent = reply;
+        renderMarkdown(pending, reply);
         chatHistory.push({ role: 'assistant', content: reply });
         setStatus('CONNECTED · READY', true);
-        speak(reply);
+        speak(plainText(reply));
       } catch (error) {
         pending.textContent = 'I could not reach the APOLONIA AI service. Please try again later.';
         setStatus('CONNECTION ERROR');
