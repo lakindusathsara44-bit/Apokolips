@@ -48,3 +48,7 @@
 #apo-jarvis-panel .j-markdown th{background:rgba(120,181,255,.13);color:#eaf4ff;font-weight:750}
 #apo-jarvis-panel .j-markdown tr:nth-child(even) td{background:rgba(255,255,255,.025)}
 #apo-jarvis-panel .j-markdown hr{border:0;border-top:1px solid rgba(142,190,255,.2);margin:10px 0}
+
+/* Per-reply, user-controlled text-to-speech */
+#apo-jarvis-panel .j-speak-btn{display:inline-flex;align-items:center;gap:6px;margin-top:9px;padding:6px 9px;border:1px solid rgba(139,216,237,.25);border-radius:8px;background:rgba(120,181,255,.07);color:#a9dced;font:600 10px Manrope,system-ui,sans-serif;cursor:pointer}
+#apo-jarvis-panel .j-speak-btn:hover,#apo-jarvis-panel .j-speak-btn.j-speaking{border-color:rgba(139,216,237,.65);background:rgba(120,181,255,.15);color:#e4f8ff}
