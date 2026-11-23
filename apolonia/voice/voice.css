@@ -31,3 +31,48 @@ button,a{-webkit-tap-highlight-color:transparent}.voice-shell{min-height:100svh;
 @media(max-width:600px){.topbar{height:62px;padding:0 16px}.wordmark{font-size:9px}.mode-label{font-size:8px;letter-spacing:1px}.text-mode{font-size:8px;padding:8px}.stage{padding-top:0}.globe-wrap{width:min(66vw,39vh,360px)}.assistant-copy{margin-top:8px}.assistant-copy h1{font-size:27px}.status-line{font-size:11px}.controls{padding-top:10px;gap:11px}.start-button{min-width:184px;height:50px}.control-row{gap:11px}}
 @media(max-height:700px){.globe-wrap{width:min(48vh,65vw,390px)}.assistant-copy{margin-top:0}.assistant-copy h1{font-size:25px}.controls{padding-top:7px;gap:8px}.topbar{height:58px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+/* APOLONIA Voice — align with the Apokolips main site and info profile orb. */
+:root{--bg:#050609;--blue:#70a9ff;--cyan:#8bd8ed;--text:#f2f4f8;--muted:#9299a8;--line:rgba(255,255,255,.09)}
+html,body{background:#050609;color:var(--text);font-family:Manrope,Arial,sans-serif}
+body{background:radial-gradient(ellipse at 50% 48%,rgba(43,91,159,.13),transparent 48%),#050609}
+body:before,body:after{content:"";position:fixed;inset:-220px 0 0;z-index:0;pointer-events:none;background-repeat:repeat;background-size:100% 220px;animation:apoloniaRain 4.5s linear infinite}
+body:before{opacity:.38;background-image:radial-gradient(1.5px 4px at 8% 18%,rgba(180,215,255,.9) 98%,transparent),radial-gradient(1px 4px at 27% 72%,rgba(130,185,255,.8) 98%,transparent),radial-gradient(1.5px 5px at 49% 38%,rgba(190,225,255,.85) 98%,transparent),radial-gradient(1px 4px at 68% 88%,rgba(130,185,255,.8) 98%,transparent),radial-gradient(1.5px 4px at 88% 55%,rgba(190,225,255,.85) 98%,transparent)}
+body:after{opacity:.24;background-image:radial-gradient(1px 3px at 17% 48%,rgba(120,180,255,.9) 98%,transparent),radial-gradient(1.5px 4px at 39% 12%,rgba(190,225,255,.8) 98%,transparent),radial-gradient(1px 4px at 61% 66%,rgba(140,195,255,.9) 98%,transparent),radial-gradient(1.5px 4px at 81% 28%,rgba(190,225,255,.8) 98%,transparent);animation-duration:6.5s;animation-delay:-2s}
+@keyframes apoloniaRain{to{transform:translateY(220px)}}
+.voice-shell{z-index:1;max-width:1120px;margin:auto}
+.voice-shell:before{opacity:.07;background-size:42px 42px}
+.topbar{height:76px;padding:0 28px;border-bottom:1px solid var(--line)}
+.wordmark{font-size:11px;letter-spacing:2px}
+.wordmark-mark{width:34px;height:34px;border-radius:10px;border-color:rgba(112,169,255,.55);color:var(--blue);font-size:14px}
+.mode-label,.text-mode{font-size:9px;letter-spacing:1.2px;color:#a8afbc}
+.mode-label b{color:var(--cyan)}
+.text-mode{border-color:var(--line);border-radius:7px;padding:9px 12px;color:#d8deea}
+.stage{padding:0 20px;gap:0}
+.globe-wrap{width:min(54vh,76vw,430px);filter:drop-shadow(0 18px 54px rgba(0,0,0,.45))}
+.globe-wrap:before{inset:13%;background:radial-gradient(circle at 32% 26%,rgba(239,251,255,.22) 0 2%,rgba(153,222,255,.17) 9%,rgba(65,169,255,.14) 31%,rgba(13,105,220,.1) 58%,rgba(5,42,112,.045) 78%,transparent 100%);border:1px solid rgba(160,215,255,.42);box-shadow:0 0 12px 3px rgba(48,164,255,.3),0 0 34px 8px rgba(22,119,255,.16),inset 0 0 24px rgba(226,248,255,.12)}
+.globe-orbit{inset:8%;border-color:rgba(112,169,255,.32);box-shadow:0 0 20px rgba(55,155,255,.08)}
+.orbit-one{transform:rotateX(68deg) rotateZ(-18deg);animation:orbit 18s linear infinite}
+.orbit-two{inset:3%;transform:rotateY(70deg) rotateZ(25deg);border-color:rgba(139,216,237,.24);animation:orbit-reverse 25s linear infinite}
+.globe-grid{display:none}
+.core-halo{width:44%;background:rgba(55,150,255,.2);filter:blur(32px)}
+.core{width:22%;background:radial-gradient(circle at 32% 26%,#244c78 0,#111d30 52%,#070b12 100%);border-color:rgba(160,215,255,.8);box-shadow:0 0 12px 3px rgba(48,164,255,.25),0 0 30px 8px rgba(22,119,255,.15),inset 0 0 14px rgba(226,248,255,.14)}
+.core-letter{font-size:clamp(23px,4vw,34px)}
+.core-label{font-size:6px;letter-spacing:1.4px}
+.assistant-copy{margin-top:9px}
+.eyebrow{font-size:8px;letter-spacing:2px;margin-bottom:5px;color:#8e9aaa}
+.assistant-copy h1{font-size:13px;letter-spacing:1.2px;font-weight:700}
+.status-line{font-size:9px;min-height:14px;margin-top:6px;color:#a1a9b7}
+.phoneme-readout{font-size:7px;letter-spacing:1.4px;margin-top:6px}
+.controls{padding:10px 20px max(16px,env(safe-area-inset-bottom));gap:8px}
+.control-hint{font-size:8px;min-height:12px;color:#7f8998}
+.start-button{height:44px;min-width:178px;padding:0 18px;font-size:10px;letter-spacing:.2px;background:linear-gradient(110deg,rgba(112,169,255,.22),rgba(139,216,237,.09));border-color:rgba(112,169,255,.35);box-shadow:0 0 22px rgba(48,147,232,.08)}
+.end-button,.mute-button{width:38px;height:38px;font-size:12px}
+.control-row{gap:12px}
+.mic-icon{font-size:18px}
+.footer-note{font-size:7px;letter-spacing:1.5px;color:#737c8b}
+.globe-wrap[data-state="listening"]:before{border-color:rgba(139,217,173,.62);box-shadow:0 0 18px rgba(130,217,173,.22),0 0 42px rgba(130,217,173,.12),inset 0 0 24px rgba(226,248,255,.12)}
+.globe-wrap[data-state="speaking"]:before{border-color:rgba(139,216,237,.85);box-shadow:0 0 22px rgba(139,216,237,.35),0 0 52px rgba(22,119,255,.22),inset 0 0 28px rgba(226,248,255,.18)}
+@media(max-width:600px){.topbar{height:62px;padding:0 16px}.wordmark{font-size:9px}.wordmark-mark{width:29px;height:29px}.mode-label{font-size:8px}.text-mode{font-size:8px;padding:8px}.globe-wrap{width:min(59vw,38vh,330px)}.assistant-copy h1{font-size:12px}.status-line{font-size:8px}.controls{padding-top:8px;gap:8px}.start-button{min-width:162px;height:42px;font-size:9px}.control-row{gap:10px}.end-button,.mute-button{width:35px;height:35px}}
+@media(max-height:700px){.globe-wrap{width:min(43vh,60vw,330px)}.assistant-copy{margin-top:4px}.assistant-copy h1{font-size:11px}.controls{padding-top:5px;gap:6px}.topbar{height:58px}}
+@media(prefers-reduced-motion:reduce){body:before,body:after{animation:none!important}}
