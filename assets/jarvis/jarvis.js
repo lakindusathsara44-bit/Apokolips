@@ -272,7 +272,7 @@
         for (const entry of chatHistory.slice(-16).reverse()) {
           const compactEntry = {
             role: entry.role,
-            content: entry.content.slice(-1200)
+            content: entry.content.slice(0, 1200)
           };
           const candidate = { ...payload, history: [compactEntry, ...payload.history] };
           if (encoder.encode(JSON.stringify(candidate)).length > 18000) break;
