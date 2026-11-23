@@ -188,6 +188,7 @@
     function hidePanel(keepWakeListening = false) {
       if (!keepWakeListening) stopListening();
       if (window.speechSynthesis) window.speechSynthesis.cancel();
+      resetSpeechButton();
       panel.classList.remove('j-open');
       launch.setAttribute('aria-expanded', 'false');
       if (keepWakeListening && listening) setStatus('HIDDEN · SAY “HEY APOLONIA” TO RETURN', true);
@@ -198,13 +199,54 @@
       body.scrollTop = body.scrollHeight;
       return item;
     }
+    let activeSpeechButton = null;
+    function resetSpeechButton() {
+      if (activeSpeechButton) {
+        activeSpeechButton.textContent = '🔊 Read aloud';
+        activeSpeechButton.setAttribute('aria-label', 'Read this response aloud');
+        activeSpeechButton.classList.remove('j-speaking');
+        activeSpeechButton = null;
+      }
+    }
     function speak(message) {
       if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
       window.speechSynthesis.cancel();
+      resetSpeechButton();
       const utterance = new SpeechSynthesisUtterance(message);
       utterance.lang = 'en-US';
       utterance.rate = 1;
       window.speechSynthesis.speak(utterance);
+    }
+    function addSpeakerControl(item, message) {
+      const button = make('button', {
+        className: 'j-speak-btn',
+        type: 'button',
+        'aria-label': 'Read this response aloud'
+      }, '🔊 Read aloud');
+      button.addEventListener('click', () => {
+        if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+          button.textContent = 'Voice unavailable';
+          return;
+        }
+        if (activeSpeechButton === button) {
+          window.speechSynthesis.cancel();
+          resetSpeechButton();
+          return;
+        }
+        window.speechSynthesis.cancel();
+        resetSpeechButton();
+        const utterance = new SpeechSynthesisUtterance(plainText(message));
+        utterance.lang = 'en-US';
+        utterance.rate = 1;
+        activeSpeechButton = button;
+        button.textContent = '■ Stop reading';
+        button.setAttribute('aria-label', 'Stop reading this response');
+        button.classList.add('j-speaking');
+        utterance.onend = resetSpeechButton;
+        utterance.onerror = resetSpeechButton;
+        window.speechSynthesis.speak(utterance);
+      });
+      item.append(button);
     }
     async function sendMessage(message) {
       const clean = message.trim();
@@ -214,7 +256,8 @@
       input.value = '';
       if (!API_URL) {
         const reply = 'My interface is online, but the APOLONIA AI backend is not connected yet. I cannot generate a real AI answer until the secure backend is deployed.';
-        addMessage(reply, 'ai');
+        const offlineReply = addMessage(reply, 'ai');
+        addSpeakerControl(offlineReply, reply);
         setStatus('INTERFACE ONLINE · AI SERVICE NOT CONNECTED');
         return;
       }
@@ -231,8 +274,8 @@
         const reply = typeof data.reply === 'string' ? data.reply : 'The assistant service returned an unsupported response.';
         renderMarkdown(pending, reply);
         chatHistory.push({ role: 'assistant', content: reply });
+        addSpeakerControl(pending, reply);
         setStatus('CONNECTED · READY', true);
-        speak(plainText(reply));
       } catch (error) {
         pending.textContent = 'I could not reach the APOLONIA AI service. Please try again later.';
         setStatus('CONNECTION ERROR');
