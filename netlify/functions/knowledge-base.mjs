@@ -109,7 +109,7 @@ export const WEBSITE_KNOWLEDGE = [
 export const WEBSITE_FAQS = [
   {
     id: "overview",
-    keywords: ["apokolips", "website", "site", "what is", "about apokolips", "portfolio", "project hub", "වෙබ් අඩවිය", "මේක මොකක්ද", "අපොකොලිප්ස්", "අපොකොලිප්ස් කියන්නේ", "මොනවද මේක"],
+    keywords: ["apokolips", "apokolips website", "about apokolips", "this website", "this site", "portfolio", "project hub", "වෙබ් අඩවිය", "මේ වෙබ් අඩවිය", "අපේ වෙබ් අඩවිය", "මේක මොකක්ද", "අපොකොලිප්ස්", "අපොකොලිප්ස් කියන්නේ", "මොනවද මේක"],
     answer: "Apokolips is a personal portfolio and project hub by Lakindu Sathsara. It brings together his profile, projects, learning and technology work, and community creations. Its idea is: “Ideas become something real.” Visit https://www.apokolips.xyz/."
   },
   {
