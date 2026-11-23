@@ -125,7 +125,8 @@
       .replace(/\s+/g, ' ')
       .trim();
   }
-\n  function init() {
+
+  function init() {
     if (document.getElementById('apo-jarvis-root')) return;
     const root = make('div', { id: 'apo-jarvis-root' });
     const launch = make('button', { id: 'apo-jarvis-launch', type: 'button', 'aria-label': 'Open APOLONIA AI assistant', 'aria-expanded': 'false' });
