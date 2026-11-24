@@ -102,3 +102,5 @@ body:after{opacity:.24;background-image:radial-gradient(1px 3px at 17% 48%,rgba(
 @keyframes apoloniaOrbSpeak{0%,100%{transform:scale(.96);box-shadow:0 0 0 7px rgba(88,174,255,.06),0 0 28px rgba(64,190,255,.28),inset 0 0 25px rgba(87,171,255,.18)}35%{transform:scale(1.075);box-shadow:0 0 0 13px rgba(88,210,255,.055),0 0 48px rgba(64,190,255,.48),inset 0 0 32px rgba(87,210,255,.24)}70%{transform:scale(1.015);box-shadow:0 0 0 9px rgba(88,174,255,.045),0 0 36px rgba(64,160,255,.36),inset 0 0 28px rgba(87,171,255,.2)}}
 @keyframes apoloniaHaloSpeak{0%,100%{transform:scale(.92);opacity:.65}45%{transform:scale(1.42);opacity:1}}
 @media(prefers-reduced-motion:reduce){.core,.core:before,.core-halo{animation:none!important}}
+
+.contacts-button{height:34px;padding:0 11px;border:1px solid rgba(139,216,237,.25);border-radius:20px;background:rgba(11,27,48,.7);color:#a9dced;font:700 9px Manrope,sans-serif;letter-spacing:.7px;cursor:pointer}.contacts-button:hover{border-color:rgba(139,216,237,.7);color:#e4f8ff}
