@@ -58,3 +58,13 @@
 
 /* APOLONIA trusted-contact setup */
 #apo-jarvis-panel .j-tools{flex-wrap:wrap}#apo-jarvis-panel .j-tools button{font-size:10px}
+
+
+/* APOLONIA Text: full-screen and compact display controls. */
+.j-view-controls{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+#apo-jarvis-panel .j-view-button{width:30px;height:30px;padding:0;display:grid;place-items:center;border:1px solid rgba(139,216,237,.22);border-radius:8px;background:rgba(120,181,255,.07);color:#b9eafa;font-size:15px;line-height:1;cursor:pointer}
+#apo-jarvis-panel .j-view-button:hover,#apo-jarvis-panel .j-view-button[aria-pressed="true"]{border-color:rgba(139,216,237,.65);background:rgba(120,181,255,.16)}
+#apo-jarvis-panel.j-compact{width:min(330px,calc(100vw - 24px));height:min(470px,calc(100dvh - 96px));right:14px;bottom:78px;border-radius:16px}
+#apo-jarvis-panel:fullscreen,#apo-jarvis-panel.j-fullscreen-fallback{position:fixed;inset:0;right:auto;bottom:auto;width:100vw;height:100dvh;max-width:none;max-height:none;border-radius:0;border:0;z-index:2147483000}
+#apo-jarvis-panel:fullscreen .j-head,#apo-jarvis-panel.j-fullscreen-fallback .j-head{padding-left:clamp(16px,4vw,42px);padding-right:clamp(16px,4vw,42px)}
+@media(max-width:520px){.j-head{gap:8px;padding:12px}.j-view-controls{gap:4px}#apo-jarvis-panel .j-view-button{width:28px;height:28px}.j-voice-mode{padding:7px 8px;font-size:8px}}
