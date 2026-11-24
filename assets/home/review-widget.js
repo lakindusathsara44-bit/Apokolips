@@ -164,7 +164,7 @@
         review,
         "",
         "Sent from: https://apokolips.xyz/"
-      ].join("\\n");
+      ].join("\n");
       const mailto = "mailto:" + EMAIL + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
       status.textContent = "Opening your email app. Please press Send there to submit your review.";
       window.location.href = mailto;
