@@ -6,7 +6,7 @@
 
   function mountReviewWidget() {
     const footer = document.querySelector(".footer");
-    if (!footer || footer.querySelector(".ap-review-widget")) return false;
+    if (!footer || document.querySelector(".ap-review-widget")) return false;
 
     const widget = document.createElement("section");
     widget.className = "ap-review-widget";
@@ -28,9 +28,8 @@
         Write a Review <span aria-hidden="true">↗</span>
       </button>`;
 
-    const visitorCounter = footer.querySelector(".visitor-counter");
-    if (visitorCounter) footer.insertBefore(widget, visitorCounter);
-    else footer.appendChild(widget);
+    // Keep the review card outside the footer so it never changes the footer layout.
+    footer.parentNode.insertBefore(widget, footer);
 
     const dialog = document.createElement("div");
     dialog.className = "ap-review-backdrop";
