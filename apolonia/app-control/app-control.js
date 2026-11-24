@@ -1,6 +1,6 @@
 /* APOLONIA App Control — shared, permission-aware app launcher.
  * This browser layer opens native app composers with prefilled content.
- * Website-only implementation: it opens supported message composers and never sends silently.
+ * Website-only implementation: opens supported message composers and never sends silently.
  */
 (() => {
   'use strict';
@@ -79,10 +79,6 @@
     if (!String(message || '').trim()) throw new Error('Message content is empty.');
 
     const request = { app, contactName: contact.name, address: contact.channels[app], message: String(message).trim(), subject };
-    // A future signed native wrapper can implement this bridge with Android intents.
-    if (window.ApoloniaNativeBridge && typeof window.ApoloniaNativeBridge.openComposer === 'function') {
-      return window.ApoloniaNativeBridge.openComposer(request);
-    }
     const url = buildComposerUrl(app, request.address, request.message, {subject});
     const opened = window.open(url, '_blank');
     if (opened) opened.opener = null;
@@ -92,8 +88,10 @@
 
   function parseCommand(text) {
     const value = String(text || '').trim();
-    // English: "send WhatsApp to Mano: I'll be late"
-    const english = value.match(/^(?:send|message)\s+(sms|whatsapp|telegram|gmail|email)\s+(?:message\s+)?to\s+([^:]{1,80})\s*:\s*([\s\S]+)$/i);
+    // English typed/voice forms:
+    // "send WhatsApp to Mano: I'll be late"
+    // "send WhatsApp message to Mano saying I'll be late"
+    const english = value.match(/^(?:send|message)\s+(sms|whatsapp|telegram|gmail|email)\s+(?:message\s+)?to\s+([^:]{1,80}?)\s*(?::|saying\s+)([\s\S]+)$/i);
     // Sinhala: "WhatsApp එකෙන් Manoට මම එනවා කියලා පණිවිඩයක් යවන්න"
     const sinhala = value.match(/^(sms|whatsapp|telegram|gmail|email)\s+එකෙන්\s+(.{1,80}?)ට\s+(.+?)\s+(?:කියලා\s+)?(?:පණිවිඩයක්|message එකක්|email එකක්)\s+යවන්න[.!?。]*$/i);
     const match = english || sinhala;
