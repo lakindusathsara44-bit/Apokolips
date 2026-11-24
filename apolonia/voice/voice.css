@@ -123,3 +123,5 @@ body.apo-compact-host{display:grid;place-items:center;min-height:100svh;height:a
 .voice-shell.apo-compact-mode .globe-wrap{width:min(38vh,58vw,300px)}
 .voice-shell.apo-compact-mode .controls{padding-top:8px;gap:8px}
 @media(max-width:600px){.voice-view-controls{gap:4px}.voice-view-controls button{width:28px;height:28px}.topbar{gap:7px}.voice-shell.apo-compact-mode{width:calc(100vw - 16px);height:min(650px,calc(100svh - 20px));border-radius:16px}.voice-shell.apo-compact-mode .mode-label{display:none}.voice-shell.apo-compact-mode .globe-wrap{width:min(42vw,32vh,250px)}}
+
+@media(max-width:420px){.topbar{padding:0 10px;gap:7px}.mode-label{display:none}.wordmark{gap:6px}.text-mode{padding:7px 7px;font-size:7px}.voice-view-controls{gap:3px}.voice-view-controls button{width:27px;height:27px}}
