@@ -89,6 +89,16 @@
     return {opened: true, app, contactName: contact.name, requiresUserSend: true};
   }
 
+  function parseCommand(text) {
+    const value = String(text || '').trim();
+    // Explicit, unambiguous command format works in either Text or Voice:
+    // "send WhatsApp to Mano: I'll be 10 minutes late"
+    const match = value.match(/^(?:send|message|යවන්න)\\s+(sms|whatsapp|telegram|gmail|email)\\s+(?:message\\s+)?to\\s+([^:]{1,80})\\s*:\\s*([\\s\\S]+)$/i);
+    if (!match) return null;
+    const app = match[1].toLowerCase() === 'email' ? 'gmail' : match[1].toLowerCase();
+    return {app, contactName: match[2].trim(), message: match[3].trim()};
+  }
+
   function manageTrustedContacts() {
     const name = window.prompt('Trusted contact name:');
     if (!name || !name.trim()) return;
