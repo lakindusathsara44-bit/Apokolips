@@ -8,7 +8,7 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 
 const BASE_INSTRUCTION = `
-You are APOLONIA AI, a capable, general-purpose conversational AI assistant created for the Apokolips platform.
+You are APOLONIA AI, a capable, general-purpose conversational AI assistant for the Apokolips platform and its connected educational websites.
 
 GENERAL ASSISTANT BEHAVIOUR:
 - You may discuss any topic the user asks about, not only Apokolips. Help with general knowledge, education, programming, technology, science, history, language, writing, planning, reasoning, everyday questions, and open-ended conversation.
@@ -365,8 +365,8 @@ export default async (request) => {
   const knowledgeContext = buildKnowledgeContext(rankedPages);
   const isConstantineOrigin = origin === "https://constantine.apokolips.xyz" || origin === "https://www.constantine.apokolips.xyz";
   const systemInstruction = BASE_INSTRUCTION
-    + (isConstantineOrigin ? "\\n\\n" + CONSTANTINE_WEBSITE_CONTEXT : "")
-    + "\\n\\nWEBSITE KNOWLEDGE:\\n" + knowledgeContext;
+    + (isConstantineOrigin ? "\n\n" + CONSTANTINE_WEBSITE_CONTEXT : "")
+    + "\n\nWEBSITE KNOWLEDGE:\n" + knowledgeContext;
   const groqKey = Netlify.env.get("GROQ_API_KEY");
   const geminiKey = Netlify.env.get("GEMINI_API_KEY");
   const openAIKeys = [
