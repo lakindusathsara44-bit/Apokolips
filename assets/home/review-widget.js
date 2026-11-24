@@ -3,7 +3,6 @@
 
   const EMAIL = "lakindusathsara65@gmail.com";
   const DISPLAY_RATING = "4.8";
-  const DISPLAY_COUNT = "Community rating";
 
   function mountReviewWidget() {
     const footer = document.querySelector(".footer");
@@ -19,37 +18,58 @@
           <h2 id="ap-review-title">Enjoying Apokolips?</h2>
           <p>Share a quick rating and help make the experience better.</p>
         </div>
-        <div class="ap-review-score" aria-label="Starting site rating ${DISPLAY_RATING} out of 5">
+        <div class="ap-review-score" aria-label="Displayed site rating ${DISPLAY_RATING} out of 5">
           <strong>${DISPLAY_RATING}</strong>
           <span class="ap-review-score-stars" aria-hidden="true">★★★★★</span>
-          <small>${DISPLAY_COUNT}</small>
+          <small>Site rating</small>
         </div>
       </div>
-      <form class="ap-review-form">
-        <fieldset class="ap-review-rating">
-          <legend>Your rating</legend>
-          <div class="ap-review-stars" role="group" aria-label="Choose a rating from 1 to 5">
-            ${[1, 2, 3, 4, 5].map(n => `<button type="button" class="ap-review-star" data-rating="${n}" aria-label="${n} star${n === 1 ? "" : "s"}" aria-pressed="${n === 5 ? "true" : "false"}">★</button>`).join("")}
-          </div>
-          <span class="ap-review-rating-hint" aria-live="polite">5 out of 5</span>
-        </fieldset>
-        <label class="ap-review-label" for="ap-review-message">Your review</label>
-        <textarea id="ap-review-message" name="message" rows="3" maxlength="1000" required placeholder="Tell us what you think about Apokolips..." ></textarea>
-        <div class="ap-review-actions">
-          <span class="ap-review-private">Your message is sent privately by email.</span>
-          <button class="ap-review-send" type="submit">Send review <span aria-hidden="true">↗</span></button>
-        </div>
-        <p class="ap-review-status" role="status" aria-live="polite"></p>
-      </form>`;
+      <button class="ap-review-open" type="button" aria-haspopup="dialog" aria-controls="ap-review-dialog">
+        Write a Review <span aria-hidden="true">↗</span>
+      </button>`;
 
     // Keep the review card outside the footer so it never changes the footer layout.
     footer.parentNode.insertBefore(widget, footer);
 
+    const dialog = document.createElement("div");
+    dialog.className = "ap-review-backdrop";
+    dialog.id = "ap-review-dialog";
+    dialog.hidden = true;
+    dialog.innerHTML = `
+      <section class="ap-review-dialog" role="dialog" aria-modal="true" aria-labelledby="ap-review-dialog-title" aria-describedby="ap-review-dialog-description" tabindex="-1">
+        <button class="ap-review-close" type="button" aria-label="Close review form">×</button>
+        <span class="ap-review-kicker">APOKOLIPS / FEEDBACK</span>
+        <h2 id="ap-review-dialog-title">Write a Review</h2>
+        <p class="ap-review-dialog-description" id="ap-review-dialog-description">Your feedback helps us improve the Apokolips experience.</p>
+        <form class="ap-review-form">
+          <fieldset class="ap-review-rating">
+            <legend>Your rating</legend>
+            <div class="ap-review-stars" role="group" aria-label="Choose a rating from 1 to 5">
+              ${[1, 2, 3, 4, 5].map(n => `<button type="button" class="ap-review-star" data-rating="${n}" aria-label="${n} star${n === 1 ? "" : "s"}" aria-pressed="${n === 5 ? "true" : "false"}">★</button>`).join("")}
+            </div>
+            <span class="ap-review-rating-hint" aria-live="polite">5 out of 5</span>
+          </fieldset>
+          <label class="ap-review-label" for="ap-review-message">Your review</label>
+          <textarea id="ap-review-message" name="message" rows="4" maxlength="1000" required minlength="3" placeholder="Tell us what you think about Apokolips..."></textarea>
+          <div class="ap-review-dialog-footer">
+            <span class="ap-review-private">Your message is sent privately by email.</span>
+            <button class="ap-review-send" type="submit">Send review <span aria-hidden="true">↗</span></button>
+          </div>
+          <p class="ap-review-status" role="status" aria-live="polite"></p>
+        </form>
+      </section>`;
+    document.body.appendChild(dialog);
+
     let selectedRating = 5;
-    const stars = [...widget.querySelectorAll(".ap-review-star")];
-    const hint = widget.querySelector(".ap-review-rating-hint");
-    const message = widget.querySelector("#ap-review-message");
-    const status = widget.querySelector(".ap-review-status");
+    let previousFocus = null;
+    let previousOverflow = "";
+    const openButton = widget.querySelector(".ap-review-open");
+    const closeButton = dialog.querySelector(".ap-review-close");
+    const dialogPanel = dialog.querySelector(".ap-review-dialog");
+    const stars = [...dialog.querySelectorAll(".ap-review-star")];
+    const hint = dialog.querySelector(".ap-review-rating-hint");
+    const message = dialog.querySelector("#ap-review-message");
+    const status = dialog.querySelector(".ap-review-status");
 
     function setRating(value) {
       selectedRating = value;
@@ -60,6 +80,50 @@
       });
       hint.textContent = value + " out of 5";
     }
+
+    function openDialog() {
+      previousFocus = document.activeElement;
+      previousOverflow = document.body.style.overflow;
+      dialog.hidden = false;
+      document.body.style.overflow = "hidden";
+      setRating(5);
+      status.textContent = "";
+      window.requestAnimationFrame(() => stars[4].focus());
+    }
+
+    function closeDialog() {
+      if (dialog.hidden) return;
+      dialog.hidden = true;
+      document.body.style.overflow = previousOverflow;
+      if (previousFocus && typeof previousFocus.focus === "function") previousFocus.focus();
+    }
+
+    openButton.addEventListener("click", openDialog);
+    closeButton.addEventListener("click", closeDialog);
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) closeDialog();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (dialog.hidden) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeDialog();
+        return;
+      }
+      if (event.key === "Tab") {
+        const focusable = [...dialogPanel.querySelectorAll('button:not([disabled]), textarea:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])')];
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    });
 
     stars.forEach((star) => {
       star.addEventListener("click", () => setRating(Number(star.dataset.rating)));
@@ -80,7 +144,7 @@
     });
     setRating(5);
 
-    widget.querySelector(".ap-review-form").addEventListener("submit", (event) => {
+    dialog.querySelector(".ap-review-form").addEventListener("submit", (event) => {
       event.preventDefault();
       const review = message.value.trim();
       if (review.length < 3) {
