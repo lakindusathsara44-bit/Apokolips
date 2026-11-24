@@ -31,3 +31,11 @@ button,a{-webkit-tap-highlight-color:transparent}.voice-shell{min-height:100svh;
 @media(max-width:600px){.topbar{height:62px;padding:0 16px}.wordmark{font-size:9px}.mode-label{font-size:8px;letter-spacing:1px}.text-mode{font-size:8px;padding:8px}.stage{padding-top:0}.globe-wrap{width:min(66vw,39vh,360px)}.assistant-copy{margin-top:8px}.assistant-copy h1{font-size:27px}.status-line{font-size:11px}.controls{padding-top:10px;gap:11px}.start-button{min-width:184px;height:50px}.control-row{gap:11px}}
 @media(max-height:700px){.globe-wrap{width:min(48vh,65vw,390px)}.assistant-copy{margin-top:0}.assistant-copy h1{font-size:25px}.controls{padding-top:7px;gap:8px}.topbar{height:58px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+/* APOLONIA: living punctuation humanoid */
+.particle-stage{width:min(66vh,78vw,540px);filter:drop-shadow(0 20px 65px rgba(0,0,0,.3));}
+.particle-stage:before{inset:5%;border:0;background:radial-gradient(ellipse at 50% 45%,rgba(24,107,180,.13),transparent 66%);box-shadow:none;}
+#particleHumanoid{position:absolute;inset:0;width:100%;height:100%;z-index:7;overflow:visible;}
+.particle-stage .globe-orbit,.particle-stage .globe-grid,.particle-stage .core-halo,.particle-stage #voiceWave,.particle-stage .core,.particle-stage .globe-sheen{display:none!important}
+.particle-stage[data-state="speaking"]{filter:drop-shadow(0 0 28px rgba(82,205,255,.28));}
+.particle-stage[data-state="listening"]{filter:drop-shadow(0 0 25px rgba(110,255,218,.2));}
+@media(max-height:700px){.particle-stage{width:min(55vh,68vw,430px)}}
