@@ -258,6 +258,21 @@
     async function sendMessage(message) {
       const clean = message.trim();
       if (!clean) return;
+      const appAction = window.ApoloniaAppControl?.parseCommand(clean);
+      if (appAction) {
+        addMessage(clean, 'user');
+        try {
+          await window.ApoloniaAppControl.openComposer(appAction);
+          const notice = 'Opened a ' + appAction.app.toUpperCase() + ' draft for ' + appAction.contactName + '. Review the recipient and message, then tap Send in that app.';
+          const item = addMessage(notice, 'ai');
+          addSpeakerControl(item, notice);
+          setStatus('APP COMPOSER OPENED · USER SEND REQUIRED', true);
+        } catch (error) {
+          addMessage(error.message || 'Could not open the app composer.', 'ai');
+          setStatus('APP CONTROL NEEDS ATTENTION');
+        }
+        return;
+      }
       addMessage(clean, 'user');
       chatHistory.push({ role: 'user', content: clean });
       input.value = '';
