@@ -1,6 +1,6 @@
 /* APOLONIA App Control — shared, permission-aware app launcher.
  * This browser layer opens native app composers with prefilled content.
- * It never sends messages silently. Native Android bridge can be added later.
+ * Website-only implementation: it opens supported message composers and never sends silently.
  */
 (() => {
   'use strict';
@@ -92,14 +92,14 @@
 
   function parseCommand(text) {
     const value = String(text || '').trim();
-    // Explicit, unambiguous command format works in either Text or Voice:
-    // "send WhatsApp to Mano: I'll be 10 minutes late"
+    // Explicit English form: "send WhatsApp to Mano: I'll be late"
     const english = value.match(/^(?:send|message)\\s+(sms|whatsapp|telegram|gmail|email)\\s+(?:message\\s+)?to\\s+([^:]{1,80})\\s*:\\s*([\\s\\S]+)$/i);
-    const sinhala = value.match(/^(sms|whatsapp|telegram|gmail|email)\\s+එකෙන්\\s+(.{1,80}?)ට\\s+(?:පණිවිඩයක්|email එකක්)\\s+යවන්න\\s*:\\s*([\\s\\S]+)$/i);
+    // Sinhala text/voice form: "WhatsApp එකෙන් Manoට මම එනවා කියලා පණිවිඩයක් යවන්න"
+    const sinhala = value.match(/^(sms|whatsapp|telegram|gmail|email)\\s+එකෙන්\\s+(.{1,80}?)ට\\s+(.+?)\\s+(?:කියලා\\s+)?(?:පණිවිඩයක්|message එකක්|email එකක්)\\s+යවන්න[.!?。]*$/i);
     const match = english || sinhala;
     if (!match) return null;
     const app = match[1].toLowerCase() === 'email' ? 'gmail' : match[1].toLowerCase();
-    return {app, contactName: match[2].trim(), message: match[3].trim()};
+    return { app, contactName: match[2].trim(), message: match[3].trim() };
   }
 
   function manageTrustedContacts() {
@@ -121,6 +121,7 @@
     saveTrustedContact,
     removeTrustedContact,
     findTrustedContact,
+    parseCommand,
     buildComposerUrl,
     openComposer,
     manageTrustedContacts
