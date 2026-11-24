@@ -92,10 +92,10 @@
 
   function parseCommand(text) {
     const value = String(text || '').trim();
-    // Explicit English form: "send WhatsApp to Mano: I'll be late"
-    const english = value.match(/^(?:send|message)\\s+(sms|whatsapp|telegram|gmail|email)\\s+(?:message\\s+)?to\\s+([^:]{1,80})\\s*:\\s*([\\s\\S]+)$/i);
-    // Sinhala text/voice form: "WhatsApp එකෙන් Manoට මම එනවා කියලා පණිවිඩයක් යවන්න"
-    const sinhala = value.match(/^(sms|whatsapp|telegram|gmail|email)\\s+එකෙන්\\s+(.{1,80}?)ට\\s+(.+?)\\s+(?:කියලා\\s+)?(?:පණිවිඩයක්|message එකක්|email එකක්)\\s+යවන්න[.!?。]*$/i);
+    // English: "send WhatsApp to Mano: I'll be late"
+    const english = value.match(/^(?:send|message)\s+(sms|whatsapp|telegram|gmail|email)\s+(?:message\s+)?to\s+([^:]{1,80})\s*:\s*([\s\S]+)$/i);
+    // Sinhala: "WhatsApp එකෙන් Manoට මම එනවා කියලා පණිවිඩයක් යවන්න"
+    const sinhala = value.match(/^(sms|whatsapp|telegram|gmail|email)\s+එකෙන්\s+(.{1,80}?)ට\s+(.+?)\s+(?:කියලා\s+)?(?:පණිවිඩයක්|message එකක්|email එකක්)\s+යවන්න[.!?。]*$/i);
     const match = english || sinhala;
     if (!match) return null;
     const app = match[1].toLowerCase() === 'email' ? 'gmail' : match[1].toLowerCase();
