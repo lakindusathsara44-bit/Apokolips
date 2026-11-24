@@ -163,7 +163,12 @@
     const listen = make('button', { className: 'j-listen', type: 'button' }, '● Start listening');
     const stop = make('button', { type: 'button' }, 'Stop voice');
     const hide = make('button', { type: 'button' }, 'Go back');
-    tools.append(listen, stop, hide);
+    const contacts = make('button', { type: 'button' }, 'Trusted contacts');
+    contacts.addEventListener('click', () => {
+      if (window.ApoloniaAppControl) window.ApoloniaAppControl.manageTrustedContacts();
+      else setStatus('APP CONTROL MODULE NOT LOADED');
+    });
+    tools.append(listen, stop, hide, contacts);
     const note = make('div', { className: 'j-note' }, 'Microphone access is used only after you press “Start listening”. Browser voice recognition availability varies by device. AI replies require the secure APOLONIA AI backend.');
     panel.append(head, status, body, compose, tools, note);
     root.append(launch, panel);
