@@ -68,7 +68,7 @@
     const e=easter(year), fixed=[
       [year+"-01-01","Mary, Mother of God","Catholic feast"],
       [year+"-03-19","Saint Joseph, Spouse of the Blessed Virgin Mary","Catholic solemnity"],
-      [year+"-03-25","Annunciation of the Lord","Catholic solemnity"],
+      [year===2027?year+"-04-05":year+"-03-25","Annunciation of the Lord","Catholic solemnity"],
       [year+"-06-24","Nativity of Saint John the Baptist","Catholic solemnity"],
       [year+"-06-29","Saints Peter and Paul, Apostles","Catholic solemnity"],
       [year+"-08-15","Assumption of the Blessed Virgin Mary","Catholic solemnity"],
