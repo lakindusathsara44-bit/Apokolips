@@ -55,3 +55,6 @@
 
 .j-voice-mode{display:inline-flex;align-items:center;justify-content:center;padding:7px 10px;border:1px solid rgba(139,216,237,.32);border-radius:8px;color:#8bd8ed;text-decoration:none;font:700 9px Manrope,system-ui,sans-serif;letter-spacing:1px;background:rgba(120,181,255,.06);transition:border-color .2s,background .2s}
 .j-voice-mode:hover{border-color:rgba(139,216,237,.72);background:rgba(120,181,255,.14)}
+
+/* APOLONIA trusted-contact setup */
+#apo-jarvis-panel .j-tools{flex-wrap:wrap}#apo-jarvis-panel .j-tools button{font-size:10px}
