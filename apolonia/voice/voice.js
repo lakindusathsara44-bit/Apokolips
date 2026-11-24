@@ -5,6 +5,7 @@ const sessionId=window.crypto&&typeof window.crypto.randomUUID==='function'?wind
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 const globe=document.getElementById('globeWrap');
 const statusLine=document.getElementById('statusLine'),hint=document.getElementById('controlHint');
+const contactsButton=document.getElementById('contactsButton');
 const startButton=document.getElementById('startButton'),startLabel=document.getElementById('startLabel'),endButton=document.getElementById('endButton'),muteButton=document.getElementById('muteButton'),muteIcon=document.getElementById('muteIcon');
 let recognition=null,active=false,muted=false,processing=false,speaking=false,history=[];
 function setState(state,message,hintText){globe.dataset.state=state;statusLine.textContent=message;if(hintText)hint.textContent=hintText;}
@@ -17,6 +18,7 @@ function updateControls(){startButton.disabled=active;startLabel.textContent=act
 function startConversation(){if(!SpeechRecognition){setState('idle','This browser does not support voice recognition.','Open APOLONIA Voice in Chrome for the best experience.');return;}active=true;muted=false;updateControls();startRecognition();}
 function endConversation(){active=false;muted=false;processing=false;speaking=false;if(recognition){try{recognition.stop();}catch(_){}recognition=null;}if(window.speechSynthesis)window.speechSynthesis.cancel();setState('idle','Conversation ended.','Press start when you want to talk again.');updateControls();}
 function toggleMute(){if(!active)return;muted=!muted;if(muted){if(recognition){try{recognition.stop();}catch(_){}}setState('idle','Microphone paused.','Resume when you are ready to speak.');}else startRecognition();updateControls();}
+if(contactsButton)contactsButton.addEventListener('click',()=>window.ApoloniaAppControl?.manageTrustedContacts());
 startButton.addEventListener('click',startConversation);endButton.addEventListener('click',endConversation);muteButton.addEventListener('click',toggleMute);window.addEventListener('pagehide',()=>{active=false;if(recognition){try{recognition.stop();}catch(_){}}if(window.speechSynthesis)window.speechSynthesis.cancel();});
 setState('idle','Your voice assistant is standing by.','Press start and allow microphone access.');updateControls();
 })();
