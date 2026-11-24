@@ -104,3 +104,22 @@ body:after{opacity:.24;background-image:radial-gradient(1px 3px at 17% 48%,rgba(
 @media(prefers-reduced-motion:reduce){.core,.core:before,.core-halo{animation:none!important}}
 
 .contacts-button{height:34px;padding:0 11px;border:1px solid rgba(139,216,237,.25);border-radius:20px;background:rgba(11,27,48,.7);color:#a9dced;font:700 9px Manrope,sans-serif;letter-spacing:.7px;cursor:pointer}.contacts-button:hover{border-color:rgba(139,216,237,.7);color:#e4f8ff}
+
+
+/* APOLONIA Voice: full-screen and compact display controls. */
+.voice-view-controls{display:flex;align-items:center;gap:6px}
+.voice-view-controls button{width:32px;height:32px;display:grid;place-items:center;border:1px solid rgba(139,216,237,.25);border-radius:8px;background:rgba(120,181,255,.07);color:#b9eafa;font-size:15px;cursor:pointer}
+.voice-view-controls button:hover,.voice-view-controls button[aria-pressed="true"]{border-color:rgba(139,216,237,.7);background:rgba(120,181,255,.16)}
+.voice-shell:fullscreen,.voice-shell.apo-fullscreen-fallback{width:100vw;max-width:none;height:100dvh;min-height:100dvh;margin:0;border:0;border-radius:0;background:#050609}
+body.apo-compact-host{display:grid;place-items:center;min-height:100svh;height:auto;overflow:auto;padding:12px}
+.voice-shell.apo-compact-mode{width:min(560px,calc(100vw - 24px));height:min(720px,calc(100svh - 24px));min-height:0;margin:auto;border:1px solid rgba(139,216,237,.22);border-radius:22px;overflow:hidden;box-shadow:0 20px 80px rgba(0,0,0,.55),0 0 36px rgba(74,143,255,.12)}
+.voice-shell.apo-compact-mode .topbar{height:58px;padding:0 14px;gap:8px}
+.voice-shell.apo-compact-mode .wordmark{font-size:9px;letter-spacing:1px}
+.voice-shell.apo-compact-mode .wordmark-mark{width:27px;height:27px}
+.voice-shell.apo-compact-mode .mode-label{font-size:8px;letter-spacing:.5px;gap:5px}
+.voice-shell.apo-compact-mode .text-mode{font-size:8px;padding:7px 8px}
+.voice-shell.apo-compact-mode .voice-view-controls{gap:4px}
+.voice-shell.apo-compact-mode .voice-view-controls button{width:27px;height:27px;font-size:13px}
+.voice-shell.apo-compact-mode .globe-wrap{width:min(38vh,58vw,300px)}
+.voice-shell.apo-compact-mode .controls{padding-top:8px;gap:8px}
+@media(max-width:600px){.voice-view-controls{gap:4px}.voice-view-controls button{width:28px;height:28px}.topbar{gap:7px}.voice-shell.apo-compact-mode{width:calc(100vw - 16px);height:min(650px,calc(100svh - 20px));border-radius:16px}.voice-shell.apo-compact-mode .mode-label{display:none}.voice-shell.apo-compact-mode .globe-wrap{width:min(42vw,32vh,250px)}}
