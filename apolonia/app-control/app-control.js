@@ -93,7 +93,9 @@
     const value = String(text || '').trim();
     // Explicit, unambiguous command format works in either Text or Voice:
     // "send WhatsApp to Mano: I'll be 10 minutes late"
-    const match = value.match(/^(?:send|message|යවන්න)\\s+(sms|whatsapp|telegram|gmail|email)\\s+(?:message\\s+)?to\\s+([^:]{1,80})\\s*:\\s*([\\s\\S]+)$/i);
+    const english = value.match(/^(?:send|message)\\s+(sms|whatsapp|telegram|gmail|email)\\s+(?:message\\s+)?to\\s+([^:]{1,80})\\s*:\\s*([\\s\\S]+)$/i);
+    const sinhala = value.match(/^(sms|whatsapp|telegram|gmail|email)\\s+එකෙන්\\s+(.{1,80}?)ට\\s+(?:පණිවිඩයක්|email එකක්)\\s+යවන්න\\s*:\\s*([\\s\\S]+)$/i);
+    const match = english || sinhala;
     if (!match) return null;
     const app = match[1].toLowerCase() === 'email' ? 'gmail' : match[1].toLowerCase();
     return {app, contactName: match[2].trim(), message: match[3].trim()};
