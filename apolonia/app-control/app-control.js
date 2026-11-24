@@ -24,7 +24,7 @@
     if (!contact || !String(contact.name || '').trim()) throw new Error('Contact name is required.');
     const channels = {};
     ['sms', 'whatsapp', 'telegram'].forEach(app => {
-      const number = normalizePhone(contact[app] || contact.phone || '');
+      const number = normalizePhone(contact[app] || '');
       if (number) channels[app] = number;
     });
     const email = String(contact.gmail || contact.email || '').trim();
@@ -92,10 +92,12 @@
   function manageTrustedContacts() {
     const name = window.prompt('Trusted contact name:');
     if (!name || !name.trim()) return;
-    const phone = window.prompt('Phone number with country code (e.g. +9477…); leave blank if not needed:', '');
-    const email = window.prompt('Email address; leave blank if not needed:', '');
-    const entry = saveTrustedContact({name, phone, email});
-    window.alert('Saved ' + entry.name + ' on this device. You can authorize app-specific channels by adding their details in contact settings.');
+    const sms = window.prompt('Authorize SMS for this contact? Enter number with country code, or leave blank:', '');
+    const whatsapp = window.prompt('Authorize WhatsApp for this contact? Enter number with country code, or leave blank:', '');
+    const telegram = window.prompt('Authorize Telegram for this contact? Enter number with country code, or leave blank:', '');
+    const gmail = window.prompt('Authorize Gmail for this contact? Enter email address, or leave blank:', '');
+    const entry = saveTrustedContact({name, sms, whatsapp, telegram, gmail});
+    window.alert('Saved ' + entry.name + ' on this device. Only the channels you filled in are authorized.');
     return entry;
   }
 
