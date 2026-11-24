@@ -6,6 +6,9 @@ const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition
 const globe=document.getElementById('globeWrap');
 const statusLine=document.getElementById('statusLine'),hint=document.getElementById('controlHint');
 const contactsButton=document.getElementById('contactsButton');
+const voiceShell=document.querySelector('.voice-shell');
+const fullscreenButton=document.getElementById('voiceFullscreenButton');
+const compactButton=document.getElementById('voiceCompactButton');
 const startButton=document.getElementById('startButton'),startLabel=document.getElementById('startLabel'),endButton=document.getElementById('endButton'),muteButton=document.getElementById('muteButton'),muteIcon=document.getElementById('muteIcon');
 let recognition=null,active=false,muted=false,processing=false,speaking=false,history=[];
 function setState(state,message,hintText){globe.dataset.state=state;statusLine.textContent=message;if(hintText)hint.textContent=hintText;}
@@ -25,6 +28,9 @@ function startConversation(){if(!SpeechRecognition){setState('idle','This browse
 function endConversation(){active=false;muted=false;processing=false;speaking=false;if(recognition){try{recognition.stop();}catch(_){}recognition=null;}if(window.speechSynthesis)window.speechSynthesis.cancel();setState('idle','Conversation ended.','Press start when you want to talk again.');updateControls();}
 function toggleMute(){if(!active)return;muted=!muted;if(muted){if(recognition){try{recognition.stop();}catch(_){}}setState('idle','Microphone paused.','Resume when you are ready to speak.');}else startRecognition();updateControls();}
 if(contactsButton)contactsButton.addEventListener('click',()=>window.ApoloniaAppControl?.manageTrustedContacts());
+if(fullscreenButton)fullscreenButton.addEventListener('click',async()=>{if(document.fullscreenElement===voiceShell){try{await document.exitFullscreen();}catch(_){}voiceShell.classList.remove('apo-fullscreen-fallback');return;}try{await voiceShell.requestFullscreen({navigationUI:'hide'});voiceShell.classList.remove('apo-fullscreen-fallback');}catch(_){voiceShell.classList.add('apo-fullscreen-fallback');}});
+document.addEventListener('fullscreenchange',()=>{const active=document.fullscreenElement===voiceShell;if(fullscreenButton){fullscreenButton.textContent=active?'⤢':'⛶';fullscreenButton.setAttribute('aria-label',active?'Exit full screen':'Enter full screen');}if(!active)voiceShell?.classList.remove('apo-fullscreen-fallback');});
+if(compactButton)compactButton.addEventListener('click',()=>{const active=voiceShell.classList.toggle('apo-compact-mode');document.body.classList.toggle('apo-compact-host',active);compactButton.setAttribute('aria-pressed',String(active));compactButton.setAttribute('aria-label',active?'Return to regular view':'Switch to compact view');compactButton.title=active?'Regular view':'Compact view';});
 startButton.addEventListener('click',startConversation);endButton.addEventListener('click',endConversation);muteButton.addEventListener('click',toggleMute);window.addEventListener('pagehide',()=>{active=false;if(recognition){try{recognition.stop();}catch(_){}}if(window.speechSynthesis)window.speechSynthesis.cancel();});
 setState('idle','Your voice assistant is standing by.','Press start and allow microphone access.');updateControls();
 })();
