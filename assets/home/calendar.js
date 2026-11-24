@@ -105,16 +105,19 @@
   function init(root){
     const select=root.querySelector("#ap-calendar-country");
     COUNTRIES.forEach(([code,name])=>select.add(new Option(name,code)));
-    let detected=TZ_COUNTRY[Intl.DateTimeFormat().resolvedOptions().timeZone]||"LK";
+    let localeRegion="";try{localeRegion=new Intl.Locale(navigator.language).region||"";}catch{};let detected=TZ_COUNTRY[Intl.DateTimeFormat().resolvedOptions().timeZone]||localeRegion||"LK";
     try{const saved=localStorage.getItem("apokolips-calendar-country");if(saved&&COUNTRIES.some(x=>x[0]===saved))detected=saved;}catch{}
     select.value=detected;
+    fetch("https://date.nager.at/api/v3/AvailableCountries").then(r=>r.ok?r.json():[]).then(list=>{if(!Array.isArray(list))return;const current=select.value;select.replaceChildren();list.sort((a,b)=>a.name.localeCompare(b.name)).forEach(c=>select.add(new Option(c.name,c.countryCode)));if(![...select.options].some(o=>o.value===current))select.add(new Option(COUNTRIES.find(x=>x[0]===current)?.[1]||current,current));select.value=current;}).catch(()=>{});
     select.addEventListener("change",()=>{activeCountry=select.value;try{localStorage.setItem("apokolips-calendar-country",activeCountry)}catch{};loadEvents();});
-    root.querySelector("#ap-calendar-prev").addEventListener("click",()=>{monthDate=new Date(monthDate.getFullYear(),monthDate.getMonth()-1,1);render();});
-    root.querySelector("#ap-calendar-next").addEventListener("click",()=>{monthDate=new Date(monthDate.getFullYear(),monthDate.getMonth()+1,1);render();});
+    root.querySelector("#ap-calendar-prev").addEventListener("click",()=>{monthDate=new Date(monthDate.getFullYear(),monthDate.getMonth()-1,1);selectedDate=iso(monthDate);loadEvents();});
+    root.querySelector("#ap-calendar-next").addEventListener("click",()=>{monthDate=new Date(monthDate.getFullYear(),monthDate.getMonth()+1,1);selectedDate=iso(monthDate);loadEvents();});
     root.querySelector("#ap-calendar-today").addEventListener("click",()=>{monthDate=new Date();selectedDate=iso(new Date());render();});
     activeCountry=detected;loadEvents();
   }
+  let loadSequence=0;
   async function loadEvents(){
+    const requestId=++loadSequence;
     const select=document.getElementById("ap-calendar-country"),note=document.getElementById("ap-calendar-country-note");
     const year=monthDate.getFullYear();activeYear=year;
     note.textContent="Calendar region: "+(COUNTRIES.find(x=>x[0]===activeCountry)?.[1]||activeCountry);
@@ -126,9 +129,10 @@
       document.getElementById("ap-calendar-source").textContent="Public holidays are retrieved from the Nager.Date public-holiday dataset where available. Catholic observances are calculated from the Gregorian liturgical calendar.";
       try{
         const response=await fetch("https://date.nager.at/api/v3/PublicHolidays/"+year+"/"+activeCountry,{headers:{Accept:"application/json"}});
-        if(response.ok){const data=await response.json();data.forEach(h=>events.push({date:h.date,name:h.localName||h.name,type:"Public holiday",description:h.name+(h.global?" · National holiday":" · Regional holiday")}));}
+        if(response.ok){const data=await response.json();if(requestId!==loadSequence)return;data.forEach(h=>events.push({date:h.date,name:h.localName||h.name,type:"Public holiday",description:h.name+(h.global?" · National holiday":" · Regional holiday")}));}
       }catch(error){console.warn("Apokolips calendar holiday lookup unavailable",error);}
     }
+    if(requestId!==loadSequence)return;
     events.sort((a,b)=>a.date.localeCompare(b.date)||a.name.localeCompare(b.name));
     render();
   }
