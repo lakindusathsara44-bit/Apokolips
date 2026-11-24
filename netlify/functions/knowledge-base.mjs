@@ -1,6 +1,6 @@
 // Curated public-facing knowledge for APOLONIA AI.
 // Update this file when public Apokolips pages or project statuses change.
-export const KNOWLEDGE_VERSION = "2026-11-23";
+export const KNOWLEDGE_VERSION = "2026-11-24";
 
 export const WEBSITE_KNOWLEDGE = [
   {
@@ -26,7 +26,7 @@ export const WEBSITE_KNOWLEDGE = [
     title: "About Lakindu Sathsara",
     url: "https://www.apokolips.xyz/info.html",
     content: [
-      "The About Me page identifies Lakindu Sathsara as the creator/profile owner. The preferred public-facing owner title is: Sire Lakindu Sathsara.",
+      "The About Me page identifies Lakindu Sathsara as the creator/profile owner. The preferred public-facing owner name is: Lakindu Sathsara.",
       "The public profile describes him as a Student of SLIATE HNDIT, Technology Enthusiast, and Project Creator.",
       "The profile lists hometown Rambukkana and country Sri Lanka.",
       "The profile lists interests in IT, Web Development, AI, and Learning.",
@@ -115,7 +115,7 @@ export const WEBSITE_FAQS = [
   {
     id: "owner",
     keywords: ["owner", "apokolips owner", "owner of apokolips", "who is the owner", "who owns apokolips", "who owns this site", "who owns this website", "website owner", "site owner", "creator", "founder", "who made", "who created", "developed by", "අයිතිකරු", "හිමිකරු", "නිර්මාතෘ", "කවුද අයිතිකරු", "අයිතිකරු කවුද", "මේ වෙබ් අඩවියේ අයිතිකරු", "වෙබ් අඩවියේ හිමිකරු", "කවුද හැදුවේ", "කවුද නිර්මාණය", "කවුද හදලා තියෙන්නේ"],
-    answer: "The owner and creator of Apokolips is Sire Lakindu Sathsara."
+    answer: "The owner and creator of Apokolips is Lakindu Sathsara."
   },
   {
     id: "projects",
