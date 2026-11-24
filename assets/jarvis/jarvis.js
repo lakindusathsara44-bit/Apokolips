@@ -141,8 +141,29 @@
     brandText.append(make('strong', {}, 'APOLONIA AI'), make('small', {}, 'APOKOLIPS INTELLIGENCE'));
     brand.append(brandText);
     const close = make('button', { className: 'j-close', type: 'button', 'aria-label': 'Hide APOLONIA AI' }, '×');
+    const viewControls = make('div', { className: 'j-view-controls', 'aria-label': 'Display options' });
+    const fullscreen = make('button', { className: 'j-view-button', type: 'button', 'aria-label': 'Enter full screen' }, '⛶');
+    const compact = make('button', { className: 'j-view-button', type: 'button', 'aria-label': 'Switch to compact view', 'aria-pressed': 'false' }, '▣');
     const voiceMode = make('a', { className: 'j-voice-mode', href: '/apolonia/voice/', 'aria-label': 'Open APOLONIA Voice' }, 'VOICE');
-    head.append(brand, voiceMode, close);
+    viewControls.append(fullscreen, compact, voiceMode);
+    head.append(brand, viewControls, close);
+    fullscreen.addEventListener('click', async () => {
+      if (document.fullscreenElement === panel) { try { await document.exitFullscreen(); } catch (_) {} panel.classList.remove('j-fullscreen-fallback'); return; }
+      try { await panel.requestFullscreen({ navigationUI: 'hide' }); panel.classList.remove('j-fullscreen-fallback'); }
+      catch (_) { panel.classList.add('j-fullscreen-fallback'); }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      const active = document.fullscreenElement === panel;
+      fullscreen.textContent = active ? '⤢' : '⛶';
+      fullscreen.setAttribute('aria-label', active ? 'Exit full screen' : 'Enter full screen');
+      if (!active) panel.classList.remove('j-fullscreen-fallback');
+    });
+    compact.addEventListener('click', () => {
+      const active = panel.classList.toggle('j-compact');
+      compact.setAttribute('aria-pressed', String(active));
+      compact.setAttribute('aria-label', active ? 'Return to regular view' : 'Switch to compact view');
+      compact.title = active ? 'Regular view' : 'Compact view';
+    });
 
     const status = make('div', { className: 'j-status' });
     const statusDot = make('span', { className: 'j-status-dot' });
