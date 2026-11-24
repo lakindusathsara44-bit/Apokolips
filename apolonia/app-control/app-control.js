@@ -84,9 +84,10 @@
       return window.ApoloniaNativeBridge.openComposer(request);
     }
     const url = buildComposerUrl(app, request.address, request.message, {subject});
-    const opened = window.open(url, '_blank', 'noopener');
-    if (!opened && app !== 'sms') window.location.href = url;
-    return {opened: true, app, contactName: contact.name, requiresUserSend: true};
+    const opened = window.open(url, '_blank');
+    if (opened) opened.opener = null;
+    else window.location.href = url;
+    return {opened: Boolean(opened), app, contactName: contact.name, requiresUserSend: true};
   }
 
   function parseCommand(text) {
