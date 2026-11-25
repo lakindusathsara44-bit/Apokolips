@@ -3,7 +3,7 @@
   const host = document.getElementById('avatarMount');
   if (!host) return;
 
-  const assetUrl = './apolonia-humanoid.svg?v=20261125-components-rig';
+  const assetUrl = './apolonia-humanoid.svg?v=20261125-mechanical-helmet';
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const state = {
     mode: 'idle',
@@ -129,7 +129,7 @@
     const idleSway = state.mode === 'idle' ? Math.sin(t * .7) * 2.2 : 0;
     const thinkingTilt = state.mode === 'thinking' ? Math.sin(t * 1.3) * 1.5 : 0;
     state.head = ease(state.head, state.headTarget + idleSway + thinkingTilt, 5.5, dt);
-    rotate(headPivot, state.head, 100, 88);
+    rotate(headPivot, state.head, 120, 145);
 
     const gazeX = state.gazeX * 2.7;
     const gazeY = state.gazeY * 1.8;
@@ -149,7 +149,7 @@
     mouthLine.setAttribute('opacity', open ? '.12' : '1');
     mouthOpen.setAttribute('opacity', open ? String(clamp(state.mouth, 0, .98)) : '0');
     const mouthScale = (0.55 + state.mouth * .85).toFixed(2);
-    mouthOpen.setAttribute('transform', 'translate(0 113) scale(1 ' + mouthScale + ') translate(0 -113)');
+    mouthOpen.setAttribute('transform', 'translate(0 166) scale(1 ' + mouthScale + ') translate(0 -166)');
 
     let leftTarget = 0;
     let rightTarget = 0;
@@ -182,10 +182,10 @@
     state.rightHand = ease(state.rightHand, rightHandTarget, 8, dt);
 
     // Each complete arm stays nested in its shoulder group; only its wrist/finger cluster moves independently.
-    rotate(leftArm, state.leftArm, 76, 144);
-    rotate(rightArm, state.rightArm, 124, 144);
-    rotate(leftHand, state.leftHand, 68, 184);
-    rotate(rightHand, state.rightHand, 132, 184);
+    rotate(leftArm, state.leftArm, 88, 210);
+    rotate(rightArm, state.rightArm, 152, 210);
+    rotate(leftHand, state.leftHand, 48, 266);
+    rotate(rightHand, state.rightHand, 192, 266);
 
     const breathe = reduceMotion ? 0 : Math.sin(t * 1.25) * 1.1;
     torso.setAttribute('transform', 'translate(0 ' + breathe.toFixed(2) + ')');
