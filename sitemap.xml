@@ -8,5 +8,5 @@
   <url><loc>https://apokolips.xyz/project.gallery.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://apokolips.xyz/Community.chat.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://apokolips.xyz/nexist.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://apokolips.xyz/assignment.html</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://apokolips.xyz/assignment.html</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>\n  <url><loc>https://apokolips.xyz/notes.html</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>\n  <url><loc>https://apokolips.xyz/answer-sheet.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>
