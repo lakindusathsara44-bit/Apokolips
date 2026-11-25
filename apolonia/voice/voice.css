@@ -100,8 +100,6 @@ button,a{-webkit-tap-highlight-color:transparent}
   filter:drop-shadow(0 12px 28px rgba(25,130,210,.2));
 }
 .apolonia-svg #headPivot,.apolonia-svg #leftArm,.apolonia-svg #rightArm,.apolonia-svg #leftHand,.apolonia-svg #rightHand,.apolonia-svg #torso{
-  transform-box:view-box;
-  transform-origin:center;
   will-change:transform;
 }
 .avatar-caption{
