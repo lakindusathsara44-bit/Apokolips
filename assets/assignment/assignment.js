@@ -3,7 +3,11 @@ import { ASSIGNMENT_QUESTIONS, ASSIGNMENT_VERSION } from "./questions.js";
 (() => {
   "use strict";
 
-  const API_URL = "https://apolonia-ai-api.netlify.app/api/assignment/evaluate";
+  const previewId = window.location.hostname.match(/^deploy-preview-(\d+)--apokolips\.netlify\.app$/)?.[1];
+  const API_ORIGIN = previewId
+    ? `https://deploy-preview-${previewId}--apolonia-ai-api.netlify.app`
+    : "https://apolonia-ai-api.netlify.app";
+  const API_URL = `${API_ORIGIN}/api/assignment/evaluate`;
   const STORAGE_KEY = `apokolips.assignment.draft.${ASSIGNMENT_VERSION}`;
   const questions = ASSIGNMENT_QUESTIONS;
   const answers = Object.create(null);
@@ -35,7 +39,7 @@ import { ASSIGNMENT_QUESTIONS, ASSIGNMENT_VERSION } from "./questions.js";
           if (typeof value === "string" && value.length <= 1800) answers[question.id] = value;
         });
       }
-    } catch (_) { localStorage.removeItem(STORAGE_KEY); }
+    } catch (_) { try { localStorage.removeItem(STORAGE_KEY); } catch (_) {} }
   }
   function saveDraft() {
     if (submitted) return;

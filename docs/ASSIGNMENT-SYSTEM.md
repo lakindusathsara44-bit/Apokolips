@@ -62,7 +62,7 @@ Draft answers are saved in browser local storage under a versioned key. The page
 
 `netlify/functions/assignment-evaluate.mjs` implements `POST /api/assignment/evaluate` on the existing `apolonia-ai-api` Netlify site.
 
-- Expected answers and marking guides are server-side only in `assignment-rubric-1.mjs` and `assignment-rubric-2.mjs`.
+- Expected answers and marking guides are stored as an AES-256-GCM encrypted payload in `assignment-rubric.enc.mjs`; the decryption key is not committed to the repository and must be configured as a Netlify secret.
 - The endpoint requires exactly 50 unique, non-empty answers for the current assignment version.
 - Each question is scored from 0 to 2 points; the maximum is 100.
 - The model is instructed to evaluate meaning, not exact wording, and to use `uncertain` rather than guess.
@@ -74,16 +74,16 @@ Draft answers are saved in browser local storage under a versioned key. The page
 
 ### Runtime configuration
 
-The function reuses the server-side provider environment variables already used by the APOLONIA chat function:
+The function requires the private rubric decryption secret below, plus at least one AI provider key. It reuses the server-side provider environment variables already used by the APOLONIA chat function:
 
 1. `GROQ_API_KEY`
 2. `GEMINI_API_KEY`
 3. `OPENAI_API_KEY`
 4. `OPENAI_API_KEY_2` (optional fallback)
 
-At least one must be configured as a secret environment variable on the `apolonia-ai-api` Netlify site. Never add a provider key to browser JavaScript or commit it to Git.
+Configure `APOKOLIPS_ASSIGNMENT_RUBRIC_KEY` and at least one provider key as secret environment variables on the `apolonia-ai-api` Netlify site. Never add either secret to browser JavaScript or commit it to Git. The rubric key must be the private base64 key supplied to the repository owner for this deployment.
 
-The API base URL is currently `https://apolonia-ai-api.netlify.app`. If the Netlify site's primary URL changes, update `API_URL` in `assets/assignment/assignment.js`.
+The frontend automatically routes a Netlify deploy preview to the matching `apolonia-ai-api` deploy preview; production uses `https://apolonia-ai-api.netlify.app`. If the production API domain changes, update `API_ORIGIN` in `assets/assignment/assignment.js`.
 
 ## Deployment
 

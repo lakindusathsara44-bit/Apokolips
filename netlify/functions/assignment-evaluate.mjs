@@ -1,11 +1,31 @@
-import { RUBRIC as RUBRIC_PART_1 } from "./assignment-rubric-1.mjs";
-import { RUBRIC as RUBRIC_PART_2 } from "./assignment-rubric-2.mjs";
+import { createDecipheriv } from "node:crypto";
+import { gunzipSync } from "node:zlib";
+import { RUBRIC_IV, RUBRIC_CIPHERTEXT } from "./assignment-rubric.enc.mjs";
 
-const RUBRIC = [...RUBRIC_PART_1, ...RUBRIC_PART_2];
+function loadRubric() {
+  const secret = Netlify.env.get("APOKOLIPS_ASSIGNMENT_RUBRIC_KEY");
+  if (!secret) return null;
+  const key = Buffer.from(secret, "base64");
+  if (key.length !== 32) throw new Error("invalid_rubric_key");
+  const encrypted = Buffer.from(RUBRIC_CIPHERTEXT, "base64");
+  const iv = Buffer.from(RUBRIC_IV, "base64");
+  if (iv.length !== 12 || encrypted.length <= 16) throw new Error("invalid_encrypted_rubric");
+  const decipher = createDecipheriv("aes-256-gcm", key, iv);
+  decipher.setAuthTag(encrypted.subarray(encrypted.length - 16));
+  const compressed = Buffer.concat([
+    decipher.update(encrypted.subarray(0, encrypted.length - 16)),
+    decipher.final()
+  ]);
+  const rubric = JSON.parse(gunzipSync(compressed).toString("utf8"));
+  if (!Array.isArray(rubric) || rubric.length !== 50) throw new Error("invalid_rubric_payload");
+  return rubric;
+}
 
 const ALLOWED_ORIGINS = new Set(["https://apokolips.xyz", "https://www.apokolips.xyz"]);
+const isAllowedOrigin = (origin) => ALLOWED_ORIGINS.has(origin) ||
+  /^https:\/\/deploy-preview-\d+--apokolips\.netlify\.app$/.test(origin);
 const HEADERS = (origin) => ({
-  "Access-Control-Allow-Origin": ALLOWED_ORIGINS.has(origin) ? origin : "https://apokolips.xyz",
+  "Access-Control-Allow-Origin": isAllowedOrigin(origin) ? origin : "https://apokolips.xyz",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
   "Access-Control-Max-Age": "86400",
@@ -103,13 +123,13 @@ async function callOpenAI(key, prompt) {
   return text;
 }
 
-function normalizeReport(modelReport, submittedAnswers) {
+function normalizeReport(modelReport, submittedAnswers, rubric) {
   const modelResults = Array.isArray(modelReport?.results) ? modelReport.results : [];
   const byId = new Map();
   for (const item of modelResults) {
     if (item && typeof item.id === "string" && !byId.has(item.id)) byId.set(item.id, item);
   }
-  const results = RUBRIC.map((rubric) => {
+  const results = rubric.map((rubric) => {
     const raw = byId.get(rubric.id);
     const answer = submittedAnswers.get(rubric.id) || "";
     const allowed = new Set(["correct", "partially_correct", "incorrect", "uncertain"]);
@@ -148,7 +168,7 @@ function normalizeReport(modelReport, submittedAnswers) {
 export default async (request) => {
   const origin = request.headers.get("origin") || "";
   const headers = HEADERS(origin);
-  if (origin && !ALLOWED_ORIGINS.has(origin)) return json({ error: "Origin not allowed." }, 403, headers);
+  if (origin && !isAllowedOrigin(origin)) return json({ error: "Origin not allowed." }, 403, headers);
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
   if (request.method !== "POST") return json({ error: "Method not allowed." }, 405, headers);
   const contentLength = Number(request.headers.get("content-length") || 0);
@@ -170,7 +190,17 @@ export default async (request) => {
     }
     submittedAnswers.set(item.id, item.answer.trim());
   }
-  if (submittedAnswers.size !== 50 || RUBRIC.some((item) => !submittedAnswers.has(item.id))) {
+
+  let rubric;
+  try {
+    rubric = loadRubric();
+  } catch (error) {
+    console.error(JSON.stringify({ scope: "APOLONIA_ASSIGNMENT_EVALUATION", event: "rubric_decryption_failed", reason: String(error?.message || "unknown").slice(0, 80) }));
+    return json({ error: "The private assignment marking guide is not configured correctly. Please contact the site administrator." }, 503, headers);
+  }
+  if (!rubric) return json({ error: "The private assignment marking guide has not been configured on the evaluation service." }, 503, headers);
+
+  if (submittedAnswers.size !== 50 || rubric.some((item) => !submittedAnswers.has(item.id))) {
     return json({ error: "Please answer all 50 questions before submitting." }, 400, headers);
   }
 
@@ -184,7 +214,7 @@ export default async (request) => {
     return json({ error: "Apolonia AI evaluation is not configured. Add a server-side AI provider key to the apolonia-ai-api Netlify site." }, 503, headers);
   }
 
-  const promptData = RUBRIC.map((rubric) => ({
+  const promptData = rubric.map((rubric) => ({
     id: rubric.id, question: rubric.question, topic: rubric.topic,
     questionAnswerGuide: rubric.expectedAnswer, markingGuide: rubric.markingGuide,
     studentAnswer: submittedAnswers.get(rubric.id)
@@ -209,7 +239,7 @@ export default async (request) => {
   }
   if (!report) return json({ error: "Apolonia AI is temporarily unable to evaluate this assignment. Your draft is still saved on your device; please retry shortly." }, 502, headers);
 
-  const normalized = normalizeReport(report, submittedAnswers);
+  const normalized = normalizeReport(report, submittedAnswers, rubric);
   return json({ ...normalized, totalQuestions: 50, maxScore: 100, provider: providerUsed, evaluatedAt: new Date().toISOString() }, 200, headers);
 };
 
