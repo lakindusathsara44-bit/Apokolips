@@ -233,10 +233,6 @@ export default async (request) => {
     ["openai", Netlify.env.get("OPENAI_API_KEY"), callOpenAI],
     ["openai-fallback", Netlify.env.get("OPENAI_API_KEY_2"), callOpenAI]
   ].filter(([name, key], index, all) => key && all.findIndex(([otherName, otherKey]) => otherKey === key) === index);
-  if (!providers.length) {
-    return json({ error: "Apolonia AI evaluation is not configured. Add a server-side AI provider key to the apolonia-ai-api Netlify site." }, 503, headers);
-  }
-
   const promptData = rubric.filter((item) => !submittedAnswers.get(item.id).skipped).map((item) => ({
     id: item.id, question: item.question, topic: item.topic,
     questionAnswerGuide: item.expectedAnswer, markingGuide: item.markingGuide,
@@ -245,6 +241,9 @@ export default async (request) => {
   if (promptData.length === 0) {
     const normalized = normalizeReport({ results: [], overallSummary: "You chose to skip every question. Review the note-based answers and key points below, then try the assignment again when you feel ready.", topicsToImprove: [] }, submittedAnswers, rubric);
     return json({ ...normalized, totalQuestions: 50, maxScore: 100, provider: null, evaluatedAt: new Date().toISOString() }, 200, headers);
+  }
+  if (!providers.length) {
+    return json({ error: "Apolonia AI evaluation is not configured. Add a server-side AI provider key to the apolonia-ai-api Netlify site." }, 503, headers);
   }
   const prompt = `Evaluate the ${promptData.length} attempted answers using this marking data. Award up to 2 points per question. Do not omit any supplied ID. Skipped questions are excluded.\n\n` + JSON.stringify(promptData);
 
