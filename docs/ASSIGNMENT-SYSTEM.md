@@ -62,10 +62,10 @@ Draft answers are saved in browser local storage under a versioned key. The page
 
 `netlify/functions/assignment-evaluate.mjs` implements `POST /api/assignment/evaluate` on the existing `apolonia-ai-api` Netlify site.
 
-- Expected answers and marking guides are server-side only in `assignment-rubric-1.mjs` and `assignment-rubric-2.mjs`.
-- The endpoint requires exactly 50 unique, non-empty answers for the current assignment version.
+- Expected answers and marking guides are stored as an AES-256-GCM encrypted payload in `netlify/lib/assignment-rubric.enc.mjs`; the decryption key is not committed to the repository and must be configured as a Netlify secret.
+- The endpoint requires exactly 50 unique question records; each must contain a non-empty answer or be explicitly marked as skipped. It also supports a separate study-guide request.
 - Each question is scored from 0 to 2 points; the maximum is 100.
-- The model is instructed to evaluate meaning, not exact wording, and to use `uncertain` rather than guess.
+- The model is instructed to evaluate meaning, not exact wording, and to use `uncertain` rather than guess. Explicitly skipped questions are not sent to the AI provider and receive zero points.
 - The server normalizes and validates every returned result and supplies the trusted expected answer from its own marking rubric.
 - Student answer text and provider credentials are not written to application logs.
 - OpenAI calls use `store: false`. The page itself does not persist submissions on a server.
@@ -74,16 +74,16 @@ Draft answers are saved in browser local storage under a versioned key. The page
 
 ### Runtime configuration
 
-The function reuses the server-side provider environment variables already used by the APOLONIA chat function:
+The function requires the private rubric decryption secret below, plus at least one AI provider key. It reuses the server-side provider environment variables already used by the APOLONIA chat function:
 
 1. `GROQ_API_KEY`
 2. `GEMINI_API_KEY`
 3. `OPENAI_API_KEY`
 4. `OPENAI_API_KEY_2` (optional fallback)
 
-At least one must be configured as a secret environment variable on the `apolonia-ai-api` Netlify site. Never add a provider key to browser JavaScript or commit it to Git.
+Configure `APOKOLIPS_ASSIGNMENT_RUBRIC_KEY` and at least one provider key as secret environment variables on the `apolonia-ai-api` Netlify site. Never add either secret to browser JavaScript or commit it to Git. The rubric key must be the private base64 key supplied to the repository owner for this deployment.
 
-The API base URL is currently `https://apolonia-ai-api.netlify.app`. If the Netlify site's primary URL changes, update `API_URL` in `assets/assignment/assignment.js`.
+The frontend automatically routes a Netlify deploy preview to the matching `apolonia-ai-api` deploy preview; production uses `https://apolonia-ai-api.netlify.app`. If the production API domain changes, update `API_ORIGIN` in `assets/assignment/assignment.js`.
 
 ## Deployment
 
@@ -96,3 +96,10 @@ The repository's existing PR #195 established the Assignment page and confirmed 
 - The assignment UI keeps an unsent draft only in the student's current browser.
 - CORS and rate limits reduce casual abuse but are not user authentication. A public assignment can be submitted anonymously.
 - AI scoring is an assisted assessment, not a substitute for lecturer review. Answers returned as `uncertain` should be manually checked.
+
+
+## Skipping questions and study mode
+
+Students may mark any unanswered question as **Skipped**, then return to it later. A skipped question counts as completed for submission navigation, but receives zero points. The evaluation endpoint explicitly records skipped IDs and excludes them from AI marking; their expected answers and marking-guide key points are still included in the post-submission report.
+
+The **I can't answer — show answers & summaries** action opens a separate study mode. It ends the current attempt without grading it and fetches the decrypted marking guide from the server-side endpoint. The browser receives the 50 expected answers and their note-based marking-guide summaries only after the student explicitly confirms this action. The existing encrypted rubric and server-only decryption key remain the source of truth; no answer key is added to public frontend files. The current local draft is retained on the device.

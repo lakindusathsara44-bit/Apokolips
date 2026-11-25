@@ -49,3 +49,19 @@ a{color:inherit;text-decoration:none}button,textarea{font:inherit}button{cursor:
 @media(max-width:760px){.workspace{grid-template-columns:1fr}.question-sidebar{position:static}.question-grid{grid-template-columns:repeat(10,minmax(0,1fr))}.question-index{height:31px}.sidebar-hint{margin-bottom:2px}.question-panel{min-height:350px}}
 @media(max-width:560px){.topbar{height:auto;min-height:72px;padding:13px 18px;gap:12px}.topbar nav{gap:14px}.topbar nav a{font-size:10px}.page-shell{padding:27px 16px 55px}.hero{padding:54px 0 32px}.hero h1{letter-spacing:-2.6px}.assignment-overview{align-items:flex-start;flex-direction:column;padding:19px}.overview-stats{width:100%;justify-content:space-between;gap:12px;padding-top:13px;border-top:1px solid #ffffff10}.progress-section{padding:15px}.question-grid{grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}.question-panel{padding:19px 16px}.question-navigation{gap:7px}.primary-button,.secondary-button{padding:0 10px;font-size:9px}.submit-section{align-items:stretch;flex-direction:column;padding:20px}.submit-button{width:100%}.result-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.score-ring{width:82px;height:82px}.footer{padding:20px 16px 28px;font-size:8px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Skip and study-guide actions */
+.question-index.skipped{border-color:#8bd8ed66;background:#102c38;color:#8bd8ed}
+.sidebar-hint .skipped-dot{background:#8bd8ed}
+.submit-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.study-guide-button{min-height:46px;border-color:#8bd8ed55;color:#b8eaf5;background:#0d2028}
+.study-guide-button:hover:not(:disabled){border-color:#8bd8ed;background:#12303b}
+.question-navigation #skip-button{white-space:nowrap}
+.result-stats{grid-template-columns:repeat(5,minmax(0,1fr))}
+.study-topic{margin-top:22px}
+.study-topic>h3{margin:0 0 10px;color:#8bd8ed;font-size:15px;letter-spacing:.2px}
+.study-topic .result-item h4{margin:0;color:#8baed5;font:10px "DM Mono",monospace}
+@media(max-width:760px){.submit-actions{width:100%;justify-content:stretch}.submit-actions button{flex:1}}
+@media(max-width:560px){.result-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.submit-actions{flex-direction:column}.submit-actions button{width:100%}.question-navigation{flex-wrap:wrap}.question-navigation #navigation-count{order:3;width:100%;text-align:center}}
+
+.result-status.skipped{color:#8bd8ed;background:#102c38}
