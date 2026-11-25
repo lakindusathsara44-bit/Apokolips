@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  // Motion-state design reference: Jp-mainieri/procedural-bot-animations (MIT).
+  // Motion-state design reference: https://github.com/Jp-mainieri/procedural-bot-animations (MIT).
   // APOLONIA's SVG artwork and this articulated rig are custom implementations.
   const host = document.getElementById('avatarMount');
   if (!host) return;
@@ -215,6 +215,7 @@
       host.replaceChildren(document.importNode(svg, true));
       svg = host.querySelector('svg');
       attach();
+      onState({ detail: { state: host.parentElement && host.parentElement.dataset.state || 'idle' } });
       host.dataset.ready = 'true';
     })
     .catch(error => {
