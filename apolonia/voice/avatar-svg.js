@@ -68,10 +68,14 @@
     const next = event.detail && event.detail.state || 'idle';
     const previous = state.mode;
     state.mode = next;
-    if (next === 'listening' && previous !== 'listening') {
+    if (next === 'listening' && previous === 'idle') {
       state.gesture = 'welcome';
       state.gestureTime = 0;
       state.headTiltTarget = -.035;
+      state.headTarget = 0;
+    } else if (next === 'listening') {
+      if (state.gesture !== 'turn') state.gesture = 'none';
+      state.headTiltTarget = -.025;
     } else if (next === 'thinking') {
       state.gesture = 'think';
       state.gestureTime = 0;
