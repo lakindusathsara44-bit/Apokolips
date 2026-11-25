@@ -3,7 +3,7 @@
 // not a verbatim transcription or a lecturer-issued answer key.
 export const NOTES = [
 {
- id:"fundamentals", title:"1. Information Systems: Foundations and Activities", subtitle:"What an information system does and how data becomes useful information", questions:["Q01","Q02","Q03","Q04","Q05","Q06","Q32","Q43","Q50"], difficulty:"Easy to Very Hard",
+ id:"fundamentals", title:"1. Information Systems: Foundations and Activities", subtitle:"What an information system does and how data becomes useful information", questions:["Q01","Q02","Q03","Q04","Q05","Q06","Q13","Q32","Q43","Q50"], difficulty:"Easy to Very Hard",
  summary:"An information system is an organized set of connected components that collects, processes, stores and distributes information to support decisions and control in an organization.",
  explanation:[
   ["Understanding an information system","A system is a collection of related elements or subcomponents that are connected and organized to achieve a common purpose. An information system brings together people, organizational arrangements and technology. It is not simply a computer: the people who enter, interpret and act on information, the procedures they follow, and the organization in which the system operates are all important."],
