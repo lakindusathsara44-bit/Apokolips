@@ -1,5 +1,7 @@
 (() => {
   'use strict';
+  // Motion-state design reference: Jp-mainieri/procedural-bot-animations (MIT).
+  // APOLONIA's SVG artwork and this articulated rig are custom implementations.
   const host = document.getElementById('avatarMount');
   if (!host) return;
 
