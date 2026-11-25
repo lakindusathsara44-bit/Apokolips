@@ -116,10 +116,14 @@ function normalizeReport(modelReport, submittedAnswers) {
     let status = allowed.has(raw?.status) ? raw.status : "uncertain";
     let points = Number.isInteger(raw?.awardedPoints) ? raw.awardedPoints : 0;
     points = Math.max(0, Math.min(2, points));
-    if (status === "uncertain") points = 0;
-    else if (points === 2) status = "correct";
-    else if (points === 1) status = "partially_correct";
-    else status = "incorrect";
+    if (status === "uncertain" || status === "incorrect") points = 0;
+    else if (status === "partially_correct") points = 1;
+    else if (status === "correct" && points > 2) points = 2;
+    if (status !== "uncertain") {
+      if (points === 2) status = "correct";
+      else if (points === 1) status = "partially_correct";
+      else status = "incorrect";
+    }
     let feedback = typeof raw?.feedback === "string" ? raw.feedback.trim().slice(0, 900) : "";
     if (!feedback) feedback = status === "uncertain"
       ? "Apolonia AI could not confidently assess this response. Please review the expected answer with your notes."
