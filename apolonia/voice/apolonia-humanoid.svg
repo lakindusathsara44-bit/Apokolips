@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 650" role="img" aria-labelledby="title desc">
+<title id="title">APOLONIA articulated upper-body humanoid</title>
+<desc id="desc">A blue and cyan mechanical humanoid from the waist up, with a movable head, expressive eyes and mouth, articulated arms and hands.</desc>
+<defs>
+ <linearGradient id="shell" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a9e9ff"/><stop offset=".25" stop-color="#397ba9"/><stop offset=".62" stop-color="#123858"/><stop offset="1" stop-color="#07182d"/></linearGradient>
+ <linearGradient id="face" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#1a456b"/><stop offset=".55" stop-color="#0b2039"/><stop offset="1" stop-color="#061323"/></linearGradient>
+ <linearGradient id="armor" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#69dfff"/><stop offset=".32" stop-color="#25628d"/><stop offset="1" stop-color="#0a1d34"/></linearGradient>
+ <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e2ffff"/><stop offset=".45" stop-color="#6deaff"/><stop offset="1" stop-color="#168ecb"/></linearGradient>
+ <radialGradient id="core"><stop stop-color="#f0ffff"/><stop offset=".35" stop-color="#72edff"/><stop offset="1" stop-color="#1687d5" stop-opacity=".1"/></radialGradient>
+ <filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
+</defs>
+<!-- Rear shoulder frame -->
+<g id="torso">
+ <path d="M206 333 Q225 306 270 294 L370 294 Q415 306 434 333 L485 385 L462 610 Q320 648 178 610 L155 385Z" fill="#07172b" stroke="#4abce9" stroke-width="5"/>
+ <path d="M208 344 Q235 319 275 314 L365 314 Q405 319 432 344 L458 396 L438 590 Q320 621 202 590 L182 396Z" fill="url(#shell)" stroke="#7adfff" stroke-opacity=".6" stroke-width="3"/>
+ <path d="M245 337 L395 337 L426 391 L403 553 Q320 581 237 553 L214 391Z" fill="#0b2038" stroke="#2f82b4" stroke-width="3"/>
+ <path d="M260 353 Q320 330 380 353 L399 390 Q320 417 241 390Z" fill="url(#armor)" stroke="#8cecff" stroke-width="2"/>
+ <path d="M254 420 Q320 395 386 420 L375 532 Q320 554 265 532Z" fill="#0a1b30" stroke="#397ba9" stroke-width="3"/>
+ <path d="M276 441 Q320 425 364 441 L355 505 Q320 521 285 505Z" fill="#143c5d" stroke="#4ac7ef" stroke-width="2"/>
+ <circle cx="320" cy="474" r="25" fill="url(#core)" filter="url(#glow)"/>
+ <circle cx="320" cy="474" r="9" fill="#e3ffff"/>
+ <path d="M198 397 L226 416 M442 397 L414 416 M213 555 L242 565 M427 555 L398 565" fill="none" stroke="#78dfff" stroke-width="5" stroke-linecap="round"/>
+ <path d="M280 314 L280 338 M360 314 L360 338" stroke="#9beeff" stroke-width="4" stroke-linecap="round"/>
+</g>
+<!-- Neck -->
+<g id="neck">
+ <path d="M278 273 L362 273 L371 337 Q320 365 269 337Z" fill="#091a2d" stroke="#4dbbe8" stroke-width="4"/>
+ <path d="M291 281 L349 281 L355 326 L285 326Z" fill="url(#armor)"/>
+ <path d="M300 291 L340 291 M297 305 L343 305 M295 319 L345 319" stroke="#8eeeff" stroke-opacity=".7" stroke-width="4" stroke-linecap="round"/>
+</g>
+<!-- Left articulated arm -->
+<g id="armLeft" class="arm">
+ <g id="leftUpper">
+  <path d="M210 347 Q171 343 145 374 L108 438 Q96 458 113 471 L139 490 Q158 499 172 478 L222 417 Q247 384 230 359Z" fill="url(#shell)" stroke="#75dcff" stroke-width="5"/>
+  <path d="M177 367 L137 442 L161 456 L207 390Z" fill="#0a2038" stroke="#3d91bd" stroke-width="3"/>
+  <path d="M151 386 L132 421 M169 398 L150 434" stroke="#8cecff" stroke-width="4" stroke-linecap="round"/>
+ <g id="leftElbow">
+  <circle cx="127" cy="464" r="27" fill="#07182d" stroke="#71dfff" stroke-width="5"/>
+  <circle cx="127" cy="464" r="12" fill="url(#cyan)" filter="url(#glow)"/>
+ <g id="leftForearm">
+  <path d="M111 480 Q88 501 77 540 L68 579 Q67 596 84 602 L108 609 Q126 612 133 593 L155 533 Q166 506 145 486Z" fill="url(#armor)" stroke="#83e8ff" stroke-width="5"/>
+  <path d="M100 505 L84 571 L111 580 L132 520Z" fill="#0b2540" stroke="#3d91bd" stroke-width="3"/>
+  <path d="M88 548 L112 555" stroke="#a1f4ff" stroke-width="4" stroke-linecap="round"/>
+ <g id="leftHand">
+  <path d="M75 584 Q57 582 51 600 L45 620 Q43 633 57 637 L100 643 Q114 643 118 628 L122 609 Q123 595 108 590Z" fill="url(#shell)" stroke="#8cecff" stroke-width="4"/>
+  <path d="M55 620 L40 624 Q27 626 27 613 Q27 603 40 598 L54 594" fill="none" stroke="#8cecff" stroke-width="10" stroke-linecap="round"/>
+  <path d="M68 633 L64 647 M84 635 L83 650 M100 631 L103 645" stroke="#8cecff" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="85" cy="613" r="7" fill="#a9f6ff"/>
+ </g>
+ </g>
+ </g>
+ </g>
+</g>
+<!-- Right articulated arm -->
+<g id="armRight" class="arm">
+ <g id="rightUpper">
+  <path d="M430 347 Q469 343 495 374 L532 438 Q544 458 527 471 L501 490 Q482 499 468 478 L418 417 Q393 384 410 359Z" fill="url(#shell)" stroke="#75dcff" stroke-width="5"/>
+  <path d="M463 367 L503 442 L479 456 L433 390Z" fill="#0a2038" stroke="#3d91bd" stroke-width="3"/>
+  <path d="M489 386 L508 421 M471 398 L490 434" stroke="#8cecff" stroke-width="4" stroke-linecap="round"/>
+ <g id="rightElbow">
+  <circle cx="513" cy="464" r="27" fill="#07182d" stroke="#71dfff" stroke-width="5"/>
+  <circle cx="513" cy="464" r="12" fill="url(#cyan)" filter="url(#glow)"/>
+ <g id="rightForearm">
+  <path d="M529 480 Q552 501 563 540 L572 579 Q573 596 556 602 L532 609 Q514 612 507 593 L485 533 Q474 506 495 486Z" fill="url(#armor)" stroke="#83e8ff" stroke-width="5"/>
+  <path d="M540 505 L556 571 L529 580 L508 520Z" fill="#0b2540" stroke="#3d91bd" stroke-width="3"/>
+  <path d="M552 548 L528 555" stroke="#a1f4ff" stroke-width="4" stroke-linecap="round"/>
+ <g id="rightHand">
+  <path d="M565 584 Q583 582 589 600 L595 620 Q597 633 583 637 L540 643 Q526 643 522 628 L518 609 Q517 595 532 590Z" fill="url(#shell)" stroke="#8cecff" stroke-width="4"/>
+  <path d="M585 620 L600 624 Q613 626 613 613 Q613 603 600 598 L586 594" fill="none" stroke="#8cecff" stroke-width="10" stroke-linecap="round"/>
+  <path d="M572 633 L576 647 M556 635 L557 650 M540 631 L537 645" stroke="#8cecff" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="555" cy="613" r="7" fill="#a9f6ff"/>
+ </g>
+ </g>
+ </g>
+ </g>
+</g>
+<!-- Head assembly, independently transformable -->
+<g id="headPivot">
+ <g id="headShell">
+  <path d="M247 92 Q254 46 320 38 Q386 46 393 92 L405 184 Q408 241 369 279 Q345 301 320 304 Q295 301 271 279 Q232 241 235 184Z" fill="url(#shell)" stroke="#a2efff" stroke-width="5"/>
+  <path d="M264 95 Q270 61 320 56 Q370 61 376 95 L386 183 Q389 230 358 261 Q340 280 320 282 Q300 280 282 261 Q251 230 254 183Z" fill="url(#face)" stroke="#4b9cc7" stroke-width="3"/>
+  <path d="M248 118 L267 91 M392 118 L373 91" stroke="#9af1ff" stroke-width="8" stroke-linecap="round"/>
+  <path d="M320 47 L320 29 M309 29 L331 29" stroke="#7be9ff" stroke-width="5" stroke-linecap="round"/>
+  <path d="M235 174 Q218 180 224 205 Q229 221 249 217 L254 190Z M405 174 Q422 180 416 205 Q411 221 391 217 L386 190Z" fill="#123653" stroke="#76dfff" stroke-width="4"/>
+  <path d="M246 213 Q320 243 394 213" fill="none" stroke="#1c5a80" stroke-width="5"/>
+ </g>
+ <g id="eyes" filter="url(#glow)">
+  <path id="eyeLeft" d="M270 153 Q292 131 312 153 Q292 175 270 153Z" fill="url(#cyan)"/>
+  <path id="eyeRight" d="M328 153 Q348 131 370 153 Q348 175 328 153Z" fill="url(#cyan)"/>
+  <ellipse id="pupilLeft" cx="292" cy="153" rx="5" ry="12" fill="#06223a"/>
+  <ellipse id="pupilRight" cx="348" cy="153" rx="5" ry="12" fill="#06223a"/>
+ </g>
+ <g id="eyelids" opacity="0">
+  <path d="M265 150 Q292 150 317 150 L317 157 Q291 168 265 157Z M323 150 Q348 150 375 150 L375 157 Q349 168 323 157Z" fill="#0a1c32"/>
+ </g>
+ <path d="M313 177 L320 188 L327 177" fill="none" stroke="#4a9ec8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+ <g id="mouthGroup">
+  <path id="mouth" d="M291 216 Q320 225 349 216" fill="none" stroke="#8ef2ff" stroke-width="7" stroke-linecap="round" filter="url(#glow)"/>
+  <path id="mouthOpen" d="M293 215 Q320 245 347 215 Q342 244 320 247 Q298 244 293 215Z" fill="#03101f" stroke="#8ef2ff" stroke-width="4" opacity="0"/>
+  <path d="M301 219 Q320 224 339 219" fill="none" stroke="#e4ffff" stroke-width="2" opacity=".75"/>
+ </g>
+ <path d="M270 250 Q320 267 370 250" fill="none" stroke="#327da8" stroke-width="3"/>
+ <circle cx="253" cy="196" r="5" fill="#72eaff"/><circle cx="387" cy="196" r="5" fill="#72eaff"/>
+</g>
+<!-- Floating status glints, no central orb -->
+<g opacity=".85" filter="url(#glow)">
+ <path d="M170 270 L170 292 M159 281 L181 281" stroke="#65dfff" stroke-width="3" stroke-linecap="round"/>
+ <path d="M470 260 L470 280 M460 270 L480 270" stroke="#65dfff" stroke-width="3" stroke-linecap="round"/>
+</g>
+</svg>
