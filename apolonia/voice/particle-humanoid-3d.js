@@ -1,58 +1,283 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
-const canvas=document.getElementById('apoloniaAvatar'),host=document.getElementById('globeWrap');
-if(canvas&&host){
-const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.6));renderer.setClearColor(0x000000,0);
-const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(32,1,.1,100);camera.position.set(0,0,7.8);
-const root=new THREE.Group();scene.add(root);
-const mat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,vertexShader:`
-attribute float glyph; attribute float psize; attribute float phase;
-uniform float uTime; uniform float uEnergy; uniform float uState;
-varying float vGlyph; varying float vGlow;
-void main(){vGlyph=glyph;vGlow=.55+.45*sin(uTime*1.4+phase);vec3 p=position;
-p+=normal*(.012*sin(uTime*1.2+phase)+uEnergy*.018*sin(uTime*5.0+phase));
-vec4 mv=modelViewMatrix*vec4(p,1.0);gl_Position=projectionMatrix*mv;
-gl_PointSize=clamp(psize*(300.0/-mv.z)*(1.0+uEnergy*.2),1.2,10.0);}
-`,fragmentShader:`
-uniform float uTime; uniform float uEnergy; uniform float uState;
-varying float vGlyph; varying float vGlow;
-void main(){vec2 p=gl_PointCoord-.5;float d=length(p);float alpha=0.0;
-if(vGlyph<.5){alpha=1.0-smoothstep(.25,.48,d);}
-else if(vGlyph<1.5){float head=1.0-smoothstep(.18,.34,length(p-vec2(-.04,-.08)));float tail=1.0-smoothstep(.04,.16,length(p-vec2(.12,.13)));alpha=max(head,tail);}
-else{alpha=1.0-smoothstep(.32,.49,d);}
-if(alpha<.04)discard;
-vec3 c=mix(vec3(.28,.62,1.0),vec3(.48,.94,1.0),vGlow);
-if(uState>.5&&uState<1.5)c=mix(c,vec3(.38,1.0,.82),.55);
-if(uState>1.5&&uState<2.5)c=mix(c,vec3(.62,.68,1.0),.5);
-gl_FragColor=vec4(c,alpha*(.72+.28*vGlow));}
-`,uniforms:{uTime:{value:0},uEnergy:{value:.08},uState:{value:0}}});
-const groups={head:new THREE.Group(),torso:new THREE.Group(),arms:new THREE.Group(),face:new THREE.Group()};
-root.add(groups.head,groups.torso,groups.arms,groups.face);
-function ellipsoidPoints(parent,center,radii,count,seed=1,face=false,rotationZ=0){let state=seed>>>0;const rand=()=>{state=(state*1664525+1013904223)>>>0;return state/4294967296;};const pos=[],norm=[],glyph=[],size=[],phase=[];
-for(let i=0;i<count;i++){const z=rand()*2-1,a=rand()*Math.PI*2,q=Math.sqrt(1-z*z);const n=new THREE.Vector3(q*Math.cos(a),z,q*Math.sin(a));const p=new THREE.Vector3(n.x*radii[0],n.y*radii[1],n.z*radii[2]);if(face&&p.z<0)p.z=-p.z;
-p.add(new THREE.Vector3(...center));pos.push(p.x,p.y,p.z);norm.push(n.x,n.y,n.z);glyph.push(rand()<.43?0:rand()<.76?1:2);size.push(2.3+rand()*2.4);phase.push(rand()*6.28);}
-const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(norm,3));g.setAttribute('glyph',new THREE.Float32BufferAttribute(glyph,1));g.setAttribute('psize',new THREE.Float32BufferAttribute(size,1));g.setAttribute('phase',new THREE.Float32BufferAttribute(phase,1));const points=new THREE.Points(g,mat);parent.add(points);return points;}
-function limb(parent,a,b,r,count,seed){const mid=[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2],len=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);return ellipsoidPoints(parent,mid,[r,len/2+r,r],count,seed,false,-Math.atan2(b[0]-a[0],b[1]-a[1]));}
-ellipsoidPoints(groups.head,[0,1.48,0],[.58,.72,.48],1900,12,true);
-ellipsoidPoints(groups.torso,[0,.12,0],[.69,.91,.39],2300,22);
-ellipsoidPoints(groups.torso,[0,-.62,0],[.53,.35,.34],700,32);
-ellipsoidPoints(groups.torso,[0,.83,0],[.72,.25,.36],550,42);
-limb(groups.arms,[-.68,.77,0],[-.92,.02,.02],.23,560,52);limb(groups.arms,[-.92,.02,.02],[-1.02,-.67,.06],.18,480,62);
-limb(groups.arms,[.68,.77,0],[.92,.02,.02],.23,560,72);limb(groups.arms,[.92,.02,.02],[1.02,-.67,.06],.18,480,82);
-// Upper-body-only avatar: no pelvis, legs, or feet are generated.
-ellipsoidPoints(groups.face,[-.2,1.58,.455],[.055,.045,.025],35,152,true);ellipsoidPoints(groups.face,[.2,1.58,.455],[.055,.045,.025],35,162,true);
-const mouthGroup=new THREE.Group();mouthGroup.position.set(0,1.25,0);groups.face.add(mouthGroup);const mouth=ellipsoidPoints(mouthGroup,[0,0,.47],[.19,.018,.018],95,172,true);
-groups.face.position.y=0;
-root.position.y=-.48;
-let targetYaw=0,currentYaw=0,energy=.08,state=0,mouthOpen=0,targetMouth=0,clock=new THREE.Clock();
-window.addEventListener('apolonia:state',e=>{const s=e.detail?.state;state=s==='listening'?1:s==='thinking'?2:s==='speaking'?3:0;mat.uniforms.uState.value=state;});
-window.addEventListener('apolonia:phoneme',e=>{const v=e.detail?.intensity||.2;energy=Math.min(1,v);targetMouth=state===3?(.18+v*.85):0;});
-window.addEventListener('apolonia:mouth',e=>{targetMouth=Math.max(0,Math.min(1,e.detail?.open||0));});
-window.addEventListener('apolonia:turn',e=>{const d=e.detail?.direction;targetYaw=d==='left'?.62:d==='right'?-.62:0;});
-function resize(){const r=host.getBoundingClientRect();renderer.setSize(Math.max(1,r.width),Math.max(1,r.height),false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix();}
-new ResizeObserver(resize).observe(host);resize();
-function frame(){requestAnimationFrame(frame);const t=clock.getElapsedTime();currentYaw+=(targetYaw-currentYaw)*.045;root.rotation.y=currentYaw+Math.sin(t*.35)*.035;groups.head.rotation.y=Math.sin(t*.7)*.045;groups.head.rotation.x=Math.sin(t*.55)*.018;groups.arms.rotation.z=Math.sin(t*.8)*.018;root.position.y=-.48+Math.sin(t*1.2)*.035;
-mouthOpen+=(targetMouth-mouthOpen)*.25;mouth.scale.y=Math.max(.45,1+mouthOpen*5);mouth.position.y=0;
-energy+=(.08-energy)*.025;mat.uniforms.uTime.value=t;mat.uniforms.uEnergy.value=energy;renderer.render(scene,camera);}
-frame();
+
+const canvas = document.getElementById('apoloniaAvatar');
+const host = document.getElementById('globeWrap');
+
+if (canvas && host) {
+  try {
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: true,
+      powerPreference: 'high-performance'
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.setClearColor(0x000000, 0);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+    camera.position.set(0, 0.45, 7.35);
+    camera.lookAt(0, 0.45, 0);
+
+    scene.add(new THREE.HemisphereLight(0x9bdcff, 0x071326, 2.0));
+    const keyLight = new THREE.DirectionalLight(0xc6eaff, 3.0);
+    keyLight.position.set(-3.5, 5, 6);
+    scene.add(keyLight);
+    const rimLight = new THREE.PointLight(0x27bfff, 22, 9);
+    rimLight.position.set(3, 1.7, -1.2);
+    scene.add(rimLight);
+    const fillLight = new THREE.PointLight(0x4e8dff, 12, 8);
+    fillLight.position.set(-3, -1.5, 3);
+    scene.add(fillLight);
+
+    const avatar = new THREE.Group();
+    scene.add(avatar);
+    const body = new THREE.Group();
+    avatar.add(body);
+
+    const shell = new THREE.MeshPhysicalMaterial({
+      color: 0x173b60,
+      metalness: 0.72,
+      roughness: 0.27,
+      clearcoat: 0.8,
+      clearcoatRoughness: 0.2
+    });
+    const brightShell = new THREE.MeshPhysicalMaterial({
+      color: 0x27618a,
+      metalness: 0.62,
+      roughness: 0.24,
+      clearcoat: 1
+    });
+    const darkJoint = new THREE.MeshStandardMaterial({
+      color: 0x071629,
+      metalness: 0.8,
+      roughness: 0.3
+    });
+    const cyan = new THREE.MeshStandardMaterial({
+      color: 0x5eeaff,
+      emissive: 0x16a9e8,
+      emissiveIntensity: 1.6,
+      metalness: 0.35,
+      roughness: 0.25
+    });
+
+    function sphere(parent, position, scale, material, segments = 40) {
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(1, segments, Math.max(16, segments >> 1)),
+        material
+      );
+      mesh.position.set(position[0], position[1], position[2]);
+      mesh.scale.set(scale[0], scale[1], scale[2]);
+      parent.add(mesh);
+      return mesh;
+    }
+
+    function capsuleBetween(parent, start, end, radius, material) {
+      const a = new THREE.Vector3(start[0], start[1], start[2]);
+      const b = new THREE.Vector3(end[0], end[1], end[2]);
+      const direction = new THREE.Vector3().subVectors(b, a);
+      const length = direction.length();
+      const mesh = new THREE.Mesh(
+        new THREE.CapsuleGeometry(radius, Math.max(0.05, length - radius * 2), 8, 20),
+        material
+      );
+      mesh.position.copy(a).add(b).multiplyScalar(0.5);
+      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+      parent.add(mesh);
+      return mesh;
+    }
+
+    // Upper torso and collar: deliberately no pelvis or lower-body geometry.
+    const torso = sphere(body, [0, -0.12, 0], [0.78, 0.98, 0.43], shell, 56);
+    sphere(body, [0, 0.72, 0.015], [0.78, 0.31, 0.43], brightShell, 48);
+    capsuleBetween(body, [0, 0.77, 0], [0, 1.12, 0], 0.19, darkJoint);
+    const neck = sphere(body, [0, 1.12, 0], [0.23, 0.3, 0.23], brightShell, 36);
+
+    // A restrained chest plate and illuminated core make the silhouette readable.
+    sphere(body, [0, 0.1, 0.414], [0.43, 0.47, 0.045], darkJoint, 40);
+    sphere(body, [0, 0.13, 0.46], [0.31, 0.34, 0.035], shell, 40);
+    const core = sphere(body, [0, 0.14, 0.5], [0.075, 0.075, 0.025], cyan, 32);
+
+    const shoulderPivots = [];
+    const forearms = [];
+    const hands = [];
+    [-1, 1].forEach((side) => {
+      const shoulder = new THREE.Group();
+      shoulder.position.set(side * 0.68, 0.65, 0);
+      body.add(shoulder);
+      shoulderPivots.push({ group: shoulder, side });
+
+      sphere(shoulder, [0, 0, 0], [0.29, 0.3, 0.31], brightShell, 40);
+      capsuleBetween(shoulder, [0, -0.05, 0], [side * 0.17, -0.62, 0.015], 0.19, shell);
+      sphere(shoulder, [side * 0.17, -0.62, 0.015], [0.205, 0.21, 0.21], darkJoint, 32);
+
+      const forearm = new THREE.Group();
+      forearm.position.set(side * 0.17, -0.62, 0.015);
+      shoulder.add(forearm);
+      capsuleBetween(forearm, [0, 0, 0], [side * 0.1, -0.55, 0.04], 0.145, brightShell);
+      sphere(forearm, [side * 0.1, -0.55, 0.04], [0.16, 0.16, 0.17], darkJoint, 28);
+
+      const palm = sphere(forearm, [side * 0.12, -0.72, 0.08], [0.19, 0.22, 0.105], shell, 32);
+      // Four simple articulated fingers and a thumb, all kept inside the upper-body frame.
+      for (let finger = 0; finger < 4; finger++) {
+        const x = side * (0.015 + finger * 0.075);
+        const fingerLength = 0.16 - Math.abs(1.5 - finger) * 0.018;
+        capsuleBetween(forearm, [side * 0.12 + x, -0.83, 0.085], [side * 0.12 + x, -0.83 - fingerLength, 0.09], 0.027, brightShell);
+      }
+      capsuleBetween(forearm, [side * 0.0, -0.69, 0.08], [side * -0.1, -0.82, 0.1], 0.035, brightShell);
+      forearms.push(forearm);
+      hands.push(palm);
+    });
+
+    // Head pivots independently for natural listening and thinking gestures.
+    const headPivot = new THREE.Group();
+    headPivot.position.set(0, 1.28, 0);
+    body.add(headPivot);
+    const head = sphere(headPivot, [0, 0.42, 0], [0.59, 0.72, 0.49], shell, 64);
+    sphere(headPivot, [0, 0.13, 0.37], [0.34, 0.2, 0.16], brightShell, 40);
+
+    // SVG facial features are rasterized by the browser at high resolution,
+    // then mapped onto the 3D head as transparent Three.js textures.
+    const eyesSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 180"><defs><linearGradient id="eye" x2="0" y2="1"><stop stop-color="#e7ffff"/><stop offset="1" stop-color="#59dfff"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g filter="url(#glow)" fill="url(#eye)"><path d="M55 88 Q128 18 201 88 Q128 158 55 88Z"/><path d="M311 88 Q384 18 457 88 Q384 158 311 88Z"/></g><g fill="#071a31"><ellipse cx="128" cy="88" rx="25" ry="34"/><ellipse cx="384" cy="88" rx="25" ry="34"/></g><g fill="#fff"><circle cx="137" cy="76" r="9"/><circle cx="393" cy="76" r="9"/></g></svg>';
+    const mouthSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 120"><defs><filter id="g"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><path d="M22 26 Q120 72 218 26 Q205 105 120 108 Q35 105 22 26Z" fill="#071629" stroke="#73efff" stroke-width="7" stroke-linejoin="round" filter="url(#g)"/><path d="M48 39 Q120 70 192 39" fill="none" stroke="#d9ffff" stroke-width="8" stroke-linecap="round"/></svg>';
+
+    function svgTexture(svg) {
+      const texture = new THREE.TextureLoader().load(
+        'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
+      );
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.minFilter = THREE.LinearMipmapLinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      return texture;
+    }
+
+    const faceMaterial = new THREE.MeshBasicMaterial({
+      map: svgTexture(eyesSvg),
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      toneMapped: false
+    });
+    const eyes = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 0.275), faceMaterial);
+    eyes.position.set(0, 0.48, 0.515);
+    headPivot.add(eyes);
+
+    const mouthMaterial = new THREE.MeshBasicMaterial({
+      map: svgTexture(mouthSvg),
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      toneMapped: false
+    });
+    const mouth = new THREE.Mesh(new THREE.PlaneGeometry(0.27, 0.135), mouthMaterial);
+    mouth.position.set(0, 0.13, 0.505);
+    headPivot.add(mouth);
+
+    // Thin luminous collar arcs give the model a clean, engineered finish.
+    const collar = new THREE.Mesh(
+      new THREE.TorusGeometry(0.255, 0.018, 8, 64),
+      cyan
+    );
+    collar.rotation.x = Math.PI / 2;
+    collar.position.set(0, 0.91, 0.02);
+    body.add(collar);
+
+    let state = 'idle';
+    let targetYaw = 0;
+    let currentYaw = 0;
+    let mouthEnergy = 0;
+    let targetMouth = 0;
+    let blink = 0;
+    let nextBlink = 3.2;
+    let lastTime = 0;
+    const clock = new THREE.Clock();
+
+    window.addEventListener('apolonia:state', (event) => {
+      state = event.detail && event.detail.state ? event.detail.state : 'idle';
+      if (state !== 'speaking') targetMouth = 0;
+    });
+    window.addEventListener('apolonia:phoneme', (event) => {
+      const intensity = Number(event.detail && event.detail.intensity) || 0.2;
+      mouthEnergy = Math.max(0.08, Math.min(1, intensity));
+      if (state === 'speaking') targetMouth = 0.28 + mouthEnergy * 0.72;
+    });
+    window.addEventListener('apolonia:mouth', (event) => {
+      targetMouth = Math.max(0, Math.min(1, Number(event.detail && event.detail.open) || 0));
+    });
+    window.addEventListener('apolonia:turn', (event) => {
+      const direction = event.detail && event.detail.direction;
+      targetYaw = direction === 'left' ? 0.48 : direction === 'right' ? -0.48 : 0;
+    });
+
+    function resize() {
+      const rect = host.getBoundingClientRect();
+      const width = Math.max(1, rect.width);
+      const height = Math.max(1, rect.height);
+      renderer.setSize(width, height, false);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    }
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(host);
+    resize();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
+      const delta = Math.min(0.05, elapsed - lastTime || 0.016);
+      lastTime = elapsed;
+
+      currentYaw += (targetYaw - currentYaw) * Math.min(1, delta * 3.5);
+      avatar.rotation.y = currentYaw + Math.sin(elapsed * 0.34) * 0.025;
+
+      const breathing = Math.sin(elapsed * 1.45) * 0.012;
+      torso.scale.y = 0.98 + breathing;
+      core.material.emissiveIntensity = state === 'listening' ? 2.8 : state === 'thinking' ? 1.1 : state === 'speaking' ? 3.4 : 1.6;
+      core.scale.setScalar(1 + (state === 'speaking' ? Math.sin(elapsed * 10) * 0.13 : Math.sin(elapsed * 2) * 0.035));
+
+      headPivot.rotation.y = Math.sin(elapsed * 0.68) * 0.035 + (state === 'thinking' ? -0.12 : 0);
+      headPivot.rotation.x = Math.sin(elapsed * 0.52) * 0.018 + (state === 'listening' ? 0.045 : 0);
+      headPivot.rotation.z = state === 'thinking' ? Math.sin(elapsed * 1.1) * 0.055 - 0.08 : Math.sin(elapsed * 0.42) * 0.012;
+
+      shoulderPivots.forEach(({ group, side }, index) => {
+        const gesture = state === 'speaking' ? Math.sin(elapsed * 3.2 + (side > 0 ? 0 : Math.PI)) * 0.11 : 0;
+        const listenLift = state === 'listening' ? 0.035 : 0;
+        group.rotation.z = side * (Math.sin(elapsed * 0.8) * 0.018 + gesture + listenLift);
+        group.rotation.x = state === 'speaking' ? Math.sin(elapsed * 2.5 + side) * 0.045 : 0;
+        const wrist = forearms[index];
+        wrist.rotation.z = state === 'speaking' ? Math.sin(elapsed * 4 + side) * 0.13 : Math.sin(elapsed * 0.7 + side) * 0.025;
+        wrist.rotation.x = state === 'speaking' ? Math.sin(elapsed * 3 + side) * 0.08 : 0;
+      });
+
+      mouthEnergy += ((state === 'speaking' ? targetMouth : 0) - mouthEnergy) * Math.min(1, delta * 11);
+      mouth.scale.y = 0.55 + mouthEnergy * 1.65;
+
+      if (elapsed >= nextBlink) {
+        blink = 1;
+        nextBlink = elapsed + 3.2 + Math.random() * 2.4;
+      }
+      if (blink > 0) {
+        blink = Math.max(0, blink - delta * 7);
+        eyes.scale.y = Math.max(0.08, 1 - blink);
+      } else {
+        eyes.scale.y += (1 - eyes.scale.y) * Math.min(1, delta * 12);
+      }
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('pagehide', () => {
+      resizeObserver.disconnect();
+      renderer.dispose();
+    }, { once: true });
+  } catch (error) {
+    console.error('APOLONIA 3D avatar failed to initialize:', error);
+    host.dataset.avatarError = 'true';
+    const status = document.getElementById('statusLine');
+    if (status) status.textContent = '3D avatar unavailable in this browser. Voice controls remain available.';
+  }
 }
