@@ -1,105 +1,29 @@
-# Apokolips Assignment System
+# Apokolips Assignment and Notes System
 
-## Overview
+## Assignment
+`assignment.html` contains 50 Information Systems questions across four difficulty levels: 12 Easy, 13 Medium, 13 Hard and 12 Very Hard. The public question bank remains in `assets/assignment/questions.js`.
 
-`assignment.html` is the interactive Information Systems assignment page. It contains 50 questions across four difficulty levels (12 Easy, 13 Medium, 13 Hard, 12 Very Hard). Every question is worth 2 points, for a total of 100.
+## Local-only behaviour
+`assets/assignment/assignment.js` handles question navigation, multiple-choice and written responses, skip/unskip, progress display and browser local-storage autosave. No answers are sent to an evaluation API. The Submit Assignment and “I can't answer — show answers & summaries” actions save the current draft and navigate to `notes.html`; neither action grades or uploads the attempt. A question and topic identifier are included in the URL when a student opens notes from the assignment.
 
-## Source-note basis
+## Learning notes
+- `notes.html` is the separate notes interface.
+- `assets/notes/notes-data.js` contains the topic-based learning content.
+- `assets/notes/notes.css` contains responsive styling.
+- `assets/notes/notes.js` implements topic navigation, search, expandable sections and question cross-links.
 
-The question set was authored from the educational photographs in the repository whose names begin with `IMG-20261125-WA`. OCR was run against all 28 matching photographs. The readable material covers:
-
-- Information systems: definition, purpose, components, and the input–processing–output–feedback model
-- Data and information; hardware, software, data management, networking, and telecommunications
-- Organizational, management, and technology dimensions
-- TPS, MIS, DSS, and ESS/EIS and their management-level use
-- Business processes and functional areas: production/manufacturing, sales and marketing, finance and accounting, and human resources
-- Information quality: accuracy, integrity, consistency, completeness, and validity
-- Benefits and organizational objectives of information systems
-
-Some handwriting in the photographs is unclear. Questions were limited to concepts that could be read with reasonable confidence; unclear fragments were not used as factual premises.
-
-### Images reviewed
-
-- `IMG-20261125-WA0008.jpg`
-- `IMG-20261125-WA0009.jpg`
-- `IMG-20261125-WA0010.jpg`
-- `IMG-20261125-WA0011.jpg`
-- `IMG-20261125-WA0012.jpg`
-- `IMG-20261125-WA0013.jpg`
-- `IMG-20261125-WA0014.jpg`
-- `IMG-20261125-WA0015.jpg`
-- `IMG-20261125-WA0016.jpg`
-- `IMG-20261125-WA0017.jpg`
-- `IMG-20261125-WA0018.jpg`
-- `IMG-20261125-WA0019.jpg`
-- `IMG-20261125-WA0020.jpg`
-- `IMG-20261125-WA0021.jpg`
-- `IMG-20261125-WA0022.jpg`
-- `IMG-20261125-WA0027.jpg`
-- `IMG-20261125-WA0038.jpg`
-- `IMG-20261125-WA0050.jpg`
-- `IMG-20261125-WA0055.jpg`
-- `IMG-20261125-WA0061.jpg`
-- `IMG-20261125-WA0077.jpg`
-- `IMG-20261125-WA0089.jpg`
-- `IMG-20261125-WA0106.jpg`
-- `IMG-20261125-WA0116.jpg`
-- `IMG-20261125-WA0137.jpg`
-- `IMG-20261125-WA0140.jpg`
-- `IMG-20261125-WA0150.jpg`
-- `IMG-20261125-WA0152.jpg`
-
-## Frontend structure
-
-- `assignment.html` — SEO metadata and semantic page shell
-- `assets/assignment/questions.js` — public question text/options only; contains no expected answers
-- `assets/assignment/assignment.js` — navigation, required-answer checks, local autosave, submission, and results rendering
-- `assets/assignment/assignment.css` — responsive Apokolips dark/blue/cyan interface
-
-Draft answers are saved in browser local storage under a versioned key. The page does not request a student name or email and does not save submissions to an application database. Correct answers are not shipped to the browser before submission.
-
-## Apolonia AI evaluation endpoint
-
-`netlify/functions/assignment-evaluate.mjs` implements `POST /api/assignment/evaluate` on the existing `apolonia-ai-api` Netlify site.
-
-- Expected answers and marking guides are stored as an AES-256-GCM encrypted payload in `netlify/lib/assignment-rubric.enc.mjs`; the decryption key is not committed to the repository and must be configured as a Netlify secret.
-- The endpoint requires exactly 50 unique question records; each must contain a non-empty answer or be explicitly marked as skipped. It also supports a separate study-guide request.
-- Each question is scored from 0 to 2 points; the maximum is 100.
-- The model is instructed to evaluate meaning, not exact wording, and to use `uncertain` rather than guess. Explicitly skipped questions are not sent to the AI provider and receive zero points.
-- The server normalizes and validates every returned result and supplies the trusted expected answer from its own marking rubric.
-- Student answer text and provider credentials are not written to application logs.
-- OpenAI calls use `store: false`. The page itself does not persist submissions on a server.
-- CORS is restricted to `https://apokolips.xyz` and `https://www.apokolips.xyz`.
-- Netlify per-IP rate limiting is configured to 4 requests per 60 seconds.
-
-### Runtime configuration
-
-The function requires the private rubric decryption secret below, plus at least one AI provider key. It reuses the server-side provider environment variables already used by the APOLONIA chat function:
-
-1. `GROQ_API_KEY`
-2. `GEMINI_API_KEY`
-3. `OPENAI_API_KEY`
-4. `OPENAI_API_KEY_2` (optional fallback)
-
-Configure `APOKOLIPS_ASSIGNMENT_RUBRIC_KEY` and at least one provider key as secret environment variables on the `apolonia-ai-api` Netlify site. Never add either secret to browser JavaScript or commit it to Git. The rubric key must be the private base64 key supplied to the repository owner for this deployment.
-
-The frontend automatically routes a Netlify deploy preview to the matching `apolonia-ai-api` deploy preview; production uses `https://apolonia-ai-api.netlify.app`. If the production API domain changes, update `API_ORIGIN` in `assets/assignment/assignment.js`.
-
-## Deployment
-
-The repository's existing PR #195 established the Assignment page and confirmed the `apolonia-ai-api` Netlify deploy-preview integration. The new evaluator function must be deployed to that Netlify site for AI evaluation to work. A GitHub preview build of the static Apokolips site alone does not deploy the API function unless the Netlify API project is also connected to the same repository/branch.
+The notes are organized from readable content in the 28 supplied `IMG-20261125-WA*.jpg` lecture-note photographs. Unclear handwriting was not used as a factual premise. Explanations and examples clarify the legible concepts; they are not a verbatim transcription or an official lecturer-issued answer key.
 
 ## Privacy and limitations
+Draft answers and skipped-question choices are stored only in the student's current browser under a versioned local-storage key. They are not uploaded or stored in an application database. Clearing browser/site data can remove this local draft, so students should keep their browser data if they want to retain it.
 
-- Answers are transmitted to the configured AI provider only when the student confirms submission.
-- No name, email, or other student identifier is requested or transmitted.
-- The assignment UI keeps an unsent draft only in the student's current browser.
-- CORS and rate limits reduce casual abuse but are not user authentication. A public assignment can be submitted anonymously.
-- AI scoring is an assisted assessment, not a substitute for lecturer review. Answers returned as `uncertain` should be manually checked.
+The Assignment workflow does not use OpenAI, Gemini, Groq, API keys, remote evaluation endpoints or AI-generated runtime answers. There is no automatic score or grading report; the Notes page is a learning resource.
 
-
-## Skipping questions and study mode
-
-Students may mark any unanswered question as **Skipped**, then return to it later. A skipped question counts as completed for submission navigation, but receives zero points. The evaluation endpoint explicitly records skipped IDs and excludes them from AI marking; their expected answers and marking-guide key points are still included in the post-submission report.
-
-The **I can't answer — show answers & summaries** action opens a separate study mode. It ends the current attempt without grading it and fetches the decrypted marking guide from the server-side endpoint. The browser receives the 50 expected answers and their note-based marking-guide summaries only after the student explicitly confirms this action. The existing encrypted rubric and server-only decryption key remain the source of truth; no answer key is added to public frontend files. The current local draft is retained on the device.
+## Difficulty distribution
+| Level | Questions |
+|---|---:|
+| Easy | 12 |
+| Medium | 13 |
+| Hard | 13 |
+| Very Hard | 12 |
+| **Total** | **50** |
