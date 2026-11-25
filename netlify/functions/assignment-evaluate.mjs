@@ -134,7 +134,13 @@ function normalizeReport(modelReport, submittedAnswers, rubric) {
   }
   const results = rubric.map((rubric) => {
     const raw = byId.get(rubric.id);
-    const answer = submittedAnswers.get(rubric.id) || "";
+    const submission = submittedAnswers.get(rubric.id) || { answer: "", skipped: true };
+    const answer = submission.answer;
+    if (submission.skipped) return {
+      id: rubric.id, status: "skipped", awardedPoints: 0,
+      feedback: "You skipped this question. Review the expected answer and key points below.",
+      correctAnswer: rubric.expectedAnswer, topic: rubric.topic, studentAnswer: ""
+    };
     const allowed = new Set(["correct", "partially_correct", "incorrect", "uncertain"]);
     let status = allowed.has(raw?.status) ? raw.status : "uncertain";
     let points = Number.isInteger(raw?.awardedPoints) ? raw.awardedPoints : 0;
@@ -180,18 +186,8 @@ export default async (request) => {
   let payload;
   try { payload = await request.json(); }
   catch { return json({ error: "A valid JSON request is required." }, 400, headers); }
-  if (payload?.assignmentVersion !== "2026-11-25-notes-v1" || !Array.isArray(payload.answers) || payload.answers.length !== 50) {
-    return json({ error: "This assignment submission is incomplete or uses an unsupported version." }, 400, headers);
-  }
-
-  const submittedAnswers = new Map();
-  for (const item of payload.answers) {
-    if (!item || typeof item.id !== "string" || typeof item.answer !== "string" ||
-        !/^Q(?:0[1-9]|[1-4][0-9]|50)$/.test(item.id) ||
-        item.answer.trim().length < 1 || item.answer.length > 1800 || submittedAnswers.has(item.id)) {
-      return json({ error: "Every question must have one valid answer of no more than 1,800 characters." }, 400, headers);
-    }
-    submittedAnswers.set(item.id, item.answer.trim());
+  if (payload?.assignmentVersion !== "2026-11-25-notes-v1") {
+    return json({ error: "This assignment uses an unsupported version." }, 400, headers);
   }
 
   let rubric;
@@ -203,8 +199,32 @@ export default async (request) => {
   }
   if (!rubric) return json({ error: "The private assignment marking guide has not been configured on the evaluation service." }, 503, headers);
 
+  if (payload.mode === "study-guide") {
+    const studyGuide = rubric.map((item) => ({
+      id: item.id, question: item.question, topic: item.topic,
+      expectedAnswer: item.expectedAnswer,
+      summary: typeof item.markingGuide === "string" ? item.markingGuide :
+        Array.isArray(item.markingGuide) ? item.markingGuide.join(" ") : item.expectedAnswer
+    }));
+    return json({ studyGuide, totalQuestions: studyGuide.length, mode: "study-guide" }, 200, headers);
+  }
+
+  if (!Array.isArray(payload.answers) || payload.answers.length !== 50) {
+    return json({ error: "A complete list of 50 answered or skipped questions is required." }, 400, headers);
+  }
+  const submittedAnswers = new Map();
+  for (const item of payload.answers) {
+    const skipped = item?.skipped === true;
+    if (!item || typeof item.id !== "string" || typeof item.answer !== "string" ||
+        !/^Q(?:0[1-9]|[1-4][0-9]|50)$/.test(item.id) ||
+        (skipped ? item.answer.trim().length !== 0 : item.answer.trim().length < 1) ||
+        item.answer.length > 1800 || submittedAnswers.has(item.id)) {
+      return json({ error: "Each question must have one valid answer or be explicitly skipped." }, 400, headers);
+    }
+    submittedAnswers.set(item.id, { answer: item.answer.trim(), skipped });
+  }
   if (submittedAnswers.size !== 50 || rubric.some((item) => !submittedAnswers.has(item.id))) {
-    return json({ error: "Please answer all 50 questions before submitting." }, 400, headers);
+    return json({ error: "Please answer or skip every question before submitting." }, 400, headers);
   }
 
   const providers = [
@@ -217,12 +237,16 @@ export default async (request) => {
     return json({ error: "Apolonia AI evaluation is not configured. Add a server-side AI provider key to the apolonia-ai-api Netlify site." }, 503, headers);
   }
 
-  const promptData = rubric.map((rubric) => ({
-    id: rubric.id, question: rubric.question, topic: rubric.topic,
-    questionAnswerGuide: rubric.expectedAnswer, markingGuide: rubric.markingGuide,
-    studentAnswer: submittedAnswers.get(rubric.id)
+  const promptData = rubric.filter((item) => !submittedAnswers.get(item.id).skipped).map((item) => ({
+    id: item.id, question: item.question, topic: item.topic,
+    questionAnswerGuide: item.expectedAnswer, markingGuide: item.markingGuide,
+    studentAnswer: submittedAnswers.get(item.id).answer
   }));
-  const prompt = "Evaluate all 50 answers using this marking data. Award up to 2 points per question. Do not omit any ID.\n\n" + JSON.stringify(promptData);
+  if (promptData.length === 0) {
+    const normalized = normalizeReport({ results: [], overallSummary: "You chose to skip every question. Review the note-based answers and key points below, then try the assignment again when you feel ready.", topicsToImprove: [] }, submittedAnswers, rubric);
+    return json({ ...normalized, totalQuestions: 50, maxScore: 100, provider: null, evaluatedAt: new Date().toISOString() }, 200, headers);
+  }
+  const prompt = `Evaluate the ${promptData.length} attempted answers using this marking data. Award up to 2 points per question. Do not omit any supplied ID. Skipped questions are excluded.\n\n` + JSON.stringify(promptData);
 
   let report = null;
   let providerUsed = null;
