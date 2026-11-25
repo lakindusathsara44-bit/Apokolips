@@ -228,7 +228,7 @@ import { ASSIGNMENT_QUESTIONS, ASSIGNMENT_VERSION } from "./questions.js";
     const intro = document.createElement("div");
     const kicker = document.createElement("p"); kicker.className = "section-kicker"; kicker.textContent = "APOLONIA AI / ASSESSMENT REPORT";
     const title = document.createElement("h2"); title.textContent = "Your assignment results";
-    const summary = document.createElement("p"); summary.textContent = report.overallSummary || "Your answers have been evaluated against the assignment marking guide.";
+    const summary = document.createElement("p"); summary.textContent = "Your answers have been evaluated. Review the individual learning summary under each question for the correct concepts and explanations.";
     intro.append(kicker, title, summary);
     const ring = document.createElement("div"); ring.className = "score-ring";
     const ringInner = document.createElement("div");
