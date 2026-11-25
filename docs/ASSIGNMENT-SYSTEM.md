@@ -62,7 +62,7 @@ Draft answers are saved in browser local storage under a versioned key. The page
 
 `netlify/functions/assignment-evaluate.mjs` implements `POST /api/assignment/evaluate` on the existing `apolonia-ai-api` Netlify site.
 
-- Expected answers and marking guides are stored as an AES-256-GCM encrypted payload in `assignment-rubric.enc.mjs`; the decryption key is not committed to the repository and must be configured as a Netlify secret.
+- Expected answers and marking guides are stored as an AES-256-GCM encrypted payload in `netlify/lib/assignment-rubric.enc.mjs`; the decryption key is not committed to the repository and must be configured as a Netlify secret.
 - The endpoint requires exactly 50 unique, non-empty answers for the current assignment version.
 - Each question is scored from 0 to 2 points; the maximum is 100.
 - The model is instructed to evaluate meaning, not exact wording, and to use `uncertain` rather than guess.
