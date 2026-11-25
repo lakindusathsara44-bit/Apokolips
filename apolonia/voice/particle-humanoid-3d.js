@@ -28,11 +28,11 @@ gl_FragColor=vec4(c,alpha*(.72+.28*vGlow));}
 `,uniforms:{uTime:{value:0},uEnergy:{value:.08},uState:{value:0}}});
 const groups={head:new THREE.Group(),torso:new THREE.Group(),arms:new THREE.Group(),legs:new THREE.Group(),face:new THREE.Group()};
 root.add(groups.head,groups.torso,groups.arms,groups.legs,groups.face);
-function ellipsoidPoints(parent,center,radii,count,seed=1,face=false){let state=seed>>>0;const rand=()=>{state=(state*1664525+1013904223)>>>0;return state/4294967296;};const pos=[],norm=[],glyph=[],size=[],phase=[];
+function ellipsoidPoints(parent,center,radii,count,seed=1,face=false,rotationZ=0){let state=seed>>>0;const rand=()=>{state=(state*1664525+1013904223)>>>0;return state/4294967296;};const pos=[],norm=[],glyph=[],size=[],phase=[];
 for(let i=0;i<count;i++){const z=rand()*2-1,a=rand()*Math.PI*2,q=Math.sqrt(1-z*z);const n=new THREE.Vector3(q*Math.cos(a),z,q*Math.sin(a));const p=new THREE.Vector3(n.x*radii[0],n.y*radii[1],n.z*radii[2]);if(face&&p.z<0)p.z=-p.z;
 p.add(new THREE.Vector3(...center));pos.push(p.x,p.y,p.z);norm.push(n.x,n.y,n.z);glyph.push(rand()<.43?0:rand()<.76?1:2);size.push(2.3+rand()*2.4);phase.push(rand()*6.28);}
 const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(norm,3));g.setAttribute('glyph',new THREE.Float32BufferAttribute(glyph,1));g.setAttribute('psize',new THREE.Float32BufferAttribute(size,1));g.setAttribute('phase',new THREE.Float32BufferAttribute(phase,1));const points=new THREE.Points(g,mat);parent.add(points);return points;}
-function limb(parent,a,b,r,count,seed){const mid=[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2],len=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);const mesh=ellipsoidPoints(parent,mid,[r,len/2+r,r],count,seed);mesh.rotation.z=-Math.atan2(b[0]-a[0],b[1]-a[1]);return mesh;}
+function limb(parent,a,b,r,count,seed){const mid=[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2],len=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);return ellipsoidPoints(parent,mid,[r,len/2+r,r],count,seed,false,-Math.atan2(b[0]-a[0],b[1]-a[1]));}
 ellipsoidPoints(groups.head,[0,1.48,0],[.58,.72,.48],1900,12,true);
 ellipsoidPoints(groups.torso,[0,.12,0],[.69,.91,.39],2300,22);
 ellipsoidPoints(groups.torso,[0,-.62,0],[.53,.35,.34],700,32);
@@ -43,7 +43,7 @@ limb(groups.legs,[-.29,-.68,0],[-.34,-1.48,.02],.29,750,92);limb(groups.legs,[-.
 limb(groups.legs,[.29,-.68,0],[.34,-1.48,.02],.29,750,112);limb(groups.legs,[.34,-1.48,.02],[.37,-2.18,.08],.22,650,122);
 ellipsoidPoints(groups.legs,[-.38,-2.22,.2],[.28,.13,.4],220,132);ellipsoidPoints(groups.legs,[.38,-2.22,.2],[.28,.13,.4],220,142);
 ellipsoidPoints(groups.face,[-.2,1.58,.455],[.055,.045,.025],35,152,true);ellipsoidPoints(groups.face,[.2,1.58,.455],[.055,.045,.025],35,162,true);
-const mouth=ellipsoidPoints(groups.face,[0,1.25,.47],[.19,.018,.018],95,172,true);
+const mouthGroup=new THREE.Group();mouthGroup.position.set(0,1.25,0);groups.face.add(mouthGroup);const mouth=ellipsoidPoints(mouthGroup,[0,0,.47],[.19,.018,.018],95,172,true);
 groups.face.position.y=0;
 root.position.y=.05;
 let targetYaw=0,currentYaw=0,energy=.08,state=0,mouthOpen=0,targetMouth=0,clock=new THREE.Clock();
@@ -54,7 +54,7 @@ window.addEventListener('apolonia:turn',e=>{const d=e.detail?.direction;targetYa
 function resize(){const r=host.getBoundingClientRect();renderer.setSize(Math.max(1,r.width),Math.max(1,r.height),false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix();}
 new ResizeObserver(resize).observe(host);resize();
 function frame(){requestAnimationFrame(frame);const t=clock.getElapsedTime();currentYaw+=(targetYaw-currentYaw)*.045;root.rotation.y=currentYaw+Math.sin(t*.35)*.035;groups.head.rotation.y=Math.sin(t*.7)*.045;groups.head.rotation.x=Math.sin(t*.55)*.018;groups.arms.rotation.z=Math.sin(t*.8)*.018;root.position.y=.05+Math.sin(t*1.2)*.035;
-mouthOpen+=(targetMouth-mouthOpen)*.25;mouth.scale.y=Math.max(.45,1+mouthOpen*5);mouth.position.y=1.25-mouthOpen*.025;
+mouthOpen+=(targetMouth-mouthOpen)*.25;mouth.scale.y=Math.max(.45,1+mouthOpen*5);mouth.position.y=0;
 energy+=(.08-energy)*.025;mat.uniforms.uTime.value=t;mat.uniforms.uEnergy.value=energy;renderer.render(scene,camera);}
 frame();
 }
