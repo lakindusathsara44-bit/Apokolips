@@ -96,3 +96,10 @@ The repository's existing PR #195 established the Assignment page and confirmed 
 - The assignment UI keeps an unsent draft only in the student's current browser.
 - CORS and rate limits reduce casual abuse but are not user authentication. A public assignment can be submitted anonymously.
 - AI scoring is an assisted assessment, not a substitute for lecturer review. Answers returned as `uncertain` should be manually checked.
+
+
+## Skipping questions and study mode
+
+Students may mark any unanswered question as **Skipped**, then return to it later. A skipped question counts as completed for submission navigation, but receives zero points. The evaluation endpoint explicitly records skipped IDs and excludes them from AI marking; their expected answers and marking-guide key points are still included in the post-submission report.
+
+The **I can't answer — show answers & summaries** action opens a separate study mode. It ends the current attempt without grading it and fetches the decrypted marking guide from the server-side endpoint. The browser receives the 50 expected answers and their note-based marking-guide summaries only after the student explicitly confirms this action. The existing encrypted rubric and server-only decryption key remain the source of truth; no answer key is added to public frontend files. The current local draft is retained on the device.
