@@ -124,9 +124,9 @@
 
     state.headYaw = ease(state.headYaw, state.headTarget + idleSway, 5, dt);
     state.headTilt = ease(state.headTilt, state.headTiltTarget + (thinking ? Math.sin(t * 1.2) * .025 : 0), 4, dt);
-    setTransform(head, state.headTilt * 57.2958, 320, 190);
     head.style.transformOrigin = '320px 190px';
-    head.style.transform = 'translateX(' + (state.headYaw * 13).toFixed(2) + 'px) rotate(' + (state.headYaw * 57.2958).toFixed(2) + 'deg)';
+    head.style.transformBox = 'view-box';
+    head.style.transform = 'translateX(' + (state.headYaw * 13).toFixed(2) + 'px) rotate(' + (state.headYaw * 57.2958).toFixed(2) + 'deg) rotate(' + (state.headTilt * 57.2958).toFixed(2) + 'deg)';
     head.style.transformBox = 'view-box';
 
     // Pupil gaze tracks the pointer slightly, without distracting from the conversation.
@@ -146,7 +146,9 @@
     const open = state.mouth > .12;
     mouth.setAttribute('opacity', open ? '.12' : '1');
     mouthOpen.setAttribute('opacity', open ? String(clamp(state.mouth, 0, .98)) : '0');
-    mouthOpen.setAttribute('transform', 'translate(0 0) scale(1 ' + (0.35 + state.mouth * 1.1).toFixed(2) + ')');
+    mouthOpen.style.transformOrigin = '320px 230px';
+    mouthOpen.style.transformBox = 'view-box';
+    mouthOpen.style.transform = 'scaleY(' + (0.45 + state.mouth * 1.15).toFixed(2) + ')';
 
     let leftS = 0, rightS = 0, leftE = 0, rightE = 0, leftW = 0, rightW = 0;
     if (listen) {
@@ -155,9 +157,9 @@
       leftE = -8; rightE = 8;
     } else if (thinking) {
       // Right hand rises towards the lower face: a clear thinking gesture.
-      rightS = -9;
-      rightE = 105;
-      rightW = -18;
+      rightS = -35;
+      rightE = -100;
+      rightW = -12;
       leftS = 3;
     } else if (speaking) {
       const wave = Math.sin(t * 3.1);
