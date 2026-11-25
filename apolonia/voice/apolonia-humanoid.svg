@@ -105,9 +105,9 @@
       <circle cx="129" cy="96" r="2.5" fill="#8cecff"/>
       <path d="M137 78l7-5M138 84l8-2M138 90l8 1M136 96l7 4" stroke="#8cecff" stroke-width="2.4" stroke-linecap="round"/>
     </g>
-    <g id="pupils" opacity="0">
-      <ellipse cx="76" cy="90" rx="4" ry="8" fill="#051529"/>
-      <ellipse cx="124" cy="90" rx="4" ry="8" fill="#051529"/>
+    <g id="pupils">
+      <ellipse id="pupilLeft" cx="76" cy="90" rx="3.2" ry="5.5" fill="#03101f"/>
+      <ellipse id="pupilRight" cx="124" cy="90" rx="3.2" ry="5.5" fill="#03101f"/>
     </g>
     <g id="eyelids" opacity="0">
       <path d="M60 82Q76 66 92 82L92 93Q76 98 60 93Z M108 82Q124 66 140 82L140 93Q124 98 108 93Z" fill="#07182d" stroke="#69ddff" stroke-width="1.4"/>
