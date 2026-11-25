@@ -137,7 +137,7 @@ if (canvas && host) {
     headPivot.position.set(0, 1.28, 0);
     body.add(headPivot);
     const head = sphere(headPivot, [0, 0.42, 0], [0.59, 0.72, 0.49], shell, 64);
-    sphere(headPivot, [0, -0.12, 0.37], [0.34, 0.2, 0.16], brightShell, 40);
+    sphere(headPivot, [0, 0.13, 0.37], [0.34, 0.2, 0.16], brightShell, 40);
 
     // SVG facial features are rasterized by the browser at high resolution,
     // then mapped onto the 3D head as transparent Three.js textures.
@@ -162,7 +162,7 @@ if (canvas && host) {
       toneMapped: false
     });
     const eyes = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 0.275), faceMaterial);
-    eyes.position.set(0, 0.48, 0.465);
+    eyes.position.set(0, 0.48, 0.515);
     headPivot.add(eyes);
 
     const mouthMaterial = new THREE.MeshBasicMaterial({
@@ -242,11 +242,14 @@ if (canvas && host) {
       headPivot.rotation.x = Math.sin(elapsed * 0.52) * 0.018 + (state === 'listening' ? 0.045 : 0);
       headPivot.rotation.z = state === 'thinking' ? Math.sin(elapsed * 1.1) * 0.055 - 0.08 : Math.sin(elapsed * 0.42) * 0.012;
 
-      shoulderPivots.forEach(({ group, side }) => {
+      shoulderPivots.forEach(({ group, side }, index) => {
         const gesture = state === 'speaking' ? Math.sin(elapsed * 3.2 + (side > 0 ? 0 : Math.PI)) * 0.11 : 0;
         const listenLift = state === 'listening' ? 0.035 : 0;
         group.rotation.z = side * (Math.sin(elapsed * 0.8) * 0.018 + gesture + listenLift);
         group.rotation.x = state === 'speaking' ? Math.sin(elapsed * 2.5 + side) * 0.045 : 0;
+        const wrist = forearms[index];
+        wrist.rotation.z = state === 'speaking' ? Math.sin(elapsed * 4 + side) * 0.13 : Math.sin(elapsed * 0.7 + side) * 0.025;
+        wrist.rotation.x = state === 'speaking' ? Math.sin(elapsed * 3 + side) * 0.08 : 0;
       });
 
       mouthEnergy += ((state === 'speaking' ? targetMouth : 0) - mouthEnergy) * Math.min(1, delta * 11);
