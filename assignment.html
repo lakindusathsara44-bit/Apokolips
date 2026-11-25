@@ -70,6 +70,7 @@
         <div id="answer-area" class="answer-area" aria-live="polite"></div>
         <div class="question-navigation">
           <button id="previous-button" class="secondary-button" type="button" disabled><span aria-hidden="true">←</span> Previous</button>
+          <button id="skip-button" class="secondary-button" type="button">Skip question</button>
           <span id="navigation-count">01 / 50</span>
           <button id="next-button" class="primary-button" type="button">Next question <span aria-hidden="true">→</span></button>
         </div>
@@ -77,7 +78,10 @@
     </div>
     <section class="submit-section" aria-labelledby="submit-title">
       <div><span class="section-kicker">READY TO FINISH?</span><h2 id="submit-title">Review your answers.</h2><p id="submit-hint">Complete all 50 questions to unlock final submission. You can revisit any question using the question index.</p></div>
-      <button id="submit-button" class="submit-button" type="button" disabled>Submit assignment <span aria-hidden="true">↗</span></button>
+      <div class="submit-actions">
+        <button id="study-guide-button" class="secondary-button study-guide-button" type="button">I can't answer — show answers &amp; summaries</button>
+        <button id="submit-button" class="submit-button" type="button" disabled>Submit assignment <span aria-hidden="true">↗</span></button>
+      </div>
     </section>
     <section id="result-section" class="result-section" aria-live="polite" hidden></section>
     <div id="status-message" class="status-message" role="status" aria-live="polite"></div>
