@@ -139,7 +139,7 @@ function normalizeReport(modelReport, submittedAnswers, rubric) {
     if (submission.skipped) return {
       id: rubric.id, status: "skipped", awardedPoints: 0,
       feedback: "You skipped this question. Review the expected answer and key points below.",
-      correctAnswer: rubric.expectedAnswer, topic: rubric.topic, studentAnswer: ""
+      correctAnswer: rubric.expectedAnswer, summary: Array.isArray(rubric.markingGuide) ? rubric.markingGuide.join(" ") : (rubric.markingGuide || rubric.expectedAnswer), topic: rubric.topic, studentAnswer: ""
     };
     const allowed = new Set(["correct", "partially_correct", "incorrect", "uncertain"]);
     let status = allowed.has(raw?.status) ? raw.status : "uncertain";
@@ -161,7 +161,7 @@ function normalizeReport(modelReport, submittedAnswers, rubric) {
         : "Your answer does not yet include all the key points in the marking guide.";
     return {
       id: rubric.id, status, awardedPoints: points, feedback,
-      correctAnswer: rubric.expectedAnswer, topic: rubric.topic, studentAnswer: answer
+      correctAnswer: rubric.expectedAnswer, summary: Array.isArray(rubric.markingGuide) ? rubric.markingGuide.join(" ") : (rubric.markingGuide || rubric.expectedAnswer), topic: rubric.topic, studentAnswer: answer
     };
   });
   const topicsToImprove = Array.isArray(modelReport?.topicsToImprove)
