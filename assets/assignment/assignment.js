@@ -263,6 +263,7 @@ import { ASSIGNMENT_QUESTIONS, ASSIGNMENT_VERSION } from "./questions.js";
       appendText(card, "result-answer", "Your answer:", answers[question.id] || "");
       appendText(card, "result-feedback", "Apolonia AI feedback:", item.feedback || "No feedback was returned.");
       appendText(card, "correct-answer", "Expected answer:", item.correctAnswer || "See the relevant study notes.");
+      appendText(card, "learning-summary", "Learning summary:", item.summary || item.correctAnswer || "Review the related study notes and key concepts.");
       list.append(card);
     });
     elements.result.append(list);
