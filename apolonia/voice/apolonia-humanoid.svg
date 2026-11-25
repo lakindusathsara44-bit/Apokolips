@@ -50,6 +50,7 @@
  </g>
  </g>
  </g>
+ </g>
 </g>
 <!-- Right articulated arm -->
 <g id="armRight" class="arm">
@@ -69,6 +70,7 @@
   <path d="M585 620 L600 624 Q613 626 613 613 Q613 603 600 598 L586 594" fill="none" stroke="#8cecff" stroke-width="10" stroke-linecap="round"/>
   <path d="M572 633 L576 647 M556 635 L557 650 M540 631 L537 645" stroke="#8cecff" stroke-width="9" stroke-linecap="round"/>
   <circle cx="555" cy="613" r="7" fill="#a9f6ff"/>
+ </g>
  </g>
  </g>
  </g>
