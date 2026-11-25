@@ -148,7 +148,8 @@
     const open = state.mouth > .1;
     mouthLine.setAttribute('opacity', open ? '.12' : '1');
     mouthOpen.setAttribute('opacity', open ? String(clamp(state.mouth, 0, .98)) : '0');
-    mouthOpen.setAttribute('transform', 'translate(0 0) scale(1 ' + (0.55 + state.mouth * .85).toFixed(2) + ')');
+    const mouthScale = (0.55 + state.mouth * .85).toFixed(2);
+    mouthOpen.setAttribute('transform', 'translate(0 113) scale(1 ' + mouthScale + ') translate(0 -113)');
 
     let leftTarget = 0;
     let rightTarget = 0;
