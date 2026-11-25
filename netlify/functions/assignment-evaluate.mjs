@@ -1,22 +1,25 @@
-import { createDecipheriv } from "node:crypto";
-import { gunzipSync } from "node:zlib";
 import { RUBRIC_IV, RUBRIC_CIPHERTEXT } from "./assignment-rubric.enc.mjs";
 
-function loadRubric() {
+function decodeBase64(value) {
+  return Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
+}
+
+async function loadRubric() {
   const secret = Netlify.env.get("APOKOLIPS_ASSIGNMENT_RUBRIC_KEY");
   if (!secret) return null;
-  const key = Buffer.from(secret, "base64");
-  if (key.length !== 32) throw new Error("invalid_rubric_key");
-  const encrypted = Buffer.from(RUBRIC_CIPHERTEXT, "base64");
-  const iv = Buffer.from(RUBRIC_IV, "base64");
+  const keyBytes = decodeBase64(secret);
+  if (keyBytes.length !== 32) throw new Error("invalid_rubric_key");
+  const iv = decodeBase64(RUBRIC_IV);
+  const encrypted = decodeBase64(RUBRIC_CIPHERTEXT);
   if (iv.length !== 12 || encrypted.length <= 16) throw new Error("invalid_encrypted_rubric");
-  const decipher = createDecipheriv("aes-256-gcm", key, iv);
-  decipher.setAuthTag(encrypted.subarray(encrypted.length - 16));
-  const compressed = Buffer.concat([
-    decipher.update(encrypted.subarray(0, encrypted.length - 16)),
-    decipher.final()
-  ]);
-  const rubric = JSON.parse(gunzipSync(compressed).toString("utf8"));
+  const cryptoKey = await crypto.subtle.importKey("raw", keyBytes, { name: "AES-GCM" }, false, ["decrypt"]);
+  const compressed = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv, tagLength: 128 },
+    cryptoKey,
+    encrypted
+  );
+  const stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream("gzip"));
+  const rubric = JSON.parse(await new Response(stream).text());
   if (!Array.isArray(rubric) || rubric.length !== 50) throw new Error("invalid_rubric_payload");
   return rubric;
 }
@@ -193,7 +196,7 @@ export default async (request) => {
 
   let rubric;
   try {
-    rubric = loadRubric();
+    rubric = await loadRubric();
   } catch (error) {
     console.error(JSON.stringify({ scope: "APOLONIA_ASSIGNMENT_EVALUATION", event: "rubric_decryption_failed", reason: String(error?.message || "unknown").slice(0, 80) }));
     return json({ error: "The private assignment marking guide is not configured correctly. Please contact the site administrator." }, 503, headers);
