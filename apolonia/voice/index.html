@@ -6,10 +6,10 @@
 <title>APOLONIA Voice | Apokolips</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./voice.css?v=20261125-svg3d">
+<link rel="stylesheet" href="./voice.css?v=20261125-articulated-svg">
 <script>window.APOKOLIPS_APOLONIA_API='https://apolonia-ai-api.netlify.app';</script>
 <script defer src="./voice.js?v=20261125-upperbody"></script>
-<script type="module" src="./particle-humanoid-3d.js?v=20261125-svg3d"></script>
+<script defer src="./avatar-svg.js?v=20261125-articulated-svg"></script>
 </head>
 <body>
 <main class="voice-shell">
@@ -18,12 +18,12 @@
 <div class="mode-label"><span class="live-dot"></span> APOLONIA <b>VOICE</b></div>
 <a class="text-mode" href="/?assistant=apolonia">TEXT MODE <span aria-hidden="true">↗</span></a>
 </header>
-<section class="stage" aria-label="APOLONIA 3D upper-body voice assistant">
+<section class="stage" aria-label="APOLONIA animated SVG upper-body voice assistant">
 <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
 <div class="avatar-wrap" id="globeWrap" data-state="idle">
-<div class="avatar-aura"></div><div class="avatar-ring ring-one"></div><div class="avatar-ring ring-two"></div>
-<canvas id="apoloniaAvatar" aria-label="APOLONIA three-dimensional upper-body humanoid with animated SVG facial features"></canvas>
-<div class="avatar-caption">3D HUMANOID <span>• SVG FACE SYSTEM</span></div>
+<div class="avatar-aura"></div>
+<div id="avatarMount" class="avatar-mount" role="img" aria-label="APOLONIA articulated humanoid upper-body avatar"></div>
+<div class="avatar-caption">ARTICULATED SVG HUMANOID <span>• LIVE EXPRESSIONS</span></div>
 </div>
 <div class="assistant-copy"><p class="eyebrow">LIVE VOICE INTERFACE</p><h1>Talk to <span>APOLONIA</span></h1><p class="status-line" id="statusLine" aria-live="polite">Your voice assistant is standing by.</p><p class="phoneme-readout" id="phonemeReadout">VOICE CORE <i>·</i> STANDBY</p></div>
 </section>
