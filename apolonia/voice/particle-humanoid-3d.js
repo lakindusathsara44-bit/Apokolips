@@ -3,7 +3,7 @@ const canvas=document.getElementById('apoloniaAvatar'),host=document.getElementB
 if(canvas&&host){
 const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.6));renderer.setClearColor(0x000000,0);
-const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(32,1,.1,100);camera.position.set(0,0,9.2);
+const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(32,1,.1,100);camera.position.set(0,0,7.2);
 const root=new THREE.Group();scene.add(root);
 const mat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,vertexShader:`
 attribute float glyph; attribute float psize; attribute float phase;
@@ -32,7 +32,7 @@ function ellipsoidPoints(parent,center,radii,count,seed=1,face=false,rotationZ=0
 for(let i=0;i<count;i++){const z=rand()*2-1,a=rand()*Math.PI*2,q=Math.sqrt(1-z*z);const n=new THREE.Vector3(q*Math.cos(a),z,q*Math.sin(a));const p=new THREE.Vector3(n.x*radii[0],n.y*radii[1],n.z*radii[2]);if(face&&p.z<0)p.z=-p.z;
 p.add(new THREE.Vector3(...center));pos.push(p.x,p.y,p.z);norm.push(n.x,n.y,n.z);glyph.push(rand()<.43?0:rand()<.76?1:2);size.push(2.3+rand()*2.4);phase.push(rand()*6.28);}
 const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(norm,3));g.setAttribute('glyph',new THREE.Float32BufferAttribute(glyph,1));g.setAttribute('psize',new THREE.Float32BufferAttribute(size,1));g.setAttribute('phase',new THREE.Float32BufferAttribute(phase,1));const points=new THREE.Points(g,mat);parent.add(points);return points;}
-function limb(parent,a,b,r,count,seed){const mid=[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2],len=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);return ellipsoidPoints(parent,mid,[r,len/2+r,r],count,seed,false,-Math.atan2(b[0]-a[0],b[1]-a[1]));}
+function limb(parent,a,b,r,count,seed){const mid=[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2],len=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);const points=ellipsoidPoints(parent,mid,[r,len/2+r,r],count,seed);points.rotation.z=-Math.atan2(b[0]-a[0],b[1]-a[1]);return points;}
 ellipsoidPoints(groups.head,[0,1.48,0],[.58,.72,.48],1900,12,true);
 ellipsoidPoints(groups.torso,[0,.12,0],[.69,.91,.39],2300,22);
 ellipsoidPoints(groups.torso,[0,-.62,0],[.53,.35,.34],700,32);
