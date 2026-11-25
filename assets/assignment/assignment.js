@@ -194,6 +194,15 @@ import { ASSIGNMENT_QUESTIONS, ASSIGNMENT_VERSION } from "./questions.js";
     elements.submit.disabled = true; elements.submit.textContent = "Study guide opened";
     elements.submitHint.textContent = "You are in study mode. Review the answers and key points below.";
     elements.studyGuide.disabled = true; elements.studyGuide.textContent = "Study guide opened";
+    const actions = document.createElement("div"); actions.className = "result-actions";
+    const resume = document.createElement("button"); resume.type = "button"; resume.textContent = "Return to assignment";
+    resume.addEventListener("click", () => window.location.reload());
+    const restart = document.createElement("button"); restart.type = "button"; restart.textContent = "Start a fresh attempt";
+    restart.addEventListener("click", () => {
+      if (!window.confirm("Clear your saved draft and start again?")) return;
+      localStorage.removeItem(STORAGE_KEY); window.location.reload();
+    });
+    actions.append(resume, restart); elements.result.append(actions);
     elements.grid.querySelectorAll("button").forEach((button) => { button.disabled = true; });
     elements.answerArea.querySelectorAll("input,textarea").forEach((control) => { control.disabled = true; });
     elements.result.scrollIntoView({ behavior: "smooth", block: "start" });
