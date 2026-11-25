@@ -1,4 +1,4 @@
-import { RUBRIC_IV, RUBRIC_CIPHERTEXT } from "./assignment-rubric.enc.mjs";
+import { RUBRIC_IV, RUBRIC_CIPHERTEXT } from "../lib/assignment-rubric.enc.mjs";
 
 function decodeBase64(value) {
   return Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
