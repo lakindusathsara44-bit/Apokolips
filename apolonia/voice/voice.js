@@ -1,26 +1,284 @@
 (() => {
-'use strict';
-const API_URL=window.APOKOLIPS_APOLONIA_API||'';
-const sessionId=window.crypto&&typeof window.crypto.randomUUID==='function'?window.crypto.randomUUID():'apolonia-'+Date.now();
-const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-const avatar=document.getElementById('globeWrap'),statusLine=document.getElementById('statusLine'),readout=document.getElementById('phonemeReadout'),hint=document.getElementById('controlHint');
-const startButton=document.getElementById('startButton'),startLabel=document.getElementById('startLabel'),endButton=document.getElementById('endButton'),muteButton=document.getElementById('muteButton'),muteIcon=document.getElementById('muteIcon');
-let recognition=null,active=false,muted=false,processing=false,speaking=false,history=[],phonemeTimer=0;
-function emit(name,detail={}){window.dispatchEvent(new CustomEvent('apolonia:'+name,{detail}));}
-function setState(state,message,hintText){avatar.dataset.state=state;statusLine.textContent=message;if(hintText)hint.textContent=hintText;emit('state',{state});}
-function setPhoneme(symbol,intensity){readout.textContent='SOUND PATTERN  ·  '+(symbol||'REST');emit('phoneme',{symbol:symbol||'REST',intensity:intensity||.2});}
-function approximatePhonemes(word){const s=String(word||'').toLowerCase();return [...s].filter(c=>/[aeiou]/.test(c)).map(c=>c);}
-function animateWord(word){if(!speaking)return;const sounds=approximatePhonemes(word);let i=0;if(phonemeTimer)clearInterval(phonemeTimer);const tick=()=>{if(!speaking||i>=sounds.length){clearInterval(phonemeTimer);return;}setPhoneme(sounds[i++],.55);};tick();phonemeTimer=setInterval(tick,100);}
-function speechText(value){return String(value||'').replace(/[#*_~>|]/g,'').replace(/`/g,'').replace(/\s+/g,' ').trim();}
-function turnCommand(message){const m=message.toLowerCase();let direction=null;if(/\b(turn|rotate|look|face)\s+(your\s+)?(head\s+)?(to\s+the\s+)?left\b/.test(m))direction='left';else if(/\b(turn|rotate|look|face)\s+(your\s+)?(head\s+)?(to\s+the\s+)?right\b/.test(m))direction='right';else if(/\b(face|look)\s+(forward|front|at me|toward me)\b/.test(m)||/\b(turn|rotate)\s+(your\s+)?head\s+back\s+to\s+me\b/.test(m))direction='front';if(direction){emit('turn',{direction});return true;}return false;}
-function startRecognition(){if(!active||muted||speaking||processing)return;if(!SpeechRecognition){setState('idle','Voice recognition is not supported in this browser.','Try Chrome on Android or desktop.');return;}try{recognition=new SpeechRecognition();recognition.lang='en-US';recognition.continuous=false;recognition.interimResults=false;recognition.maxAlternatives=1;recognition.onstart=()=>setState('listening','Listening. I’m here.','Speak naturally. APOLONIA is listening.');recognition.onresult=e=>{let transcript='';for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)transcript+=e.results[i][0].transcript;if(transcript.trim())handleUserSpeech(transcript.trim());};recognition.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){active=false;updateControls();setState('idle','Microphone permission was denied.','Allow microphone access in your browser settings.');}else if(e.error!=='no-speech'&&e.error!=='aborted')setState('idle','Voice recognition error: '+e.error,'Try starting the conversation again.');};recognition.onend=()=>{if(active&&!muted&&!speaking&&!processing)setTimeout(startRecognition,350);};recognition.start();}catch(_){setState('idle','Could not start the microphone.','Check microphone permission and try again.');}}
-async function handleUserSpeech(message){if(processing||!active)return;processing=true;if(recognition){try{recognition.stop();}catch(_){}}history.push({role:'user',content:message});if(turnCommand(message)){processing=false;setState('listening','Turning '+(message.toLowerCase().includes('left')?'left':message.toLowerCase().includes('right')?'right':'to the front')+'.','You can give another direction.');setTimeout(startRecognition,500);return;}setState('thinking','Thinking…','APOLONIA is preparing a reply.');try{if(!API_URL)throw new Error('APOLONIA service is not configured.');const recent=history.slice(-10),payload={message,sessionId,history:recent.slice(0,-1)};const response=await fetch(API_URL.replace(/\/$/,'')+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'APOLONIA service returned an error.');const reply=String(data.reply||'').trim();if(!reply)throw new Error('APOLONIA returned an empty reply.');history.push({role:'assistant',content:reply});history=history.slice(-12);processing=false;speakReply(reply);}catch(error){processing=false;setState('idle',error.message||'I could not reach APOLONIA.','Check your connection and try again.');if(active&&!muted)setTimeout(startRecognition,1000);}}
-function speakReply(markdown){const text=speechText(markdown);if(!text||!window.speechSynthesis||!window.SpeechSynthesisUtterance){setState('idle','Speech output is not available on this device.','Try a browser with speech synthesis support.');if(active&&!muted)setTimeout(startRecognition,700);return;}window.speechSynthesis.cancel();speaking=true;setState('speaking','APOLONIA is speaking…','Listen to the reply. The microphone reopens afterwards.');setPhoneme('REST',.45);const utterance=new SpeechSynthesisUtterance(text);utterance.lang=/[\u0D80-\u0DFF]/.test(text)?'si-LK':'en-US';utterance.rate=1;utterance.pitch=1;utterance.onboundary=e=>{const match=text.slice(e.charIndex).match(/^[\p{L}']+/u);if(match)animateWord(match[0]);};utterance.onstart=()=>setState('speaking','APOLONIA is speaking…','Audio playback started.');utterance.onend=finishSpeaking;utterance.onerror=e=>{speaking=false;emit('mouth',{open:0});setPhoneme('REST',.1);setState('idle','Speech playback failed: '+(e&&e.error?e.error:'unknown error'),'Check device text-to-speech settings.');if(active&&!muted)setTimeout(startRecognition,1200);};try{window.speechSynthesis.resume();window.speechSynthesis.speak(utterance);}catch(_){speaking=false;setState('idle','Could not start speech playback.','Check your browser and device text-to-speech settings.');}}
-function finishSpeaking(){speaking=false;if(phonemeTimer)clearInterval(phonemeTimer);emit('mouth',{open:0});setPhoneme('REST',.1);if(active&&!muted){setState('listening','Your turn. I’m listening.','Speak naturally to continue.');setTimeout(startRecognition,450);}else setState('idle','Voice reply complete.','Press start to begin another conversation.');}
-function updateControls(){startButton.disabled=active;startLabel.textContent=active?'Conversation active':'Start conversation';endButton.disabled=!active;muteButton.disabled=!active;muteIcon.textContent=muted?'▶':'Ⅱ';muteButton.setAttribute('aria-label',muted?'Resume microphone':'Pause microphone');}
-function startConversation(){if(!SpeechRecognition){setState('idle','This browser does not support voice recognition.','Open APOLONIA Voice in Chrome for the best experience.');return;}active=true;muted=false;updateControls();startRecognition();}
-function endConversation(){active=false;muted=false;processing=false;speaking=false;if(recognition){try{recognition.stop();}catch(_){}recognition=null;}if(window.speechSynthesis)window.speechSynthesis.cancel();if(phonemeTimer)clearInterval(phonemeTimer);emit('mouth',{open:0});setPhoneme('REST',.08);setState('idle','Conversation ended.','Press start when you want to talk again.');updateControls();}
-function toggleMute(){if(!active)return;muted=!muted;if(muted){if(recognition){try{recognition.stop();}catch(_){}}setState('idle','Microphone paused.','Resume when you are ready to speak.');}else startRecognition();updateControls();}
-startButton.addEventListener('click',startConversation);endButton.addEventListener('click',endConversation);muteButton.addEventListener('click',toggleMute);window.addEventListener('pagehide',()=>{active=false;if(recognition){try{recognition.stop();}catch(_){}}if(window.speechSynthesis)window.speechSynthesis.cancel();});
-setState('idle','Your voice assistant is standing by.','Press start and allow microphone access.');updateControls();
+  'use strict';
+  const API_URL = window.APOKOLIPS_APOLONIA_API || '';
+  const sessionId = window.crypto && typeof window.crypto.randomUUID === 'function' ? window.crypto.randomUUID() : 'apolonia-' + Date.now();
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const avatar = document.getElementById('globeWrap');
+  const statusLine = document.getElementById('statusLine');
+  const readout = document.getElementById('phonemeReadout');
+  const hint = document.getElementById('controlHint');
+  const startButton = document.getElementById('startButton');
+  const startLabel = document.getElementById('startLabel');
+  const endButton = document.getElementById('endButton');
+  const muteButton = document.getElementById('muteButton');
+  const muteIcon = document.getElementById('muteIcon');
+  let recognition = null;
+  let active = false;
+  let muted = false;
+  let processing = false;
+  let speaking = false;
+  let history = [];
+  let phonemeTimer = 0;
+
+  function emit(name, detail = {}) {
+    window.dispatchEvent(new CustomEvent('apolonia:' + name, { detail }));
+  }
+
+  function updateComponents(state) {
+    const states = {
+      input: state === 'listening' ? ['LISTENING', 'active'] : [state === 'idle' ? 'STANDBY' : 'READY', ''],
+      core: state === 'thinking' ? ['PROCESSING', 'busy'] : [state === 'idle' ? 'READY' : 'CONNECTED', state === 'thinking' ? 'busy' : 'active'],
+      output: state === 'speaking' ? ['SPEAKING', 'active'] : [state === 'idle' ? 'STANDBY' : 'READY', ''],
+      avatar: [String(state || 'idle').toUpperCase(), state === 'thinking' ? 'busy' : (state === 'idle' ? '' : 'active')]
+    };
+    Object.entries(states).forEach(([name, value]) => {
+      const node = document.querySelector('[data-component-state="' + name + '"]');
+      if (!node) return;
+      node.textContent = value[0];
+      node.dataset.state = value[1];
+    });
+  }
+
+  function setState(state, message, hintText) {
+    avatar.dataset.state = state;
+    statusLine.textContent = message;
+    if (hintText) hint.textContent = hintText;
+    updateComponents(state);
+    emit('state', { state });
+  }
+
+  function setPhoneme(symbol, intensity) {
+    readout.textContent = 'SOUND PATTERN  ·  ' + (symbol || 'REST');
+    emit('phoneme', { symbol: symbol || 'REST', intensity: intensity || .2 });
+  }
+
+  function approximatePhonemes(word) {
+    const s = String(word || '').toLowerCase();
+    return [...s].filter(c => /[aeiou]/.test(c)).map(c => c);
+  }
+
+  function animateWord(word) {
+    if (!speaking) return;
+    const sounds = approximatePhonemes(word);
+    let i = 0;
+    if (phonemeTimer) clearInterval(phonemeTimer);
+    const tick = () => {
+      if (!speaking || i >= sounds.length) {
+        clearInterval(phonemeTimer);
+        return;
+      }
+      setPhoneme(sounds[i++], .55);
+    };
+    tick();
+    phonemeTimer = setInterval(tick, 100);
+  }
+
+  function speechText(value) {
+    return String(value || '').replace(/[#*_~>|]/g, '').replace(/`/g, '').replace(/\s+/g, ' ').trim();
+  }
+
+  function turnCommand(message) {
+    const m = message.toLowerCase();
+    let direction = null;
+    if (/\b(turn|rotate|look|face)\s+(your\s+)?(head\s+)?(to\s+the\s+)?left\b/.test(m)) direction = 'left';
+    else if (/\b(turn|rotate|look|face)\s+(your\s+)?(head\s+)?(to\s+the\s+)?right\b/.test(m)) direction = 'right';
+    else if (/\b(face|look)\s+(forward|front|at me|toward me)\b/.test(m) || /\b(turn|rotate)\s+(your\s+)?head\s+back\s+to\s+me\b/.test(m)) direction = 'front';
+    if (direction) {
+      emit('turn', { direction });
+      return true;
+    }
+    return false;
+  }
+
+  function startRecognition() {
+    if (!active || muted || speaking || processing) return;
+    if (!SpeechRecognition) {
+      setState('idle', 'Voice recognition is not supported in this browser.', 'Try Chrome on Android or desktop.');
+      return;
+    }
+    try {
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onstart = () => setState('listening', 'Listening. I’m here.', 'Speak naturally. APOLONIA is listening.');
+      recognition.onresult = event => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) transcript += event.results[i][0].transcript;
+        }
+        if (transcript.trim()) handleUserSpeech(transcript.trim());
+      };
+      recognition.onerror = event => {
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          active = false;
+          updateControls();
+          setState('idle', 'Microphone permission was denied.', 'Allow microphone access in your browser settings.');
+        } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
+          setState('idle', 'Voice recognition error: ' + event.error, 'Try starting the conversation again.');
+        }
+      };
+      recognition.onend = () => {
+        if (active && !muted && !speaking && !processing) setTimeout(startRecognition, 350);
+      };
+      recognition.start();
+    } catch (_) {
+      setState('idle', 'Could not start the microphone.', 'Check microphone permission and try again.');
+    }
+  }
+
+  async function handleUserSpeech(message) {
+    if (processing || !active) return;
+    processing = true;
+    if (recognition) {
+      try { recognition.stop(); } catch (_) {}
+    }
+    history.push({ role: 'user', content: message });
+    if (turnCommand(message)) {
+      processing = false;
+      setState('listening', 'Turning ' + (message.toLowerCase().includes('left') ? 'left' : message.toLowerCase().includes('right') ? 'right' : 'to the front') + '.', 'You can give another direction.');
+      setTimeout(startRecognition, 500);
+      return;
+    }
+    setState('thinking', 'Thinking…', 'APOLONIA is preparing a reply.');
+    try {
+      if (!API_URL) throw new Error('APOLONIA service is not configured.');
+      const recent = history.slice(-10);
+      const payload = { message, sessionId, history: recent.slice(0, -1) };
+      const response = await fetch(API_URL.replace(/\/$/, '') + '/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'APOLONIA service returned an error.');
+      const reply = String(data.reply || '').trim();
+      if (!reply) throw new Error('APOLONIA returned an empty reply.');
+      history.push({ role: 'assistant', content: reply });
+      history = history.slice(-12);
+      processing = false;
+      speakReply(reply);
+    } catch (error) {
+      processing = false;
+      setState('idle', error.message || 'I could not reach APOLONIA.', 'Check your connection and try again.');
+      if (active && !muted) setTimeout(startRecognition, 1000);
+    }
+  }
+
+  function speakReply(markdown) {
+    const text = speechText(markdown);
+    if (!text || !window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+      setState('idle', 'Speech output is not available on this device.', 'Try a browser with speech synthesis support.');
+      if (active && !muted) setTimeout(startRecognition, 700);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    speaking = true;
+    setState('speaking', 'APOLONIA is speaking…', 'Listen to the reply. The microphone reopens afterwards.');
+    setPhoneme('REST', .45);
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = /[\u0D80-\u0DFF]/.test(text) ? 'si-LK' : 'en-US';
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.onboundary = event => {
+      const match = text.slice(event.charIndex).match(/^[\p{L}']+/u);
+      if (match) animateWord(match[0]);
+    };
+    utterance.onstart = () => setState('speaking', 'APOLONIA is speaking…', 'Audio playback started.');
+    utterance.onend = finishSpeaking;
+    utterance.onerror = event => {
+      speaking = false;
+      emit('mouth', { open: 0 });
+      setPhoneme('REST', .1);
+      setState('idle', 'Speech playback failed: ' + (event && event.error ? event.error : 'unknown error'), 'Check device text-to-speech settings.');
+      if (active && !muted) setTimeout(startRecognition, 1200);
+    };
+    try {
+      window.speechSynthesis.resume();
+      window.speechSynthesis.speak(utterance);
+    } catch (_) {
+      speaking = false;
+      setState('idle', 'Could not start speech playback.', 'Check your browser and device text-to-speech settings.');
+    }
+  }
+
+  function finishSpeaking() {
+    speaking = false;
+    if (phonemeTimer) clearInterval(phonemeTimer);
+    emit('mouth', { open: 0 });
+    setPhoneme('REST', .1);
+    if (active && !muted) {
+      setState('listening', 'Your turn. I’m listening.', 'Speak naturally to continue.');
+      setTimeout(startRecognition, 450);
+    } else {
+      setState('idle', 'Voice reply complete.', 'Press start to begin another conversation.');
+    }
+  }
+
+  function updateControls() {
+    startButton.disabled = active;
+    startLabel.textContent = active ? 'Conversation active' : 'Start conversation';
+    endButton.disabled = !active;
+    muteButton.disabled = !active;
+    muteIcon.textContent = muted ? '▶' : 'Ⅱ';
+    muteButton.setAttribute('aria-label', muted ? 'Resume microphone' : 'Pause microphone');
+  }
+
+  function startConversation() {
+    if (!SpeechRecognition) {
+      setState('idle', 'This browser does not support voice recognition.', 'Open APOLONIA Voice in Chrome for the best experience.');
+      return;
+    }
+    active = true;
+    muted = false;
+    updateControls();
+    startRecognition();
+  }
+
+  function endConversation() {
+    active = false;
+    muted = false;
+    processing = false;
+    speaking = false;
+    if (recognition) {
+      try { recognition.stop(); } catch (_) {}
+      recognition = null;
+    }
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (phonemeTimer) clearInterval(phonemeTimer);
+    emit('mouth', { open: 0 });
+    setPhoneme('REST', .08);
+    setState('idle', 'Conversation ended.', 'Press start when you want to talk again.');
+    updateControls();
+  }
+
+  function toggleMute() {
+    if (!active) return;
+    muted = !muted;
+    if (muted) {
+      if (recognition) {
+        try { recognition.stop(); } catch (_) {}
+      }
+      setState('idle', 'Microphone paused.', 'Resume when you are ready to speak.');
+    } else {
+      startRecognition();
+    }
+    updateControls();
+  }
+
+  startButton.addEventListener('click', startConversation);
+  endButton.addEventListener('click', endConversation);
+  muteButton.addEventListener('click', toggleMute);
+  window.addEventListener('pagehide', () => {
+    active = false;
+    if (recognition) {
+      try { recognition.stop(); } catch (_) {}
+    }
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+  });
+
+  updateComponents('idle');
+  setState('idle', 'Your voice assistant is standing by.', 'Press start and allow microphone access.');
+  updateControls();
 })();
