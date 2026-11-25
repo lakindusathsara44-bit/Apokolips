@@ -35,21 +35,20 @@
   <path d="M210 347 Q171 343 145 374 L108 438 Q96 458 113 471 L139 490 Q158 499 172 478 L222 417 Q247 384 230 359Z" fill="url(#shell)" stroke="#75dcff" stroke-width="5"/>
   <path d="M177 367 L137 442 L161 456 L207 390Z" fill="#0a2038" stroke="#3d91bd" stroke-width="3"/>
   <path d="M151 386 L132 421 M169 398 L150 434" stroke="#8cecff" stroke-width="4" stroke-linecap="round"/>
- </g>
  <g id="leftElbow">
   <circle cx="127" cy="464" r="27" fill="#07182d" stroke="#71dfff" stroke-width="5"/>
   <circle cx="127" cy="464" r="12" fill="url(#cyan)" filter="url(#glow)"/>
- </g>
  <g id="leftForearm">
   <path d="M111 480 Q88 501 77 540 L68 579 Q67 596 84 602 L108 609 Q126 612 133 593 L155 533 Q166 506 145 486Z" fill="url(#armor)" stroke="#83e8ff" stroke-width="5"/>
   <path d="M100 505 L84 571 L111 580 L132 520Z" fill="#0b2540" stroke="#3d91bd" stroke-width="3"/>
   <path d="M88 548 L112 555" stroke="#a1f4ff" stroke-width="4" stroke-linecap="round"/>
- </g>
  <g id="leftHand">
   <path d="M75 584 Q57 582 51 600 L45 620 Q43 633 57 637 L100 643 Q114 643 118 628 L122 609 Q123 595 108 590Z" fill="url(#shell)" stroke="#8cecff" stroke-width="4"/>
   <path d="M55 620 L40 624 Q27 626 27 613 Q27 603 40 598 L54 594" fill="none" stroke="#8cecff" stroke-width="10" stroke-linecap="round"/>
   <path d="M68 633 L64 647 M84 635 L83 650 M100 631 L103 645" stroke="#8cecff" stroke-width="9" stroke-linecap="round"/>
   <circle cx="85" cy="613" r="7" fill="#a9f6ff"/>
+ </g>
+ </g>
  </g>
 </g>
 <!-- Right articulated arm -->
@@ -58,21 +57,20 @@
   <path d="M430 347 Q469 343 495 374 L532 438 Q544 458 527 471 L501 490 Q482 499 468 478 L418 417 Q393 384 410 359Z" fill="url(#shell)" stroke="#75dcff" stroke-width="5"/>
   <path d="M463 367 L503 442 L479 456 L433 390Z" fill="#0a2038" stroke="#3d91bd" stroke-width="3"/>
   <path d="M489 386 L508 421 M471 398 L490 434" stroke="#8cecff" stroke-width="4" stroke-linecap="round"/>
- </g>
  <g id="rightElbow">
   <circle cx="513" cy="464" r="27" fill="#07182d" stroke="#71dfff" stroke-width="5"/>
   <circle cx="513" cy="464" r="12" fill="url(#cyan)" filter="url(#glow)"/>
- </g>
  <g id="rightForearm">
   <path d="M529 480 Q552 501 563 540 L572 579 Q573 596 556 602 L532 609 Q514 612 507 593 L485 533 Q474 506 495 486Z" fill="url(#armor)" stroke="#83e8ff" stroke-width="5"/>
   <path d="M540 505 L556 571 L529 580 L508 520Z" fill="#0b2540" stroke="#3d91bd" stroke-width="3"/>
   <path d="M552 548 L528 555" stroke="#a1f4ff" stroke-width="4" stroke-linecap="round"/>
- </g>
  <g id="rightHand">
   <path d="M565 584 Q583 582 589 600 L595 620 Q597 633 583 637 L540 643 Q526 643 522 628 L518 609 Q517 595 532 590Z" fill="url(#shell)" stroke="#8cecff" stroke-width="4"/>
   <path d="M585 620 L600 624 Q613 626 613 613 Q613 603 600 598 L586 594" fill="none" stroke="#8cecff" stroke-width="10" stroke-linecap="round"/>
   <path d="M572 633 L576 647 M556 635 L557 650 M540 631 L537 645" stroke="#8cecff" stroke-width="9" stroke-linecap="round"/>
   <circle cx="555" cy="613" r="7" fill="#a9f6ff"/>
+ </g>
+ </g>
  </g>
 </g>
 <!-- Head assembly, independently transformable -->
