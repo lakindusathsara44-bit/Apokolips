@@ -1,5 +1,5 @@
 import { ANSWERS } from "./answer-sheet-data.js?v=20261126b";
-import { ASSIGNMENT_QUESTIONS } from "../assignment/questions.js";
+import { ASSIGNMENT_QUESTIONS } from "../assignment/questions.js?v=20261126b";
 (() => {
 "use strict";
 const search=document.querySelector("#answer-search"),list=document.querySelector("#answer-list"),status=document.querySelector("#answer-status"),filters=[...document.querySelectorAll("[data-level]")];
