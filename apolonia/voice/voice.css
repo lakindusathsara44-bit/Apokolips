@@ -99,9 +99,8 @@ button,a{-webkit-tap-highlight-color:transparent}
   overflow:visible;
   filter:drop-shadow(0 12px 28px rgba(25,130,210,.2));
 }
-.apolonia-svg #headPivot,.apolonia-svg #leftArm,.apolonia-svg #rightArm,.apolonia-svg #leftHand,.apolonia-svg #rightHand,.apolonia-svg #torso{
-  will-change:transform;
-}
+.apolonia-svg #avatarMotion{transform-box:fill-box;transform-origin:center;will-change:transform}
+.apolonia-svg{filter:drop-shadow(0 12px 28px rgba(25,130,210,.28)) drop-shadow(0 0 10px rgba(88,220,255,.12))}
 .avatar-caption{
   position:absolute;
   bottom:1%;
