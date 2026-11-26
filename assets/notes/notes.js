@@ -3,6 +3,22 @@ import { NOTES } from "./notes-data.js";
 "use strict";
 const search=document.querySelector("#notes-search"),nav=document.querySelector("#topic-nav"),list=document.querySelector("#notes-list"),status=document.querySelector("#search-status");
 if(!search||!nav||!list||!status)return;
+const topicTools=nav.closest(".topic-tools");
+const topicToggle=document.createElement("button");
+topicToggle.type="button";
+topicToggle.className="topic-toggle";
+topicToggle.setAttribute("aria-controls","topic-nav");
+topicToggle.innerHTML='<span>EXPLORE TOPICS <span class="topic-count">('+NOTES.length+')</span></span><span class="topic-toggle-icon" aria-hidden="true">⌄</span>';
+topicTools.insertBefore(topicToggle,nav);
+let topicsExpanded=!matchMedia("(max-width: 700px)").matches;
+function setTopicsExpanded(expanded){
+  topicsExpanded=expanded;
+  topicTools.classList.toggle("is-expanded",expanded);
+  topicToggle.setAttribute("aria-expanded",String(expanded));
+  topicToggle.querySelector(".topic-toggle-icon").textContent=expanded?"⌃":"⌄";
+}
+topicToggle.addEventListener("click",()=>setTopicsExpanded(!topicsExpanded));
+setTopicsExpanded(topicsExpanded);
 const params=new URLSearchParams(location.search),targetQuestion=params.get("question"),targetTopic=params.get("topic"),initialTerm=params.get("q")||"";
 const esc=v=>String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const searchable=n=>[n.title,n.subtitle,n.summary,n.difficulty,n.source,...n.questions,...n.explanation.flat(),...n.definitions.flat(),...n.keyPoints,...n.examples].join(" ").toLowerCase();
