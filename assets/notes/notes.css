@@ -54,3 +54,9 @@
   .notes-tools{padding-bottom:8px}
   .search-status{margin-top:5px}
 }
+
+.note-image-gallery{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:18px 0 8px}
+.note-image-gallery figure{margin:0;padding:12px;border:1px solid var(--line);border-radius:10px;background:#080e17}
+.note-image-gallery img{display:block;width:100%;max-height:390px;object-fit:contain;border-radius:7px;background:#f7f7f7}
+.note-image-gallery figcaption{margin-top:9px;color:#9eacc0;font-size:14px;line-height:1.7}
+.note-image-gallery figcaption a{color:#b8d8ff;text-decoration:underline;text-underline-offset:3px}
