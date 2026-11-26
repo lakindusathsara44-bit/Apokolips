@@ -26,6 +26,11 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.concurrent.Executors
+import org.json.JSONObject
+
 class MainActivity : Activity() {
     private lateinit var web: WebView
     private lateinit var subtitle: TextView
@@ -36,6 +41,17 @@ class MainActivity : Activity() {
     private var lastWebTab = 1
     private var chatLaunchPending = false
     private var chooser: ValueCallback<Array<Uri>>? = null
+    private val uiUpdateHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val uiUpdateExecutor = Executors.newSingleThreadExecutor()
+    @Volatile private var remoteUiVersion = "1.0.0"
+    @Volatile private var remoteUiStylesheet = "https://www.apokolips.xyz/app-ui.css?v=1.0.0"
+
+    private val uiUpdatePoll = object : Runnable {
+        override fun run() {
+            checkRemoteUiManifest(reloadWhenChanged = true)
+            uiUpdateHandler.postDelayed(this, 5 * 60 * 1000L)
+        }
+    }
 
     private val urls = listOf(
         "https://www.apokolips.xyz/blog.html",
@@ -59,6 +75,9 @@ class MainActivity : Activity() {
         super.onCreate(state)
         window.statusBarColor = BG
         window.navigationBarColor = BG
+        remoteUiVersion = getSharedPreferences("apokolips_remote_ui", MODE_PRIVATE)
+            .getString("version", "1.0.0") ?: "1.0.0"
+        remoteUiStylesheet = "https://www.apokolips.xyz/app-ui.css?v=$remoteUiVersion"
         createUi()
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(web, true)
@@ -77,12 +96,20 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        checkRemoteUiManifest(reloadWhenChanged = true)
+        uiUpdateHandler.removeCallbacks(uiUpdatePoll)
+        uiUpdateHandler.postDelayed(uiUpdatePoll, 5 * 60 * 1000L)
         if (chatLaunchPending) {
             chatLaunchPending = false
             currentTab = 0
             subtitle.text = "IDEAS BECOME SOMETHING REAL.  /  GROUP CHAT"
             styleTabs()
         }
+    }
+
+    override fun onPause() {
+        uiUpdateHandler.removeCallbacks(uiUpdatePoll)
+        super.onPause()
     }
 
     private fun createUi() {
@@ -303,6 +330,71 @@ class MainActivity : Activity() {
     }
 
     /**
+     * Downloads a small, versioned manifest on resume and every five minutes while
+     * the app is active. Only the same-origin stylesheet is remotely replaceable;
+     * native Android code and arbitrary remote JavaScript are never executed.
+     */
+    private fun checkRemoteUiManifest(reloadWhenChanged: Boolean) {
+        try {
+            uiUpdateExecutor.execute {
+                var nextVersion: String? = null
+                var nextStylesheet: String? = null
+                var connection: HttpURLConnection? = null
+                try {
+                    connection = (URL("https://www.apokolips.xyz/app-ui.json?ts=" +
+                        System.currentTimeMillis()).openConnection() as HttpURLConnection).apply {
+                        requestMethod = "GET"
+                        connectTimeout = 7000
+                        readTimeout = 7000
+                        useCaches = false
+                        setRequestProperty("Accept", "application/json")
+                        setRequestProperty("Cache-Control", "no-cache, no-store")
+                    }
+                    if (connection.responseCode in 200..299) {
+                        val body = connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                        val manifest = JSONObject(body)
+                        val schema = manifest.optInt("schemaVersion", 0)
+                        val version = manifest.optString("version", "")
+                        val stylesheet = manifest.optString("stylesheet", "")
+                        if (schema == 1 &&
+                            version.matches(Regex("[A-Za-z0-9._-]{1,64}")) &&
+                            stylesheet == "/app-ui.css"
+                        ) {
+                            nextVersion = version
+                            nextStylesheet = "https://www.apokolips.xyz/app-ui.css?v=$version"
+                        }
+                    }
+                } catch (_: Exception) {
+                    // Keep the last-known-good stylesheet when offline or the manifest is unavailable.
+                } finally {
+                    connection?.disconnect()
+                }
+
+                val version = nextVersion ?: return@execute
+                val stylesheet = nextStylesheet ?: return@execute
+                if (version == remoteUiVersion) return@execute
+
+                runOnUiThread {
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    remoteUiVersion = version
+                    remoteUiStylesheet = stylesheet
+                    getSharedPreferences("apokolips_remote_ui", MODE_PRIVATE)
+                        .edit().putString("version", version).apply()
+                    if (reloadWhenChanged && currentTab != 0 && ::web.isInitialized &&
+                        !web.url.isNullOrBlank()
+                    ) {
+                        web.reload()
+                    } else if (::web.isInitialized && !web.url.isNullOrBlank()) {
+                        applyNativePageTheme(web)
+                    }
+                }
+            }
+        } catch (_: Exception) {
+            // A closing Activity must not crash because its updater executor has stopped.
+        }
+    }
+
+    /**
      * Applies the Apokolips app visual language to approved website screens.
      * Presentation-only: no website source files or page data are modified.
      */
@@ -361,7 +453,7 @@ class MainActivity : Activity() {
             ::-webkit-scrollbar-thumb { background: #1b5b91; border-radius: 20px; }
             ::-webkit-scrollbar-track { background: #020304; }
         """.trimIndent()
-        val script = "(function(){var id='apokolips-native-skin';var s=document.getElementById(id);if(!s){s=document.createElement('style');s.id=id;document.head.appendChild(s);}s.textContent=" + org.json.JSONObject.quote(css) + ";})();"
+        val script = "(function(){var id='apokolips-native-skin';var s=document.getElementById(id);if(!s){s=document.createElement('style');s.id=id;document.head.appendChild(s);}s.textContent=" + JSONObject.quote(css) + ";var l=document.getElementById('apo-remote-ui');if(!l){l=document.createElement('link');l.id='apo-remote-ui';l.rel='stylesheet';document.head.appendChild(l);}l.href=" + JSONObject.quote(remoteUiStylesheet) + ";})();"
         view.evaluateJavascript(script, null)
     }
 
@@ -461,6 +553,8 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        uiUpdateHandler.removeCallbacksAndMessages(null)
+        uiUpdateExecutor.shutdownNow()
         chooser?.onReceiveValue(null)
         chooser = null
         if (::web.isInitialized) {

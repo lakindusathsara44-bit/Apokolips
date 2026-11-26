@@ -1,0 +1,55 @@
+/* Apokolips remote UI layer.
+   This file is intentionally CSS-only: it can update WebView presentation without
+   downloading or executing remote JavaScript or changing native Android code. */
+:root {
+  color-scheme: dark !important;
+  --apo-bg: #020304;
+  --apo-surface: #070a0f;
+  --apo-surface-raised: #0a1018;
+  --apo-text: #edf3fb;
+  --apo-muted: #9ba9bb;
+  --apo-accent: #55baff;
+  --apo-border: rgba(75, 151, 224, .24);
+}
+html, body {
+  background: var(--apo-bg) !important;
+  color: var(--apo-text) !important;
+  color-scheme: dark !important;
+}
+body {
+  background-image: radial-gradient(ellipse at 50% -18%, rgba(13, 76, 137, .09), transparent 48%),
+    linear-gradient(180deg, #030405 0%, #020304 65%, #010203 100%) !important;
+}
+h1, h2, h3, h4, strong, b { color: #f5f8ff !important; }
+p, li, label, small { color: var(--apo-muted); }
+a { color: var(--apo-accent) !important; }
+header, nav, footer, aside, article, section, main, form, fieldset, table,
+.card, .post, .blog-post, .folder, .file-card, .upload-card, .panel, .box {
+  border-color: var(--apo-border) !important;
+}
+.card, .post, .blog-post, .folder, .file-card, .upload-card, .panel, .box,
+article, section, fieldset, form {
+  background-color: rgba(6, 9, 14, .97) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 12px 34px rgba(0,0,0,.48) !important;
+}
+button, input[type=button], input[type=submit], .btn, [role=button] {
+  background: linear-gradient(135deg, #07539a, #03264b) !important;
+  color: #fff !important;
+  border: 1px solid rgba(91,180,255,.42) !important;
+  border-radius: 12px !important;
+}
+input, textarea, select {
+  background: #030507 !important;
+  color: var(--apo-text) !important;
+  border: 1px solid rgba(58,91,128,.3) !important;
+  border-radius: 11px !important;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: #168bff !important;
+  box-shadow: 0 0 0 3px rgba(22,139,255,.13) !important;
+}
+table { background: #05070a !important; color: #dce5f0 !important; }
+th { background: #080e16 !important; color: #f2f6fb !important; }
+td, th { border-color: rgba(76,157,235,.18) !important; }
+::selection { background: rgba(22,139,255,.35) !important; color: #fff !important; }
