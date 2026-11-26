@@ -1,4 +1,4 @@
-import { NOTES } from "./notes-data.js";
+import { NOTES } from "./notes-data.js?v=20261126c";
 (() => {
 "use strict";
 const search=document.querySelector("#notes-search"),nav=document.querySelector("#topic-nav"),list=document.querySelector("#notes-list"),status=document.querySelector("#search-status");
