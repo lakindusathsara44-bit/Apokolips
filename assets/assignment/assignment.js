@@ -1,4 +1,4 @@
-import { ASSIGNMENT_QUESTIONS, ASSIGNMENT_VERSION } from "./questions.js";
+import { ASSIGNMENT_QUESTIONS, ASSIGNMENT_VERSION } from "./questions.js?v=20261126b";
 (() => {
 "use strict";
 const KEY="apokolips.assignment.draft."+ASSIGNMENT_VERSION,questions=ASSIGNMENT_QUESTIONS,answers=Object.create(null),skipped=new Set();
