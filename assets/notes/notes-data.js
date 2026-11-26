@@ -4,6 +4,7 @@
 export const NOTES = [
 {
  id:"fundamentals", title:"1. Information Systems: Foundations and Activities", subtitle:"What an information system does and how data becomes useful information", questions:["Q01","Q02","Q03","Q04","Q05","Q06","Q13","Q32","Q43","Q50"], difficulty:"Easy to Very Hard",
+ images:[{src:"https://commons.wikimedia.org/wiki/Special:FilePath/Information_processing_system_(english).svg",alt:"Flow diagram of the information-processing cycle, showing input, processing and output.",caption:"Information-processing cycle: input, processing and output.",credit:"Gradient drift, Wikimedia Commons — Public Domain",sourceUrl:"https://commons.wikimedia.org/wiki/File:Information_processing_system_(english).svg"},{src:"https://commons.wikimedia.org/wiki/Special:FilePath/General_Feedback_Loop.svg",alt:"General feedback-loop diagram showing input, process, output and feedback.",caption:"Feedback loop: output can inform the next input.",credit:"Wikimedia Commons — General Feedback Loop (license details on source page)",sourceUrl:"https://commons.wikimedia.org/wiki/File:General_Feedback_Loop.svg"}],
  summary:"An information system is an organized set of connected components that collects, processes, stores and distributes information to support decisions and control in an organization.",
  explanation:[
   ["Understanding an information system","A system is a collection of related elements or subcomponents that are connected and organized to achieve a common purpose. An information system brings together people, organizational arrangements and technology. It is not simply a computer: the people who enter, interpret and act on information, the procedures they follow, and the organization in which the system operates are all important."],
@@ -19,6 +20,7 @@ export const NOTES = [
 },
 {
  id:"components", title:"2. Components and Technology of Information Systems", subtitle:"Hardware, software, data, procedures, networking and telecommunications", questions:["Q05","Q07","Q08","Q21","Q36","Q46","Q48"], difficulty:"Easy to Very Hard",
+ images:[{src:"https://openstax.org/apps/image-cdn/v1/f=webp/apps/archive/20260604.144757/resources/cdf66559a6557d423dd8eb9611ab298f179f78a0",alt:"OpenStax diagram showing hardware, software, data, people and procedures as information-system components.",caption:"Five common components of an information system.",credit:"OpenStax, Foundations of Information Systems, Figure 1.2 — CC BY 4.0",sourceUrl:"https://openstax.org/books/foundations-information-systems/pages/1-1-introduction-to-information-systems"}],
  summary:"A computer-based information system combines hardware, software, data, procedures and communication/networking capabilities. Technology is one dimension of a wider organizational system.",
  explanation:[
   ["Hardware","Hardware means the physical parts of a computer or computer-based system. Examples include computers, storage devices, barcode readers, keyboards, monitors and printers. Input hardware captures data; processing hardware works on it; output hardware presents results."],
@@ -34,6 +36,7 @@ export const NOTES = [
 },
 {
  id:"dimensions", title:"3. The Three Dimensions of an Information System", subtitle:"Organization, management and information technology work together", questions:["Q19","Q20","Q21","Q36","Q39","Q46","Q48","Q49"], difficulty:"Medium to Very Hard",
+ images:[{src:"https://commons.wikimedia.org/wiki/Special:FilePath/Information_system_diagram.png",alt:"Diagram representing the model of an information system and its connected elements.",caption:"A schematic view of an information system.",credit:"John Yeung, Wikimedia Commons — CC BY-SA 3.0",sourceUrl:"https://commons.wikimedia.org/wiki/File:Information_system_diagram.png"}],
  summary:"The notes explain an information system through three connected dimensions: organization, management and information technology. A successful system must fit all three.",
  explanation:[
   ["Organizational dimension","This dimension concerns the organization itself: its people, structure, hierarchy, functional specialties, business processes, culture and interests. The notes describe organizations as groups of people who share common goals and work together. Different positions have different responsibilities and viewpoints. For a hospital patient-record system, staff roles determine who enters and views records; the department structure shapes how doctors, nurses and administration share information; and patient-care procedures determine when records are created, checked and updated. These arrangements affect access permissions, workflow and system design."],
@@ -48,6 +51,7 @@ export const NOTES = [
 },
 {
  id:"management-systems", title:"4. Management Levels and Information-System Types", subtitle:"TPS, MIS, DSS and ESS/EIS support different kinds of work and decisions", questions:["Q09","Q10","Q11","Q14","Q15","Q16","Q17","Q18","Q26","Q27","Q28","Q29","Q37","Q38","Q41","Q42","Q47"], difficulty:"Easy to Very Hard",
+ images:[{src:"https://openstax.org/apps/image-cdn/v1/f=webp/apps/archive/20260604.144757/resources/962836e06b1f6f03d062cc50a8537b65580b966f",alt:"OpenStax diagram relating TPS, MIS, DSS and executive information systems to organizational management levels.",caption:"Information systems aligned with management levels.",credit:"OpenStax, Foundations of Information Systems, Figure 1.3 — CC BY 4.0",sourceUrl:"https://openstax.org/books/foundations-information-systems/pages/1-1-introduction-to-information-systems"}],
  summary:"The notes connect organizational hierarchy with information-system use: TPS supports routine operational transactions, MIS summarizes information for middle management, DSS helps analyze alternatives for non-routine decisions, and ESS/EIS supports senior managers and strategic issues.",
  explanation:[
   ["Organizational hierarchy","The notes identify senior management, middle management and operational management. Senior managers focus on long-term plans, policies and strategic decisions. Middle managers monitor and control departmental performance and prepare plans. Operational managers supervise short-term, day-to-day work."],
@@ -64,6 +68,7 @@ export const NOTES = [
 },
 {
  id:"business-processes", title:"5. Business Processes and Functional Areas", subtitle:"How departments coordinate work to deliver products and services", questions:["Q12","Q24","Q33","Q34","Q38","Q39","Q45","Q46"], difficulty:"Easy to Very Hard",
+ images:[{src:"https://commons.wikimedia.org/wiki/Special:FilePath/SIPOC_diagram.svg",alt:"SIPOC process map showing suppliers, inputs, process, outputs and customers.",caption:"A high-level process map: suppliers, inputs, process, outputs and customers.",credit:"Peter Gladdish, Wikimedia Commons — CC BY 4.0",sourceUrl:"https://commons.wikimedia.org/wiki/File:SIPOC_diagram.svg"}],
  summary:"A business process is a set of connected tasks that directly or indirectly helps an organization provide products or services. Processes often cross functional areas and are guided by formal rules and procedures.",
  explanation:[
   ["Business processes","A business process is a set of tasks that directly or indirectly helps a business provide products or services to customers. Processes include steps, responsibilities and formal rules that guide employee behaviour. A process may involve several departments rather than belonging to one team only. For an online order, the business checks stock, accepts payment, packs the item and delivers it. These linked steps form a process because they work together to fulfil the customer's order."],
@@ -80,6 +85,7 @@ export const NOTES = [
 },
 {
  id:"information-quality", title:"6. Information Quality", subtitle:"Accuracy, integrity, consistency, completeness and validity", questions:["Q22","Q23","Q25","Q30","Q31","Q40","Q44"], difficulty:"Medium to Very Hard",
+ images:[{src:"https://commons.wikimedia.org/wiki/Special:FilePath/Data_visualization_process_v1.png",alt:"Flowchart showing data collection, cleaning, analysis and visualization.",caption:"Data moves through collection, preparation, analysis and visualization before it can support decisions.",credit:"Wikimedia Commons, Data visualization process v1 — CC BY-SA 3.0 (see source page)",sourceUrl:"https://commons.wikimedia.org/wiki/File:Data_visualization_process_v1.png"}],
  summary:"Information must be reliable and suitable for the decision being made. The supplied notes identify accuracy, integrity, consistency, completeness and validity as important information-quality characteristics.",
  explanation:[
   ["Accuracy","Accuracy concerns whether information is correct and free from errors. Incorrect quantities, prices or dates can lead to poor decisions."],
@@ -96,6 +102,7 @@ export const NOTES = [
 },
 {
  id:"benefits", title:"7. Organizational Benefits and Business Intelligence", subtitle:"How information systems help organizations improve performance", questions:["Q08","Q16","Q18","Q27","Q29","Q35","Q37","Q39","Q41","Q49"], difficulty:"Medium to Very Hard",
+ images:[{src:"https://commons.wikimedia.org/wiki/Special:FilePath/Information_Systems_for_organisations.png",alt:"Diagram illustrating information systems used across different parts of a typical organization.",caption:"Information systems support different functions across an organization.",credit:"Wikimedia Commons, Information Systems for organisations (see source page for reuse details)",sourceUrl:"https://commons.wikimedia.org/wiki/File:Information_Systems_for_organisations.png"},{src:"https://commons.wikimedia.org/wiki/Special:FilePath/Data_visualization_process_v1.png",alt:"Data visualization workflow from data collection through analysis to a data product.",caption:"Business intelligence turns collected data into analysis and useful visual outputs.",credit:"Wikimedia Commons, Data visualization process v1 — CC BY-SA 3.0 (see source page)",sourceUrl:"https://commons.wikimedia.org/wiki/File:Data_visualization_process_v1.png"}],
  summary:"The notes associate information systems with operational excellence, new products and services, improved employee productivity, better decision-making, competitive advantage and stronger customer relationships.",
  explanation:[
   ["Operational excellence and productivity","Information systems can help coordinate and automate parts of daily work, reduce avoidable delays and make information available to employees when needed. Better records and process visibility can support more efficient operations."],
