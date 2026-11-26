@@ -65,3 +65,31 @@ a{color:inherit;text-decoration:none}button,textarea{font:inherit}button{cursor:
 @media(max-width:560px){.result-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.submit-actions{flex-direction:column}.submit-actions button{width:100%}.question-navigation{flex-wrap:wrap}.question-navigation #navigation-count{order:3;width:100%;text-align:center}}
 
 .result-status.skipped{color:#8bd8ed;background:#102c38}
+
+
+/* Readability pass: slightly larger type across the assignment workspace */
+.lead{font-size:15px;line-height:1.9}
+.overview-copy p{font-size:13px}
+.progress-top{font-size:11px}
+.difficulty{font-size:10px}
+.sidebar-heading{font-size:10px}
+.question-index{font-size:11px}
+.sidebar-hint{font-size:10px}
+.question-number,.question-meta{font-size:11px}
+.question-panel h2{font-size:clamp(20px,2.5vw,26px);line-height:1.6}
+.answer-textarea{font-size:14px;line-height:1.85}
+.answer-help{font-size:11px}
+.option-label{font-size:14px;line-height:1.65;padding:13px 15px}
+.question-navigation>span{font-size:10px}
+.primary-button,.secondary-button,.submit-button{font-size:12px}
+.submit-section h2{font-size:21px}
+.submit-section p{font-size:12px}
+.status-message{font-size:12px}
+.privacy-note p{font-size:12px}
+.result-header p,.result-summary{font-size:13px}
+.result-stat span{font-size:11px}
+.result-item h3{font-size:14px}
+.result-question{font-size:13px}
+.result-answer,.result-feedback,.correct-answer{font-size:12px}
+.result-actions button{font-size:12px}
+@media(max-width:560px){.lead{font-size:14px}.overview-copy p{font-size:12px}.option-label{font-size:13px}.question-panel h2{font-size:20px}.submit-section p{font-size:12px}}
