@@ -1,4 +1,4 @@
-import { ANSWERS } from "./answer-sheet-data.js";
+import { ANSWERS } from "./answer-sheet-data.js?v=20261126b";
 import { ASSIGNMENT_QUESTIONS } from "../assignment/questions.js";
 (() => {
 "use strict";
