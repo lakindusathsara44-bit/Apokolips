@@ -38,3 +38,19 @@
 .primary-button,.secondary-button{font-size:16px}
 .noscript-note{font-size:16px}
 @media(max-width:700px){.lead{font-size:18px}.source-note p{font-size:16px}.note-title{font-size:20px}.note-summary{font-size:17px}.explanation p,.key-list,.example-list{font-size:16px}.topic-overview p,.topic-overview ul{font-size:16px}}
+
+
+/* Compact, accessible topic navigation on small screens */
+.topic-toggle{display:none;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#0b111a;color:#a9bad0;font:13px "DM Mono",monospace;letter-spacing:1px;text-align:left;cursor:pointer}
+.topic-toggle-icon{color:var(--blue);font-size:19px;line-height:1}
+.topic-count{color:#83b7ff}
+@media(max-width:700px){
+  .topic-tools{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .topic-toggle{display:flex}
+  .tool-label{display:none}
+  .topic-nav{display:none;width:100%;padding:2px 0 5px}
+  .topic-tools.is-expanded .topic-nav{display:flex}
+  .topic-link{font-size:15px;padding:7px 9px}
+  .notes-tools{padding-bottom:8px}
+  .search-status{margin-top:5px}
+}
