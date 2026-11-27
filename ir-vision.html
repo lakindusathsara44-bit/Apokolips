@@ -55,6 +55,7 @@
  function parse(line){try{const d=JSON.parse(line);if(d.type==='sample')sample(d);else if(d.type==='hello')setStatus('ARDUINO READY / '+(d.sensor||'IR SENSOR'),true)}catch(e){console.warn('Ignored serial line',line)}}
  async function disconnect(){try{if(reader){await reader.cancel();reader.releaseLock();reader=null}}catch{}try{if(writer){await writer.close();writer=null}}catch{}try{if(port){await port.close();port=null}}catch{}connected=false;setStatus('DEVICE NOT CONNECTED')}
  $('connectBtn').onclick=async()=>{
+  if(demoTimer){clearInterval(demoTimer);demoTimer=null}
   if(!('serial'in navigator)){alert('Web Serial needs desktop Chrome or Edge over HTTPS. On Android, use the demo or connect through a supported serial bridge.');return}
   try{
    port=await navigator.serial.requestPort();await port.open({baudRate:115200});connected=true;setStatus('ARDUINO CONNECTED / 115200 BAUD',true);
