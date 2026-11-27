@@ -1,43 +1,61 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#050609">
-  <link rel="icon" type="image/x-icon" href="file_00000000a7ec820890154ca6ed49b608.ico?v=20261107d">
-  <link rel="shortcut icon" type="image/x-icon" href="file_00000000a7ec820890154ca6ed49b608.ico?v=20261107d">
-  <link rel="apple-touch-icon" href="file_00000000a7ec820890154ca6ed49b608.png?v=20261107b">
-  <link rel="manifest" href="manifest.json?v=20261107b">
-  <meta name="description" content="Healthdiuno is an in-development hardware diagnostic platform for Arduino and ESP32 development boards.">
-  <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://apokolips.xyz/healthdiuno.html">
-  <title>Healthdiuno | Apokolips</title><link rel="stylesheet" href="style.css?v=20261107c">
-  <style>
-    .health-hero{padding:34px;border:1px solid rgba(90,170,255,.2);border-radius:22px;background:linear-gradient(135deg,rgba(16,42,78,.55),rgba(5,8,15,.8));}
-    .health-mark{width:62px;height:62px;display:grid;place-items:center;border-radius:18px;background:rgba(35,130,255,.14);border:1px solid rgba(80,160,255,.35);font-size:30px;color:#78c8ff;margin-bottom:18px}
-    .health-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:22px 0}
-    .health-item{padding:20px;border:1px solid rgba(120,170,220,.17);border-radius:16px;background:rgba(10,18,30,.72)}
-    .health-item h3{margin:0 0 8px}.health-item p{margin:0;color:var(--muted,#aab6c8);line-height:1.6}
-    .health-note{padding:16px;border-left:3px solid #4da5ff;background:rgba(35,110,200,.09);border-radius:8px;line-height:1.65}
-    .health-label{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,190,70,.12);color:#ffd080;font-size:.76rem;letter-spacing:.08em}
-  </style></head>
-<body><canvas id="rain" aria-hidden="true"></canvas><header class="topbar"><a class="brand" href="index.html"><span class="brand-mark"><img src="file_00000000a7ec820890154ca6ed49b608.png?v=20261107b" alt="Apokolips logo"></span><span>APOKOLIPS</span></a><button class="menu-toggle" aria-label="Toggle navigation">☰</button><nav class="nav"><a href="index.html">Home</a><a href="info.html">About Me</a><a href="project.gallery.html">Community Gallery</a><a class="active" href="My-project.html">My Projects</a></nav></header>
-<main class="page-shell">
-<div class="eyebrow">PROJECT 009 / EMBEDDED SYSTEMS</div>
-<section class="health-hero">
-<div class="health-mark">⌁</div><span class="health-label">IN DEVELOPMENT</span>
-<h1 class="page-title">Health<span class="gradient-text">diuno.</span></h1>
-<p class="page-lead">A web-based hardware diagnostic platform for Arduino and ESP32 development boards.</p>
-<p>Connect a supported development board to a computer over USB, open the diagnostic interface, and run guided tests to inspect board communication, pins, power rails, and supported hardware functions.</p>
-</section>
-<h2>Diagnostic goals</h2>
-<div class="health-grid">
-<article class="health-item"><h3>Pin diagnostics</h3><p>Digital input/output, analog input, PWM output, and pin response checks using safe test procedures.</p></article>
-<article class="health-item"><h3>Power monitoring</h3><p>Inspect measurable supply rails such as 5V, 3.3V, and input voltage where the board and test setup expose them.</p></article>
-<article class="health-item"><h3>Chip & interface checks</h3><p>Check MCU communication, USB serial, UART, I²C, SPI, reset response, and other supported interfaces.</p></article>
-<article class="health-item"><h3>Visual health report</h3><p>Show test results, pin maps, warnings, failed checks, and a downloadable diagnostic report.</p></article>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050609">
+<meta name="description" content="Healthdiuno — a universal hardware diagnostics workspace for Arduino and ESP32 development boards.">
+<link rel="canonical" href="https://apokolips.xyz/healthdiuno.html">
+<title>Healthdiuno | Apokolips</title><link rel="stylesheet" href="style.css?v=20261107c">
+<style>
+.hd-wrap{max-width:1180px;margin:auto}.hd-head{display:flex;align-items:center;gap:18px;margin:12px 0 26px}.hd-logo{width:58px;height:58px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(145deg,#123e70,#071322);border:1px solid #2873b8;color:#8bd2ff;font-weight:900;font-size:25px;box-shadow:0 8px 30px #0066aa22}.hd-head h1{margin:0;font-size:clamp(2rem,5vw,3.2rem)}.hd-sub{margin:5px 0 0;color:#aab8cb}.hd-panel{background:rgba(8,15,26,.88);border:1px solid #20364e;border-radius:17px;padding:20px;margin:16px 0;box-shadow:0 12px 35px #0002}.hd-toolbar{display:flex;flex-wrap:wrap;align-items:end;gap:12px}.hd-field{display:grid;gap:7px;flex:1;min-width:190px}.hd-field label,.hd-small{font-size:.82rem;color:#aab8cb}.hd-field select{width:100%;padding:12px;border:1px solid #304b68;border-radius:10px;background:#081321;color:#edf6ff}.hd-btn{border:1px solid #2c75b5;border-radius:10px;padding:12px 17px;background:#0d3153;color:#eaf6ff;font-weight:700;cursor:pointer}.hd-btn.primary{background:linear-gradient(120deg,#1267ad,#17427b)}.hd-btn:disabled{opacity:.45;cursor:not-allowed}.hd-state{display:flex;align-items:center;gap:9px;color:#aebed0;font-size:.9rem}.hd-dot{width:9px;height:9px;border-radius:50%;background:#7c8999}.hd-dot.on{background:#37d69a;box-shadow:0 0 12px #37d69a88}.hd-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:15px 0}.hd-stat{padding:16px;border:1px solid #20364e;border-radius:13px;background:#091523}.hd-stat strong{display:block;font-size:1.7rem;color:#eaf5ff}.hd-stat span{font-size:.78rem;color:#9fb0c5}.hd-section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px}.hd-section-title h2{margin:0;font-size:1.18rem}.hd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.hd-test{padding:14px;border:1px solid #20364e;border-radius:12px;background:#091523;display:flex;align-items:center;justify-content:space-between;gap:12px}.hd-test b{font-size:.92rem}.hd-result{font-size:.75rem;color:#91a4ba}.hd-result.pass{color:#46dda4}.hd-result.fail{color:#ff737d}.hd-result.wait{color:#f0c36e}.hd-pinmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(74px,1fr));gap:8px}.hd-pin{padding:10px 5px;text-align:center;border:1px solid #29435f;border-radius:9px;background:#0a1929;color:#dcecff;font-size:.82rem}.hd-pin.pass{border-color:#16875e;background:#0b2b25}.hd-pin.fail{border-color:#a43d4c;background:#32151e}.hd-log{height:170px;overflow:auto;background:#03080e;border:1px solid #1e3044;border-radius:10px;padding:12px;font:12px/1.6 ui-monospace,monospace;color:#a9c5df;white-space:pre-wrap}.hd-actions{display:flex;flex-wrap:wrap;gap:9px}.hd-footnote{font-size:.82rem;color:#9fb0c5;line-height:1.6}.hd-link{color:#81caff}@media(max-width:650px){.hd-stats{grid-template-columns:repeat(2,1fr)}.hd-panel{padding:15px}.hd-head{align-items:flex-start}}
+</style>
+</head>
+<body><canvas id="rain" aria-hidden="true"></canvas>
+<header class="topbar"><a class="brand" href="index.html"><span class="brand-mark"><img src="file_00000000a7ec820890154ca6ed49b608.png?v=20261107b" alt="Apokolips logo"></span><span>APOKOLIPS</span></a><button class="menu-toggle" aria-label="Toggle navigation">☰</button><nav class="nav"><a href="index.html">Home</a><a href="info.html">About Me</a><a href="project.gallery.html">Community Gallery</a><a class="active" href="My-project.html">My Projects</a></nav></header>
+<main class="page-shell hd-wrap">
+<div class="eyebrow">PROJECT 009 / HARDWARE DIAGNOSTICS</div>
+<div class="hd-head"><div class="hd-logo">HD</div><div><h1>Health<span class="gradient-text">diuno</span></h1><p class="hd-sub">Universal Arduino &amp; ESP32 Board Diagnostics</p></div></div>
+<section class="hd-panel">
+<div class="hd-section-title"><h2>Board connection</h2><div class="hd-state"><span class="hd-dot" id="connectionDot"></span><span id="connectionText">Not connected</span></div></div>
+<div class="hd-toolbar">
+<div class="hd-field"><label for="boardFamily">Board family</label><select id="boardFamily"><option value="auto">Auto detect</option><option value="uno">Arduino UNO / Nano (AVR)</option><option value="mega">Arduino Mega 2560</option><option value="leonardo">Arduino Leonardo / Micro</option><option value="esp32">ESP32</option><option value="esp32s2">ESP32-S2</option><option value="esp32s3">ESP32-S3</option><option value="esp32c3">ESP32-C3</option><option value="samd">Arduino SAMD</option><option value="renesas">Arduino UNO R4</option><option value="other">Other supported board</option></select></div>
+<button class="hd-btn primary" id="connectBtn">Connect board</button><button class="hd-btn" id="disconnectBtn" disabled>Disconnect</button>
 </div>
-<h2>Planned board support</h2>
-<div class="project-tags"><span>Arduino UNO</span><span>Arduino Mega</span><span>Arduino Nano</span><span>Arduino Leonardo</span><span>Arduino Micro</span><span>ESP32</span><span>ESP32-S2</span><span>ESP32-S3</span><span>ESP32-C3</span><span>More board profiles</span></div>
-<div class="health-note"><strong>Diagnostic accuracy:</strong> Healthdiuno will report only what can be measured or verified by firmware and the connected test hardware. A USB connection alone cannot prove that every pin, chip, transistor, memory cell, oscillator, or internal circuit is healthy. Some tests will require loopback wiring or an external diagnostic fixture. Untestable components will be clearly marked as “Not tested” rather than incorrectly reported as healthy.</div>
-<h2>Planned workflow</h2>
-<ol><li>Connect a supported board using USB.</li><li>Select or detect the board profile.</li><li>Install or upload the matching diagnostic firmware when required.</li><li>Run safe automatic checks and optional guided hardware tests.</li><li>Review the board health map and export the report.</li></ol>
+<p class="hd-footnote" id="connectionHelp">Connect the board with a USB data cable, then select its serial port.</p>
+</section>
+<div class="hd-stats">
+<div class="hd-stat"><strong id="statPassed">—</strong><span>Tests passed</span></div><div class="hd-stat"><strong id="statFailed">—</strong><span>Tests failed</span></div><div class="hd-stat"><strong id="statPins">—</strong><span>Pins checked</span></div><div class="hd-stat"><strong id="statBoard">—</strong><span>Board detected</span></div>
+</div>
+<section class="hd-panel">
+<div class="hd-section-title"><h2>Diagnostic tests</h2><div class="hd-actions"><button class="hd-btn primary" id="scanBtn" disabled>Run full scan</button><button class="hd-btn" id="exportBtn" disabled>Export report</button></div></div>
+<div class="hd-grid" id="testList">
+<div class="hd-test"><b>Microcontroller identity</b><span class="hd-result">Waiting</span></div><div class="hd-test"><b>Digital I/O pins</b><span class="hd-result">Waiting</span></div><div class="hd-test"><b>Analog input channels</b><span class="hd-result">Waiting</span></div><div class="hd-test"><b>PWM outputs</b><span class="hd-result">Waiting</span></div><div class="hd-test"><b>Power measurements</b><span class="hd-result">Waiting</span></div><div class="hd-test"><b>UART communication</b><span class="hd-result">Waiting</span></div><div class="hd-test"><b>I²C interface</b><span class="hd-result">Waiting</span></div><div class="hd-test"><b>SPI interface</b><span class="hd-result">Waiting</span></div><div class="hd-test"><b>Reset &amp; runtime</b><span class="hd-result">Waiting</span></div><div class="hd-test"><b>Clock &amp; system status</b><span class="hd-result">Waiting</span></div>
+</div>
+</section>
+<section class="hd-panel"><div class="hd-section-title"><h2>Pin health map</h2><span class="hd-small" id="pinCount">No pin results</span></div><div class="hd-pinmap" id="pinMap"><div class="hd-pin">Connect a board</div></div></section>
+<section class="hd-panel"><div class="hd-section-title"><h2>Live diagnostic console</h2><button class="hd-btn" id="clearLogBtn">Clear</button></div><div class="hd-log" id="consoleLog" aria-live="polite">Healthdiuno ready. Connect a board to begin.</div></section>
+<section class="hd-panel"><div class="hd-section-title"><h2>Supported board families</h2></div><div class="project-tags"><span>Arduino AVR</span><span>Arduino Mega</span><span>Arduino Leonardo</span><span>Arduino SAMD</span><span>Arduino UNO R4</span><span>ESP32</span><span>ESP32-S2</span><span>ESP32-S3</span><span>ESP32-C3</span><span>ESP32-C6</span><span>ESP32-H2</span><span>ESP8266</span><span>Compatible third-party boards</span></div></section>
 <a class="project-link" href="My-project.html">← BACK TO MY PROJECTS</a>
 </main>
-<footer class="footer"><span>© <span id="year"></span> Lakindu Sathsara</span><span><a href="My-project.html">MY PROJECTS ↑</a></span></footer><script src="script.js"></script></body></html>
+<footer class="footer"><span>© <span id="year"></span> Lakindu Sathsara</span><span><a href="My-project.html">MY PROJECTS ↑</a></span></footer>
+<script src="script.js"></script>
+<script>
+(()=> {
+const $=id=>document.getElementById(id), enc=new TextEncoder(), dec=new TextDecoder();
+let port=null,reader=null,writer=null,readTask=null,buffer="",results=[],boardInfo=null;
+const tests=["Microcontroller identity","Digital I/O pins","Analog input channels","PWM outputs","Power measurements","UART communication","I²C interface","SPI interface","Reset & runtime","Clock & system status"];
+function log(message){const box=$("consoleLog");box.textContent+="\n"+new Date().toLocaleTimeString()+"  "+message;box.scrollTop=box.scrollHeight}
+function setConnected(value){$("connectionDot").classList.toggle("on",value);$("connectionText").textContent=value?"Connected":"Not connected";$("connectBtn").disabled=value;$("disconnectBtn").disabled=!value;$("scanBtn").disabled=!value;$("exportBtn").disabled=!results.length}
+function renderTests(){const list=$("testList");list.innerHTML="";tests.forEach(name=>{const r=results.find(x=>x.test===name);const div=document.createElement("div");div.className="hd-test";const b=document.createElement("b");b.textContent=name;const s=document.createElement("span");s.className="hd-result "+(r?(r.status==="PASS"?"pass":r.status==="FAIL"?"fail":"wait"):"");s.textContent=r?r.status:"Waiting";div.append(b,s);list.append(div)});const pass=results.filter(x=>x.status==="PASS").length,fail=results.filter(x=>x.status==="FAIL").length;$("statPassed").textContent=results.length?pass:"—";$("statFailed").textContent=results.length?fail:"—";$("statBoard").textContent=boardInfo?.board||"—";$("exportBtn").disabled=!results.length}
+function renderPins(pins){const map=$("pinMap");map.innerHTML="";pins.forEach(p=>{const el=document.createElement("div");el.className="hd-pin "+(p.status==="PASS"?"pass":p.status==="FAIL"?"fail":"");el.textContent=p.pin+" · "+p.status;map.append(el)});$("statPins").textContent=pins.length;$("pinCount").textContent=pins.length+" pin results"}
+async function send(payload){if(!writer)throw Error("No board connection");await writer.write(enc.encode(JSON.stringify(payload)+"\n"));log("→ "+JSON.stringify(payload))}
+function handleLine(line){if(!line.trim())return;log("← "+line);let data;try{data=JSON.parse(line)}catch{return}if(data.type==="hello"||data.type==="board"){boardInfo=data; $("statBoard").textContent=data.board||data.mcu||"Detected";$("connectionHelp").textContent=(data.board||"Board")+" · "+(data.mcu||"Diagnostic firmware connected");return}if(data.type==="test"||data.test){const name=data.test||data.name;const status=String(data.status||"INFO").toUpperCase();const idx=results.findIndex(x=>x.test===name);const item={test:name,status,details:data.details||data.value||""};if(idx>=0)results[idx]=item;else results.push(item);renderTests()}if(data.type==="pins"&&Array.isArray(data.pins))renderPins(data.pins);if(data.type==="scan_complete"){log("Diagnostic scan completed.");renderTests()}}
+async function readLoop(){try{while(port?.readable){reader=port.readable.getReader();try{while(true){const {value,done}=await reader.read();if(done)break;buffer+=dec.decode(value,{stream:true});const lines=buffer.split(/\r?\n/);buffer=lines.pop()||"";lines.forEach(handleLine)}}finally{reader.releaseLock();reader=null}}}catch(e){log("Serial read stopped: "+e.message)}}
+async function connect(){if(!("serial" in navigator)){log("Web Serial is unavailable in this browser. Open Healthdiuno in desktop Chrome or Edge.");return}try{port=await navigator.serial.requestPort();await port.open({baudRate:115200});writer=port.writable.getWriter();setConnected(true);log("USB serial connection opened at 115200 baud.");readTask=readLoop();await send({cmd:"hello",app:"Healthdiuno",protocol:1,board:$("boardFamily").value});}catch(e){log("Connection error: "+e.message);await disconnect()}}
+async function disconnect(){try{if(writer){writer.releaseLock();writer=null}if(port){await port.close();port=null}}catch(e){log("Disconnect: "+e.message)}setConnected(false);log("Board disconnected.")}
+async function scan(){results=[];renderTests();renderPins([]);try{await send({cmd:"diagnostic_scan",protocol:1,profile:$("boardFamily").value,tests:["identity","digital","analog","pwm","power","uart","i2c","spi","reset","system"]});log("Full diagnostic scan requested.")}catch(e){log(e.message)}}
+function exportReport(){const report={application:"Healthdiuno",created:new Date().toISOString(),board:boardInfo,results,pinResults:[...$("pinMap").children].map(x=>x.textContent)};const blob=new Blob([JSON.stringify(report,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="healthdiuno-report-"+Date.now()+".json";a.click();URL.revokeObjectURL(a.href)}
+$("connectBtn").addEventListener("click",connect);$("disconnectBtn").addEventListener("click",disconnect);$("scanBtn").addEventListener("click",scan);$("exportBtn").addEventListener("click",exportReport);$("clearLogBtn").addEventListener("click",()=>$("consoleLog").textContent="Console cleared.");window.addEventListener("beforeunload",()=>{try{reader?.cancel();port?.close()}catch{}});
+})();
+</script>
+</body></html>
