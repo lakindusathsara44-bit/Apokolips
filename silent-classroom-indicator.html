@@ -9,7 +9,7 @@
 <title>Silent Classroom Indicator | Apokolips</title>
 <link rel="stylesheet" href="style.css?v=20261127-sci">
 <style>
-:root{--sci-bg:#070b12;--sci-panel:#0d1724;--sci-line:#243b55;--sci-text:#eef5ff;--sci-muted:#9eafc3;--sci-cyan:#50d9ed;--sci-red:#ff6377;--sci-green:#4be0a5;--sci-amber:#ffd477}
+:root{--sci-bg:#070b12;--sci-panel:#0d1724;--sci-line:#243b55;--sci-text:#eef5ff;--sci-muted:#9eafc3;--sci-cyan:#50d9ed;--sci-red:#ff6377;--sci-green:#4be0a5;--sci-yellow:#ffd34d;--sci-amber:#ffd477}
 .sci{max-width:1160px;margin:48px auto 80px;padding:0 28px;position:relative;z-index:3}
 .sci-kicker{font:10px 'DM Mono',monospace;letter-spacing:2px;color:var(--sci-cyan)}
 .sci-title{font-size:clamp(38px,6vw,68px);letter-spacing:-3px;line-height:1.04;margin:14px 0}
@@ -40,7 +40,7 @@
 .sci-progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--sci-amber),var(--sci-red))}
 .sci-status{padding:11px 12px;border:1px solid #286b56;border-radius:9px;background:#102e2a;color:#b8f6dc;font-size:10px;font-weight:800;margin-top:12px}
 .sci-status.wait{background:#302819;border-color:#81632e;color:#ffe3a6}.sci-status.alert{background:#351925;border-color:#87384c;color:#ffc2cc}
-.sci-io{display:grid;gap:10px;margin-top:14px}.sci-io-row{display:flex;align-items:center;gap:9px;font-size:10px}.sci-led{width:11px;height:11px;border-radius:50%;background:#30445a;box-shadow:inset 0 0 0 1px #526a82}.sci-led.on.green{background:var(--sci-green);box-shadow:0 0 12px var(--sci-green)}.sci-led.on.red{background:var(--sci-red);box-shadow:0 0 12px var(--sci-red)}.sci-led.on.cyan{background:var(--sci-cyan);box-shadow:0 0 12px var(--sci-cyan)}
+.sci-io{display:grid;gap:10px;margin-top:14px}.sci-io-row{display:flex;align-items:center;gap:9px;font-size:10px}.sci-led{width:11px;height:11px;border-radius:50%;background:#30445a;box-shadow:inset 0 0 0 1px #526a82}.sci-led.on.green{background:var(--sci-green);box-shadow:0 0 12px var(--sci-green)}.sci-led.on.yellow{background:var(--sci-yellow);box-shadow:0 0 12px var(--sci-yellow)}.sci-led.on.yellow.flashing{animation:sci-yellow-flash .8s infinite ease-in-out}@keyframes sci-yellow-flash{0%,100%{opacity:1;box-shadow:0 0 14px var(--sci-yellow)}50%{opacity:.18;box-shadow:0 0 2px transparent}}.sci-led.on.red{background:var(--sci-red);box-shadow:0 0 12px var(--sci-red)}.sci-led.on.cyan{background:var(--sci-cyan);box-shadow:0 0 12px var(--sci-cyan)}
 .sci-state{margin-left:auto;color:var(--sci-muted);font-size:9px;font-weight:800}
 .sci-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
 .sci-step{padding:13px;border:1px solid var(--sci-line);border-radius:10px;background:#091523}
@@ -90,7 +90,7 @@
 <div class="sci-progress"><i id="sciProgress"></i></div>
 <div class="sci-status" id="sciStatus">NORMAL — Sound level is below the configured threshold.</div>
 <div class="sci-io">
-<div class="sci-io-row"><i class="sci-led on green" id="sciGreenLed"></i>Green LED <span class="sci-state" id="sciGreenState">ON</span></div>
+<div class="sci-io-row"><i class="sci-led on green" id="sciGreenLed"></i>Green LED <span class="sci-state" id="sciGreenState">ON</span></div>\n<div class="sci-io-row"><i class="sci-led" id="sciYellowLed"></i>Yellow LED <span class="sci-state" id="sciYellowState">OFF</span></div>
 <div class="sci-io-row"><i class="sci-led" id="sciRedLed"></i>Red LED <span class="sci-state" id="sciRedState">OFF</span></div>
 <div class="sci-io-row"><i class="sci-led" id="sciBuzzerLed"></i>Buzzer <span class="sci-state" id="sciBuzzerState">OFF</span></div>
 </div>
@@ -102,8 +102,8 @@
 <section class="sci-card"><div class="sci-flow">
 <div class="sci-step"><b>STEP 01</b><h4>Sound Detection</h4><p>A microphone sound sensor captures changes in classroom sound and produces an electrical signal.</p></div>
 <div class="sci-step"><b>STEP 02</b><h4>Signal Analysis</h4><p>The Arduino reads the sensor signal and estimates the sound level against a configured threshold.</p></div>
-<div class="sci-step"><b>STEP 03</b><h4>Five-Minute Verification</h4><p>If the sound remains above the threshold continuously for five minutes, the alert is triggered. A drop below threshold resets this timer.</p></div>
-<div class="sci-step"><b>STEP 04</b><h4>Alert and Auto-Off</h4><p>The red LED and buzzer turn ON. After five minutes, both turn OFF automatically and monitoring resumes.</p></div>
+<div class="sci-step"><b>STEP 03</b><h4>Five-Minute Verification</h4><p>When sound crosses the threshold, the yellow LED flashes as an early warning. If the sound remains high continuously for five minutes, the main alert is triggered. A drop below threshold resets this timer.</p></div>
+<div class="sci-step"><b>STEP 04</b><h4>Alert and Auto-Off</h4><p>The yellow warning stops. The red LED and buzzer turn ON. After five minutes, both turn OFF automatically and monitoring resumes.</p></div>
 </div></section>
 
 <div class="sci-section"><div><h2>03 / Hardware Overview</h2><p>Proposed components and measurement notes.</p></div></div>
@@ -111,7 +111,7 @@
 <div class="sci-flow">
 <div class="sci-step"><b>CONTROLLER</b><h4>Arduino UNO / Leonardo</h4><p>Reads the sound sensor and controls the indicator outputs.</p></div>
 <div class="sci-step"><b>INPUT</b><h4>Microphone Sensor</h4><p>Captures sound changes and provides an analogue signal for analysis.</p></div>
-<div class="sci-step"><b>OUTPUT</b><h4>LEDs and Buzzer</h4><p>Green indicates normal conditions; red and buzzer indicate an alert.</p></div>
+<div class="sci-step"><b>OUTPUT</b><h4>LEDs and Buzzer</h4><p>Green indicates normal conditions; flashing yellow warns that noise is high; red and buzzer indicate the main alert.</p></div>
 <div class="sci-step"><b>CONTROL</b><h4>Push Button</h4><p>Reserved for a manual reset or test control in the physical prototype.</p></div>
 </div>
 <div class="sci-note"><b>Technical note:</b> The 60% threshold shown here is a demonstration value, not 60 dB. Accurate decibel measurement requires a suitable calibrated sound-level sensor and calibration procedure. This page simulates the waveform, timer, LEDs, and buzzer in the browser; it does not connect to a physical Arduino or microphone. In the hardware prototype, the Arduino will control the real components using sensor readings.</div>
@@ -133,7 +133,7 @@ function buzzerOn(){if(!enableAudio())return;buzzerOff();osc=audioCtx.createOsci
 function stopAlert(){alertActive=false;alertSeconds=0;buzzerOff()}
 function startAlert(){alertActive=true;alertSeconds=0;highSeconds=TRIGGER_SECONDS;buzzerOn()}
 function fmt(s){s=Math.max(0,Math.ceil(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
-function render(){const n=Number(slider.value),high=n>=THRESHOLD;$('sciNoiseValue').textContent=n+'%';$('sciMetricNoise').textContent=n+'%';$('sciTimer').textContent=fmt(highSeconds);$('sciOffTimer').textContent=alertActive?fmt(ALERT_SECONDS-alertSeconds):'—';$('sciProgress').style.width=Math.min(100,highSeconds/TRIGGER_SECONDS*100)+'%';$('sciGreenLed').className='sci-led'+(!high&&!alertActive?' on green':'');$('sciRedLed').className='sci-led'+(alertActive?' on red':'');$('sciBuzzerLed').className='sci-led'+(alertActive?' on cyan':'');$('sciGreenState').textContent=!high&&!alertActive?'ON':'OFF';$('sciRedState').textContent=alertActive?'ON':'OFF';$('sciBuzzerState').textContent=alertActive?'ON':'OFF';const s=$('sciStatus');if(alertActive){s.className='sci-status alert';s.textContent='ALERT ACTIVE — Red LED and buzzer are ON. Automatic shutdown in '+fmt(ALERT_SECONDS-alertSeconds)+'.'}else if(high){s.className='sci-status wait';s.textContent='HIGH NOISE — Continuous five-minute trigger timer is running.'}else{s.className='sci-status';s.textContent='NORMAL — Sound level is below the configured threshold.'}}
+function render(){const n=Number(slider.value),high=n>=THRESHOLD;$('sciNoiseValue').textContent=n+'%';$('sciMetricNoise').textContent=n+'%';$('sciTimer').textContent=fmt(highSeconds);$('sciOffTimer').textContent=alertActive?fmt(ALERT_SECONDS-alertSeconds):'—';$('sciProgress').style.width=Math.min(100,highSeconds/TRIGGER_SECONDS*100)+'%';$('sciGreenLed').className='sci-led'+(!high&&!alertActive?' on green':'');$('sciYellowLed').className='sci-led'+(high&&!alertActive?' on yellow flashing':'');$('sciRedLed').className='sci-led'+(alertActive?' on red':'');$('sciBuzzerLed').className='sci-led'+(alertActive?' on cyan':'');$('sciGreenState').textContent=!high&&!alertActive?'ON':'OFF';$('sciYellowState').textContent=high&&!alertActive?'FLASHING':'OFF';$('sciRedState').textContent=alertActive?'ON':'OFF';$('sciBuzzerState').textContent=alertActive?'ON':'OFF';const s=$('sciStatus');if(alertActive){s.className='sci-status alert';s.textContent='ALERT ACTIVE — Red LED and buzzer are ON. Automatic shutdown in '+fmt(ALERT_SECONDS-alertSeconds)+'.'}else if(high){s.className='sci-status wait';s.textContent='WARNING — Yellow LED is flashing. Continuous five-minute trigger timer is running.'}else{s.className='sci-status';s.textContent='NORMAL — Sound level is below the configured threshold.'}}
 function draw(){const w=canvas.clientWidth,h=canvas.clientHeight;ctx.clearRect(0,0,w,h);ctx.strokeStyle='#19334c';ctx.lineWidth=1;for(let y=25;y<h;y+=35){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}const ty=h-(THRESHOLD/110)*(h-36)-12;ctx.setLineDash([7,6]);ctx.strokeStyle='#ff6377';ctx.beginPath();ctx.moveTo(0,ty);ctx.lineTo(w,ty);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#ff9eaa';ctx.font='10px Arial';ctx.fillText('NOISE THRESHOLD',9,Math.max(14,ty-7));const amp=8+(Number(slider.value)/100)*(h*.37),mid=h*.57;ctx.beginPath();ctx.lineWidth=2.4;ctx.strokeStyle='#50d9ed';for(let x=0;x<=w;x+=2){const t=x/w*Math.PI*11+phase,y=mid+Math.sin(t)*amp*(.7+.3*Math.sin(t*1.7))+Math.sin(t*2.6+1)*amp*.12;if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.stroke();phase+=.045;requestAnimationFrame(draw)}
 function tick(now){const dt=Math.min((now-last)/1000,1)*timeSpeed;last=now;if(alertActive){alertSeconds+=dt;if(alertSeconds>=ALERT_SECONDS){stopAlert();highSeconds=0}}else if(Number(slider.value)>=THRESHOLD){highSeconds+=dt;if(highSeconds>=TRIGGER_SECONDS)startAlert()}else highSeconds=0;render();requestAnimationFrame(tick)}
 slider.addEventListener('input',render);
