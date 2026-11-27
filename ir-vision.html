@@ -99,11 +99,15 @@
   render();
  }
  async function disconnect(){
+  reading=false;
   try{if(reader){await reader.cancel();}}catch(error){console.warn('Reader close:',error)}
   try{if(reader){reader.releaseLock();}}catch{}
   reader=null;
-  try{if(port&&port.readable===null)await port.close();}catch(error){console.warn('Port close:',error)}
-  port=null;connected=false;reading=false;buffer='';
+  if(port){
+   const oldPort=port;port=null;
+   try{await oldPort.close();}catch(error){console.warn('Port close:',error)}
+  }
+  connected=false;buffer='';
   setStatus('DEVICE NOT CONNECTED');
   $('dataSource').textContent='NONE';
  }
