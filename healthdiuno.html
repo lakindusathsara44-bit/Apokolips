@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#050609">
+  <link rel="icon" type="image/x-icon" href="file_00000000a7ec820890154ca6ed49b608.ico?v=20261107d">
+  <link rel="shortcut icon" type="image/x-icon" href="file_00000000a7ec820890154ca6ed49b608.ico?v=20261107d">
+  <link rel="apple-touch-icon" href="file_00000000a7ec820890154ca6ed49b608.png?v=20261107b">
+  <link rel="manifest" href="manifest.json?v=20261107b">
+  <meta name="description" content="Healthdiuno is an in-development hardware diagnostic platform for Arduino and ESP32 development boards.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://apokolips.xyz/healthdiuno.html">
+  <title>Healthdiuno | Apokolips</title><link rel="stylesheet" href="style.css?v=20261107c">
+  <style>
+    .health-hero{padding:34px;border:1px solid rgba(90,170,255,.2);border-radius:22px;background:linear-gradient(135deg,rgba(16,42,78,.55),rgba(5,8,15,.8));}
+    .health-mark{width:62px;height:62px;display:grid;place-items:center;border-radius:18px;background:rgba(35,130,255,.14);border:1px solid rgba(80,160,255,.35);font-size:30px;color:#78c8ff;margin-bottom:18px}
+    .health-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:22px 0}
+    .health-item{padding:20px;border:1px solid rgba(120,170,220,.17);border-radius:16px;background:rgba(10,18,30,.72)}
+    .health-item h3{margin:0 0 8px}.health-item p{margin:0;color:var(--muted,#aab6c8);line-height:1.6}
+    .health-note{padding:16px;border-left:3px solid #4da5ff;background:rgba(35,110,200,.09);border-radius:8px;line-height:1.65}
+    .health-label{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,190,70,.12);color:#ffd080;font-size:.76rem;letter-spacing:.08em}
+  </style></head>
+<body><canvas id="rain" aria-hidden="true"></canvas><header class="topbar"><a class="brand" href="index.html"><span class="brand-mark"><img src="file_00000000a7ec820890154ca6ed49b608.png?v=20261107b" alt="Apokolips logo"></span><span>APOKOLIPS</span></a><button class="menu-toggle" aria-label="Toggle navigation">☰</button><nav class="nav"><a href="index.html">Home</a><a href="info.html">About Me</a><a href="project.gallery.html">Community Gallery</a><a class="active" href="My-project.html">My Projects</a></nav></header>
+<main class="page-shell">
+<div class="eyebrow">PROJECT 009 / EMBEDDED SYSTEMS</div>
+<section class="health-hero">
+<div class="health-mark">⌁</div><span class="health-label">IN DEVELOPMENT</span>
+<h1 class="page-title">Health<span class="gradient-text">diuno.</span></h1>
+<p class="page-lead">A web-based hardware diagnostic platform for Arduino and ESP32 development boards.</p>
+<p>Connect a supported development board to a computer over USB, open the diagnostic interface, and run guided tests to inspect board communication, pins, power rails, and supported hardware functions.</p>
+</section>
+<h2>Diagnostic goals</h2>
+<div class="health-grid">
+<article class="health-item"><h3>Pin diagnostics</h3><p>Digital input/output, analog input, PWM output, and pin response checks using safe test procedures.</p></article>
+<article class="health-item"><h3>Power monitoring</h3><p>Inspect measurable supply rails such as 5V, 3.3V, and input voltage where the board and test setup expose them.</p></article>
+<article class="health-item"><h3>Chip & interface checks</h3><p>Check MCU communication, USB serial, UART, I²C, SPI, reset response, and other supported interfaces.</p></article>
+<article class="health-item"><h3>Visual health report</h3><p>Show test results, pin maps, warnings, failed checks, and a downloadable diagnostic report.</p></article>
+</div>
+<h2>Planned board support</h2>
+<div class="project-tags"><span>Arduino UNO</span><span>Arduino Mega</span><span>Arduino Nano</span><span>Arduino Leonardo</span><span>Arduino Micro</span><span>ESP32</span><span>ESP32-S2</span><span>ESP32-S3</span><span>ESP32-C3</span><span>More board profiles</span></div>
+<div class="health-note"><strong>Diagnostic accuracy:</strong> Healthdiuno will report only what can be measured or verified by firmware and the connected test hardware. A USB connection alone cannot prove that every pin, chip, transistor, memory cell, oscillator, or internal circuit is healthy. Some tests will require loopback wiring or an external diagnostic fixture. Untestable components will be clearly marked as “Not tested” rather than incorrectly reported as healthy.</div>
+<h2>Planned workflow</h2>
+<ol><li>Connect a supported board using USB.</li><li>Select or detect the board profile.</li><li>Install or upload the matching diagnostic firmware when required.</li><li>Run safe automatic checks and optional guided hardware tests.</li><li>Review the board health map and export the report.</li></ol>
+<a class="project-link" href="My-project.html">← BACK TO MY PROJECTS</a>
+</main>
+<footer class="footer"><span>© <span id="year"></span> Lakindu Sathsara</span><span><a href="My-project.html">MY PROJECTS ↑</a></span></footer><script src="script.js"></script></body></html>
