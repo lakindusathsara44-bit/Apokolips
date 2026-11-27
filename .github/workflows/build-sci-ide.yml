@@ -1,0 +1,120 @@
+name: Build SCI Arduino Web IDE
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-sci-ide.yml"
+      - "silent-classroom-programmer.html"
+      - "silent-classroom-indicator.html"
+      - "silent-classroom-hardware.html"
+      - "arduino/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sci-arduino-ide
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out Apokolips
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check out pinned Arduino Web source
+        env:
+          ARDUINO_WEB_REF: 3796156785a387d700895716a0f2b21793454f7e
+        run: |
+          git clone https://github.com/Shubin123/arduino-web.git "$RUNNER_TEMP/arduino-web"
+          git -C "$RUNNER_TEMP/arduino-web" checkout "$ARDUINO_WEB_REF"
+
+      - name: Install Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+        with:
+          version: 1.5.1
+
+      - name: Install Arduino AVR core
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr@1.8.8
+
+      - name: Install IDE dependencies and reference examples
+        working-directory: ${{ runner.temp }}/arduino-web
+        run: |
+          npm ci
+          git clone --depth 1 --branch 1.10.3 https://github.com/arduino/arduino-examples.git examples-reference
+
+      - name: Generate browser AVR compiler assets
+        working-directory: ${{ runner.temp }}/arduino-web
+        run: |
+          export ARDUINO_AVR_CORE="$HOME/.arduino15/packages/arduino/hardware/avr/1.8.8"
+          export ARDUINO_AVR_GCC="$HOME/.arduino15/packages/arduino/tools/avr-gcc/7.3.0-atmel3.6.1-arduino7"
+          test -d "$ARDUINO_AVR_CORE"
+          test -x "$ARDUINO_AVR_GCC/bin/avr-g++"
+          npm run assets
+
+      - name: Test Arduino Web toolchain and upload protocols
+        working-directory: ${{ runner.temp }}/arduino-web
+        run: npm test
+
+      - name: Compile the current SCI firmware for Arduino UNO
+        run: |
+          mkdir -p "$RUNNER_TEMP/SCI_MAX4466_UNO"
+          cp arduino/sci_max4466_uno.ino "$RUNNER_TEMP/SCI_MAX4466_UNO/SCI_MAX4466_UNO.ino"
+          arduino-cli compile --fqbn arduino:avr:uno --warnings all \
+            --build-path "$RUNNER_TEMP/SCI_MAX4466_UNO/build" \
+            "$RUNNER_TEMP/SCI_MAX4466_UNO"
+
+      - name: Build the browser IDE
+        working-directory: ${{ runner.temp }}/arduino-web
+        env:
+          VITE_SOURCE_URL: https://github.com/Shubin123/arduino-web
+        run: npm run build
+
+      - name: Stage the IDE under the Apokolips website
+        run: |
+          rm -rf sci-ide
+          mkdir -p sci-ide
+          cp -a "$RUNNER_TEMP/arduino-web/dist/." sci-ide/
+          cp "$RUNNER_TEMP/arduino-web/LICENSE.txt" sci-ide/LICENSE.txt
+          cp "$RUNNER_TEMP/arduino-web/THIRD_PARTY_NOTICES.md" sci-ide/THIRD_PARTY_NOTICES.md
+          cp "$RUNNER_TEMP/arduino-web/README.md" sci-ide/UPSTREAM-README.md
+          cat > sci-ide/APOKOLIPS-INTEGRATION.txt <<'NOTICE'
+          Apokolips Silent Classroom Indicator — Arduino Web IDE
+
+          This IDE is built from the unmodified upstream Arduino Web project:
+          https://github.com/Shubin123/arduino-web
+          Pinned upstream commit:
+          3796156785a387d700895716a0f2b21793454f7e
+
+          Upstream license: GNU Affero General Public License v3.0 or later.
+          The upstream LICENSE.txt and THIRD_PARTY_NOTICES.md are included here.
+          The IDE's Source link points to the upstream source repository.
+
+          This is an independent integration and is not affiliated with or
+          endorsed by Arduino.
+          NOTICE
+
+      - name: Publish generated IDE files to the main Pages branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sci-ide
+          if git diff --cached --quiet; then
+            echo "IDE build is already up to date."
+          else
+            git commit -m "Build SCI Arduino Web IDE assets"
+            git push origin HEAD:main
+          fi
