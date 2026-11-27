@@ -60,6 +60,15 @@
 .hm-footer{margin-top:25px;color:#8295ab;font-size:9px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .hm a{color:#9bdff0}
 .hm-wiring{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.hm-binary-panel{margin-top:13px;padding:12px;border:1px solid #203953;border-radius:10px;background:#081321}
+.hm-binary-head{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--hm-muted);font-size:9px;letter-spacing:.6px}
+.hm-binary-head strong{font:800 25px 'DM Mono',monospace;color:var(--hm-green)}
+.hm-binary-head strong.high{color:var(--hm-yellow)}
+.hm-binary-chart{height:76px;margin-top:7px;background:#050d17;border:1px solid #19334c;border-radius:7px;overflow:hidden}
+#hmBinaryWave{display:block;width:100%;height:76px}
+.hm-binary-caption{display:flex;justify-content:space-between;color:var(--hm-muted);font-size:8px;margin-top:7px}
+.hm-select{width:100%;padding:10px;border:1px solid #35516e;border-radius:7px;background:#081321;color:#eef5ff;font-size:10px}
+.hm-small-note{color:var(--hm-muted);font-size:9px;line-height:1.5;margin:7px 0 0}
 .hm-wire{padding:11px;border:1px solid #203953;border-radius:8px;background:#081321}
 .hm-wire b{display:block;font-size:12px;color:#fff}.hm-wire small{display:block;color:var(--hm-muted);font-size:9px;margin-top:4px}
 @media(max-width:820px){.hm-grid{grid-template-columns:1fr}}
@@ -90,14 +99,27 @@
 <section class="hm-card">
 <h2>Live microphone signal</h2>
 <div class="hm-chart"><canvas id="hmWave" aria-label="Live microphone amplitude history"></canvas></div>
-<div class="hm-legend"><span class="hm-key"><i class="hm-dot" style="background:var(--hm-cyan)"></i>MAX4466 amplitude envelope</span><span class="hm-key"><i class="hm-dot" style="background:var(--hm-yellow)"></i>Warning threshold</span></div>
+<div class="hm-legend"><span class="hm-key"><i class="hm-dot" style="background:var(--hm-cyan)"></i>Analog peak-to-peak ADC signal</span><span class="hm-key"><i class="hm-dot" style="background:var(--hm-yellow)"></i>Arduino threshold</span></div>
+<div class="hm-binary-panel">
+  <div class="hm-binary-head"><span>BINARY OUTPUT / ARDUINO STATE</span><strong id="hmBinary">—</strong></div>
+  <div class="hm-binary-chart"><canvas id="hmBinaryWave" aria-label="Live binary signal history"></canvas></div>
+  <div class="hm-binary-caption"><span>0 = NORMAL</span><span>1 = HIGH NOISE</span></div>
+</div>
 <div class="hm-control">
 <label for="hmSensitivity"><span>INPUT SENSITIVITY / FULL-SCALE RANGE</span><b id="hmSensitivityValue">250 ADC counts</b></label>
 <input id="hmSensitivity" type="range" min="80" max="700" step="10" value="250">
 </div>
 <div class="hm-control">
-<label for="hmThreshold"><span>WARNING THRESHOLD</span><b id="hmThresholdValue">60%</b></label>
-<input id="hmThreshold" type="range" min="10" max="95" value="60">
+<label for="hmThresholdMode"><span>ARDUINO THRESHOLD MODE</span><b>LIVE CONTROL</b></label>
+<select id="hmThresholdMode" class="hm-select">
+  <option value="web" selected>Website adjustable</option>
+  <option value="fixed">Fixed in Arduino code</option>
+</select>
+</div>
+<div class="hm-control">
+<label for="hmThreshold"><span>THRESHOLD / ADC COUNTS</span><b id="hmThresholdValue">50 counts</b></label>
+<input id="hmThreshold" type="range" min="1" max="500" step="1" value="50">
+<p class="hm-small-note" id="hmThresholdHelp">Website Mode: changing this slider sends the new threshold directly to Arduino.</p>
 </div>
 <div class="hm-control">
 <label><span>TEST TIMER SPEED</span><b id="hmSpeedLabel">1× / Real time</b></label>
@@ -112,7 +134,8 @@
 <h2>Hardware system monitor</h2>
 <div class="hm-metrics">
 <div class="hm-metric"><span>LIVE SOUND LEVEL</span><strong id="hmLevel">—%</strong></div>
-<div class="hm-metric"><span>FILTERED PEAK-TO-PEAK</span><strong id="hmRaw">—</strong></div>
+<div class="hm-metric"><span>FILTERED ANALOG ADC</span><strong id="hmRaw">—</strong></div>
+<div class="hm-metric"><span>BINARY STATE</span><strong id="hmBinaryMetric">—</strong></div>
 <div class="hm-metric"><span>HIGH-NOISE TIMER</span><strong id="hmTimer">00:00</strong></div>
 <div class="hm-metric"><span>ALERT AUTO-OFF</span><strong id="hmOffTimer">—</strong></div>
 </div>
@@ -149,23 +172,27 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const canvas=$('hmWave'),ctx=canvas.getContext('2d');
-const history=Array(180).fill(0);
-let port=null,reader=null,readTask=null,keepReading=false,raw=0,level=0,noiseFloor=0,calibrated=false,calibrating=false,calSamples=[];
+const binaryCanvas=$('hmBinaryWave'),binaryCtx=binaryCanvas.getContext('2d');
+const history=Array(180).fill(0),binaryHistory=Array(180).fill(0);
+let port=null,reader=null,writer=null,readTask=null,keepReading=false,raw=0,level=0,binaryState=0,noiseFloor=0,calibrated=false,calibrating=false,calSamples=[];
 let lastTick=performance.now(),highSeconds=0,alertSeconds=0,alertActive=false,speed=1,audioContext=null,oscillator=null,gainNode=null,pulseTimer=null;
 let noiseState=false,belowSince=null;
+const encoder=new TextEncoder();
 const RELEASE_HYSTERESIS=6, SILENCE_GRACE_MS=1500;
 const TRIGGER_SECONDS=300,ALERT_SECONDS=300;
 const supported='serial' in navigator;
 function setConnection(ok,title,detail){$('hmConnection').classList.toggle('connected',ok);$('hmConnectionText').textContent=title;$('hmPortText').textContent=detail}
-function resize(){const r=canvas.getBoundingClientRect(),d=window.devicePixelRatio||1;canvas.width=Math.max(1,Math.floor(r.width*d));canvas.height=Math.max(1,Math.floor(r.height*d));ctx.setTransform(d,0,0,d,0,0)}
+function resize(){const r=canvas.getBoundingClientRect(),d=window.devicePixelRatio||1;canvas.width=Math.max(1,Math.floor(r.width*d));canvas.height=Math.max(1,Math.floor(r.height*d));ctx.setTransform(d,0,0,d,0,0);const br=binaryCanvas.getBoundingClientRect();binaryCanvas.width=Math.max(1,Math.floor(br.width*d));binaryCanvas.height=Math.max(1,Math.floor(br.height*d));binaryCtx.setTransform(d,0,0,d,0,0)}
 window.addEventListener('resize',resize);resize();
 function fmt(v){v=Math.max(0,Math.ceil(v));return String(Math.floor(v/60)).padStart(2,'0')+':'+String(v%60).padStart(2,'0')}
 function fullScale(){return Number($('hmSensitivity').value)}
 function threshold(){return Number($('hmThreshold').value)}
+async function sendCommand(command){if(!writer)return;try{await writer.write(encoder.encode(command+'\n'))}catch(err){console.error('Serial command failed:',err);$('hmThresholdHelp').textContent='Could not send command. Reconnect the Arduino and try again.'}}
 function toLevel(v){const span=Math.max(1,fullScale()-noiseFloor);return Math.max(0,Math.min(100,Math.round((v-noiseFloor)/span*100)))}
 function updateIndicators(){
  const high=noiseState;
  $('hmLevel').textContent=level+'%';$('hmRaw').textContent=raw;
+ $('hmBinary').textContent=String(binaryState);$('hmBinary').classList.toggle('high',binaryState===1);$('hmBinaryMetric').textContent=String(binaryState);
  $('hmTimer').textContent=fmt(highSeconds);$('hmOffTimer').textContent=alertActive?fmt(ALERT_SECONDS-alertSeconds):'—';
  $('hmMeter').style.width=level+'%';
  $('hmGreen').className='hm-led'+(!high&&!alertActive&&port?' on green':'');
@@ -187,12 +214,18 @@ function startTone(){if(!audioContext)return;stopTone();oscillator=audioContext.
 function endAlert(){alertActive=false;alertSeconds=0;stopTone();updateIndicators()}
 function beginAlert(){alertActive=true;alertSeconds=0;if(audioContext)startTone();updateIndicators()}
 function parseLine(line){
- const m=line.trim().match(/^SCI\s*,\s*(\d{1,4})\s*$/i);
- if(!m)return;
- raw=Math.max(0,Math.min(1023,Number(m[1])));
- level=toLevel(raw);
- history.push(level);history.shift();
- if(calibrating){calSamples.push(raw)}
+ const clean=line.trim();
+ const analog=clean.match(/^SCI\s*,\s*(\d{1,4})\s*$/i);
+ const state=clean.match(/^STATE\s*,\s*([01])\s*$/i);
+ if(analog){
+  raw=Math.max(0,Math.min(1023,Number(analog[1])));
+  level=toLevel(raw);
+  history.push(raw);history.shift();
+  if(calibrating){calSamples.push(raw)}
+ }else if(state){
+  binaryState=Number(state[1]);
+  binaryHistory.push(binaryState);binaryHistory.shift();
+ }else{return}
  updateIndicators();
 }
 async function connect(){
@@ -200,7 +233,10 @@ async function connect(){
  try{
   port=await navigator.serial.requestPort();
   await port.open({baudRate:115200});
-  noiseState=false;belowSince=null;highSeconds=0;lastTick=performance.now();
+  writer=port.writable.getWriter();
+  await sendCommand($('hmThresholdMode').value==='web'?'MODE,WEB':'MODE,FIXED');
+  if($('hmThresholdMode').value==='web')await sendCommand('TH,'+threshold());
+  noiseState=false;binaryState=0;belowSince=null;highSeconds=0;lastTick=performance.now();
   keepReading=true;$('hmDisconnect').disabled=false;$('hmCalibrate').disabled=false;$('hmSilence').disabled=false;$('hmConnect').disabled=true;
   setConnection(true,'CONNECTED','Serial 115200 baud · Arduino UNO');
   const decoder=new TextDecoderStream();const closed=port.readable.pipeTo(decoder.writable);reader=decoder.readable.getReader();
@@ -211,8 +247,9 @@ async function connect(){
 async function disconnect(){
  keepReading=false;
  try{if(reader)await reader.cancel()}catch(e){}
+ try{if(writer){writer.releaseLock();writer=null}}catch(e){}
  try{if(port)await port.close()}catch(e){}
- port=null;reader=null;highSeconds=0;noiseState=false;belowSince=null;calibrated=false;calibrating=false;
+ port=null;reader=null;binaryState=0;highSeconds=0;noiseState=false;belowSince=null;calibrated=false;calibrating=false;
  $('hmConnect').disabled=false;$('hmDisconnect').disabled=true;$('hmCalibrate').disabled=true;$('hmSilence').disabled=true;
  setConnection(false,'DISCONNECTED','Arduino USB serial port closed');endAlert();updateIndicators();
 }
@@ -223,12 +260,15 @@ $('hmReset').addEventListener('click',()=>{highSeconds=0;noiseState=false;belowS
 $('hmSilence').addEventListener('click',()=>{endAlert();highSeconds=0;noiseState=false;belowSince=null});
 $('hmCalibrate').addEventListener('click',()=>{if(!port)return;calSamples=[];calibrating=true;$('hmCalibrate').disabled=true;$('hmCalibration').textContent='Calibration running for 3 seconds — keep the room quiet.';setTimeout(()=>{calibrating=false;if(calSamples.length){calSamples.sort((a,b)=>a-b);noiseFloor=calSamples[Math.floor((calSamples.length-1)*.2)];calibrated=true;$('hmCalibration').textContent='Calibrated quiet-room noise floor: '+noiseFloor+' ADC counts. Recalibrate if the microphone position or room changes.'}else{$('hmCalibration').textContent='No microphone samples received. Check the Arduino connection and sketch.'}$('hmCalibrate').disabled=!port},3000)});
 $('hmSensitivity').addEventListener('input',()=>{$('hmSensitivityValue').textContent=fullScale()+' ADC counts';level=toLevel(raw);updateIndicators()});
-$('hmThreshold').addEventListener('input',()=>{$('hmThresholdValue').textContent=threshold()+'%';updateIndicators()});
+$('hmThreshold').addEventListener('input',()=>{$('hmThresholdValue').textContent=threshold()+' counts'});
+$('hmThreshold').addEventListener('change',()=>{if($('hmThresholdMode').value==='web')sendCommand('TH,'+threshold())});
+$('hmThresholdMode').addEventListener('change',async()=>{const web=$('hmThresholdMode').value==='web';$('hmThreshold').disabled=!web;$('hmThresholdHelp').textContent=web?'Website Mode: changing this slider sends the new threshold directly to Arduino.':'Fixed Mode: threshold comes from FIXED_THRESHOLD in the Arduino sketch.';await sendCommand(web?'MODE,WEB':'MODE,FIXED');if(web)await sendCommand('TH,'+threshold())});
 document.querySelectorAll('.hm-speed button').forEach(b=>b.addEventListener('click',()=>{speed=Number(b.dataset.speed);document.querySelectorAll('.hm-speed button').forEach(x=>x.classList.toggle('active',x===b));$('hmSpeedLabel').textContent=speed+'×'+(speed===1?' / Real time':' / Test mode');lastTick=performance.now()}));
-function tick(now){const elapsed=Math.max(0,Math.min((now-lastTick)/1000,.5));lastTick=now;const dt=elapsed*speed;if(port){if(alertActive){alertSeconds+=dt;if(alertSeconds>=ALERT_SECONDS){endAlert();highSeconds=0;noiseState=false;belowSince=null}}else{const exitThreshold=Math.max(0,threshold()-RELEASE_HYSTERESIS);if(!noiseState&&level>=threshold()){noiseState=true;belowSince=null}else if(noiseState){if(level<=exitThreshold){if(belowSince===null)belowSince=now;if(now-belowSince>=SILENCE_GRACE_MS){noiseState=false;belowSince=null;highSeconds=0}}else{belowSince=null}}if(noiseState&&belowSince===null){highSeconds+=dt;if(highSeconds>=TRIGGER_SECONDS)beginAlert()}}}updateIndicators();requestAnimationFrame(tick)}
-function draw(){const w=canvas.clientWidth,h=canvas.clientHeight;ctx.clearRect(0,0,w,h);ctx.strokeStyle='#19334c';ctx.lineWidth=1;for(let y=25;y<h;y+=35){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}const ty=h-(threshold()/100)*(h-28)-10;ctx.setLineDash([6,6]);ctx.strokeStyle='#ffd34d';ctx.beginPath();ctx.moveTo(0,ty);ctx.lineTo(w,ty);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#ffe19a';ctx.font='10px Arial';ctx.fillText('WARNING THRESHOLD',9,Math.max(14,ty-7));ctx.beginPath();ctx.lineWidth=2.4;ctx.strokeStyle='#50d9ed';history.forEach((v,i)=>{const x=i/(history.length-1)*w,y=h-12-(v/100)*(h-28);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.stroke();requestAnimationFrame(draw)}
+function tick(now){const elapsed=Math.max(0,Math.min((now-lastTick)/1000,.5));lastTick=now;const dt=elapsed*speed;if(port){if(alertActive){alertSeconds+=dt;if(alertSeconds>=ALERT_SECONDS){endAlert();highSeconds=0;noiseState=false;belowSince=null}}else{if(binaryState===1){noiseState=true;belowSince=null;highSeconds+=dt}else if(noiseState){if(belowSince===null)belowSince=now;if(now-belowSince>=SILENCE_GRACE_MS){noiseState=false;belowSince=null;highSeconds=0}}if(noiseState&&belowSince===null&&highSeconds>=TRIGGER_SECONDS)beginAlert()}}updateIndicators();requestAnimationFrame(tick)}
+function draw(){const w=canvas.clientWidth,h=canvas.clientHeight;ctx.clearRect(0,0,w,h);ctx.strokeStyle='#19334c';ctx.lineWidth=1;for(let y=25;y<h;y+=35){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}const ty=h-(threshold()/1023)*(h-28)-10;ctx.setLineDash([6,6]);ctx.strokeStyle='#ffd34d';ctx.beginPath();ctx.moveTo(0,ty);ctx.lineTo(w,ty);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#ffe19a';ctx.font='10px Arial';ctx.fillText('ARDUINO THRESHOLD: '+threshold()+' ADC',9,Math.max(14,ty-7));ctx.beginPath();ctx.lineWidth=2.4;ctx.strokeStyle='#50d9ed';history.forEach((v,i)=>{const x=i/(history.length-1)*w,y=h-12-(v/1023)*(h-28);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.stroke();
+const bw=binaryCanvas.clientWidth,bh=binaryCanvas.clientHeight;binaryCtx.clearRect(0,0,bw,bh);binaryCtx.strokeStyle='#19334c';binaryCtx.lineWidth=1;binaryCtx.beginPath();binaryCtx.moveTo(0,bh/2);binaryCtx.lineTo(bw,bh/2);binaryCtx.stroke();binaryCtx.strokeStyle='#4be0a5';binaryCtx.lineWidth=2.2;binaryHistory.forEach((v,i)=>{const x=i/(binaryHistory.length-1)*bw,y=v===1?12:bh-12;if(i===0)binaryCtx.moveTo(x,y);else{const py=binaryHistory[i-1]===1?12:bh-12;binaryCtx.lineTo(x,py);binaryCtx.lineTo(x,y)}});binaryCtx.stroke();binaryCtx.fillStyle='#9eafc3';binaryCtx.font='9px Arial';binaryCtx.fillText('1',5,11);binaryCtx.fillText('0',5,bh-4);requestAnimationFrame(draw)}
 if(!supported){$('hmConnect').disabled=true;setConnection(false,'WEB SERIAL NOT AVAILABLE','Desktop Chrome / Edge required')}
-$('hmSensitivityValue').textContent=fullScale()+' ADC counts';$('year').textContent=new Date().getFullYear();updateIndicators();requestAnimationFrame(draw);requestAnimationFrame(tick);
+$('hmSensitivityValue').textContent=fullScale()+' ADC counts';$('hmThresholdValue').textContent=threshold()+' counts';$('hmThreshold').disabled=$('hmThresholdMode').value!=='web';$('hmThresholdHelp').textContent=$('hmThresholdMode').value==='web'?'Website Mode: changing this slider sends the new threshold directly to Arduino.':'Fixed Mode: threshold comes from FIXED_THRESHOLD in the Arduino sketch.';$('year').textContent=new Date().getFullYear();updateIndicators();requestAnimationFrame(draw);requestAnimationFrame(tick);
 window.addEventListener('beforeunload',()=>{try{reader&&reader.cancel();port&&port.close()}catch(e){}});
 })();
 </script>
