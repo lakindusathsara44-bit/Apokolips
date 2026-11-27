@@ -101,7 +101,7 @@ async function disconnect(){
  finally{reader=null;closing=false;setConnected(false)}
  log("Board disconnected.");
 }
-function scan(){results=[];renderTests();renderPins([]);try{await send({cmd:"diagnostic_scan",protocol:1,profile:$("boardFamily").value,tests:["identity","digital","analog","pwm","power","uart","i2c","spi","reset","system"]});log("Full diagnostic scan requested.")}catch(e){log(e.message)}}
+async function scan(){results=[];renderTests();renderPins([]);try{await send({cmd:"diagnostic_scan",protocol:1,profile:$("boardFamily").value,tests:["identity","digital","analog","pwm","power","uart","i2c","spi","reset","system"]});log("Full diagnostic scan requested.")}catch(e){log(e.message)}}
 function exportReport(){const report={application:"Healthdiuno",created:new Date().toISOString(),board:boardInfo,results,pinResults:[...$("pinMap").children].map(x=>x.textContent)};const blob=new Blob([JSON.stringify(report,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="healthdiuno-report-"+Date.now()+".json";a.click();URL.revokeObjectURL(a.href)}
 $("connectBtn").addEventListener("click",connect);$("disconnectBtn").addEventListener("click",disconnect);$("scanBtn").addEventListener("click",scan);$("exportBtn").addEventListener("click",exportReport);$("clearLogBtn").addEventListener("click",()=>$("consoleLog").textContent="Console cleared.");window.addEventListener("beforeunload",()=>{try{reader?.cancel()}catch{}});
 })();
