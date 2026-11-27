@@ -105,7 +105,7 @@
 <button class="active" data-speed="1">1×</button><button data-speed="1.5">1.5×</button><button data-speed="2">2×</button><button data-speed="3">3×</button><button data-speed="5">5×</button><button data-speed="6">6×</button><button data-speed="7">7×</button>
 </div>
 </div>
-<div class="hm-note">Timer speed is provided for testing the browser-side alert sequence. Keep <strong>1×</strong> for real five-minute timing. Sound percentage is a relative display value, not a calibrated decibel (dB) measurement. The Arduino smooths the microphone envelope; the timer tolerates brief dips.</div>
+<div class="hm-note">Timer speed is provided for testing the browser-side alert sequence. Keep <strong>1×</strong> for real five-minute timing. Sound percentage is a relative display value, not a calibrated decibel (dB) measurement. The Arduino smooths the microphone envelope. The timer pauses during brief dips and resets only after the level stays at least 6 percentage points below threshold for 1.5 seconds.</div>
 </section>
 
 <aside class="hm-card">
@@ -204,7 +204,7 @@ async function connect(){
   keepReading=true;$('hmDisconnect').disabled=false;$('hmCalibrate').disabled=false;$('hmSilence').disabled=false;$('hmConnect').disabled=true;
   setConnection(true,'CONNECTED','Serial 115200 baud · Arduino UNO');
   const decoder=new TextDecoderStream();const closed=port.readable.pipeTo(decoder.writable);reader=decoder.readable.getReader();
-  readTask=(async()=>{let buffer='';try{while(keepReading){const {value,done}=await reader.read();if(done)break;buffer+=value;let idx;while((idx=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,idx);buffer=buffer.slice(idx+1);parseLine(line)}if(buffer.length>120)buffer=buffer.slice(-40)}}catch(err){if(keepReading)console.error(err)}finally{try{reader.releaseLock()}catch(e){}reader=null;try{await closed}catch(e){}if(keepReading){keepReading=false;port=null;setConnection(false,'SERIAL CONNECTION LOST','Reconnect the Arduino USB cable.');$('hmConnect').disabled=false;$('hmDisconnect').disabled=true;$('hmCalibrate').disabled=true;$('hmSilence').disabled=true;highSeconds=0;updateIndicators()}}})();
+  readTask=(async()=>{let buffer='';try{while(keepReading){const {value,done}=await reader.read();if(done)break;buffer+=value;let idx;while((idx=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,idx);buffer=buffer.slice(idx+1);parseLine(line)}if(buffer.length>120)buffer=buffer.slice(-40)}}catch(err){if(keepReading)console.error(err)}finally{try{reader.releaseLock()}catch(e){}reader=null;try{await closed}catch(e){}if(keepReading){keepReading=false;port=null;setConnection(false,'SERIAL CONNECTION LOST','Reconnect the Arduino USB cable.');$('hmConnect').disabled=false;$('hmDisconnect').disabled=true;$('hmCalibrate').disabled=true;$('hmSilence').disabled=true;highSeconds=0;noiseState=false;belowSince=null;updateIndicators()}}})();
   updateIndicators();
  }catch(err){port=null;setConnection(false,'NOT CONNECTED',err&&err.message?err.message:'Port selection cancelled');$('hmConnect').disabled=false}
 }
