@@ -227,15 +227,16 @@ async function connect(){
   keepReading=true;$('hmDisconnect').disabled=false;$('hmCalibrate').disabled=false;$('hmSilence').disabled=false;$('hmConnect').disabled=true;
   setConnection(true,'CONNECTED','Serial 115200 baud · Arduino UNO');
   const decoder=new TextDecoderStream();const closed=port.readable.pipeTo(decoder.writable);reader=decoder.readable.getReader();
-  readTask=(async()=>{let buffer='';try{while(keepReading){const {value,done}=await reader.read();if(done)break;buffer+=value;let idx;while((idx=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,idx);buffer=buffer.slice(idx+1);parseLine(line)}if(buffer.length>120)buffer=buffer.slice(-40)}}catch(err){if(keepReading)console.error(err)}finally{try{reader.releaseLock()}catch(e){}reader=null;try{await closed}catch(e){}if(keepReading){keepReading=false;port=null;setConnection(false,'SERIAL CONNECTION LOST','Reconnect the Arduino USB cable.');$('hmConnect').disabled=false;$('hmDisconnect').disabled=true;$('hmCalibrate').disabled=true;$('hmSilence').disabled=true;highSeconds=0;noiseState=false;belowSince=null;updateIndicators()}}})();
+  readTask=(async()=>{let buffer='';try{while(keepReading){const {value,done}=await reader.read();if(done)break;buffer+=value;let idx;while((idx=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,idx);buffer=buffer.slice(idx+1);parseLine(line)}if(buffer.length>120)buffer=buffer.slice(-40)}}catch(err){if(keepReading)console.error(err)}finally{try{reader.releaseLock()}catch(e){}reader=null;try{await closed}catch(e){}if(keepReading){keepReading=false;try{if(writer)writer.releaseLock()}catch(e){}writer=null;try{if(port)await port.close()}catch(e){}port=null;setConnection(false,'SERIAL CONNECTION LOST','Reconnect the Arduino USB cable.');$('hmConnect').disabled=false;$('hmDisconnect').disabled=true;$('hmCalibrate').disabled=true;$('hmSilence').disabled=true;highSeconds=0;noiseState=false;belowSince=null;arduinoNoiseState=null;updateIndicators()}}})();
   updateIndicators();
  }catch(err){port=null;setConnection(false,'NOT CONNECTED',err&&err.message?err.message:'Port selection cancelled');$('hmConnect').disabled=false}
 }
 async function disconnect(){
  keepReading=false;
  try{if(reader)await reader.cancel()}catch(e){}
+ try{if(writer)writer.releaseLock()}catch(e){}writer=null;
  try{if(port)await port.close()}catch(e){}
- port=null;reader=null;try{if(writer)writer.releaseLock()}catch(e){}writer=null;highSeconds=0;noiseState=false;belowSince=null;arduinoNoiseState=null;binaryHistory.fill(0);calibrated=false;calibrating=false;
+ port=null;reader=null;highSeconds=0;noiseState=false;belowSince=null;arduinoNoiseState=null;binaryHistory.fill(0);calibrated=false;calibrating=false;
  $('hmConnect').disabled=false;$('hmDisconnect').disabled=true;$('hmCalibrate').disabled=true;$('hmSilence').disabled=true;
  setConnection(false,'DISCONNECTED','Arduino USB serial port closed');endAlert();updateIndicators();
 }
