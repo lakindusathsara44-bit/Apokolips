@@ -6,70 +6,191 @@
 <main class="ir-shell"><div class="ir-kicker">PROJECT 009 / EXPERIMENTAL IMAGING</div><h1 class="ir-heading">IR <span class="gradient-text">Vision.</span></h1><p class="ir-lead">A real-time IR detection and signal-visualization interface built for a basic 3-pin obstacle sensor. It turns incoming detection samples into live history patterns — not camera photographs.</p>
 <div class="ir-statusbar"><span class="ir-dot" id="deviceDot"></span><span class="ir-status" id="deviceStatus">DEVICE NOT CONNECTED</span><span class="ir-spacer"></span><button class="ir-btn primary" id="connectBtn">CONNECT ARDUINO ↗</button><button class="ir-btn" id="demoBtn">RUN DEMO</button></div>
 <div class="ir-tabs" role="tablist"><button class="ir-tab active" data-mode="ir">01 / OBJECT DETECTION</button><button class="ir-tab" data-mode="dual">02 / NIGHT VIEW</button><button class="ir-tab" data-mode="spectrum">03 / SIGNAL PATTERN</button></div>
-<section class="ir-layout"><div class="ir-panel"><div id="singlePanel"><h2 id="modeTitle">Infrared image capture</h2><p class="ir-sub" id="modeDescription">Live grayscale history of the sensor's digital detection state.</p><div class="ir-view"><div class="ir-placeholder" id="mainPlaceholder"><div style="font-size:34px;color:#8bd8ed">⌁</div><strong>AWAITING IMAGE DATA</strong><span>Connect compatible hardware or run the demo.</span></div><canvas id="mainCanvas" class="ir-hidden" width="160" height="120"></canvas><div class="ir-overlay"><span id="viewLabel">IR / GRAYSCALE</span><span>LIVE PREVIEW</span></div></div></div>
+<section class="ir-layout"><div class="ir-panel"><div id="singlePanel"><h2 id="modeTitle">IR detection history</h2><p class="ir-sub" id="modeDescription">Live grayscale history of the sensor's digital detection state.</p><div class="ir-view"><div class="ir-placeholder" id="mainPlaceholder"><div style="font-size:34px;color:#8bd8ed">⌁</div><strong>AWAITING IMAGE DATA</strong><span>Connect compatible hardware or run the demo.</span></div><canvas id="mainCanvas" class="ir-hidden" width="160" height="120"></canvas><div class="ir-overlay"><span id="viewLabel">IR / GRAYSCALE</span><span>LIVE PREVIEW</span></div></div></div>
 <div id="spectrumPanel" class="ir-hidden"><h2>Dual-spectrum comparison</h2><p class="ir-sub">IR detection history compared with a synthetic reference pattern — not a real visible-light feed.</p><div class="ir-spectrum"><div><label>VISIBLE LIGHT</label><div class="ir-view"><canvas id="visibleCanvas" width="160" height="120"></canvas></div></div><div><label>INFRARED</label><div class="ir-view"><canvas id="spectrumIrCanvas" width="160" height="120"></canvas></div></div></div></div>
 <div class="ir-metrics"><div class="ir-metric"><span>FRAME WIDTH</span><strong id="frameWidth">—</strong></div><div class="ir-metric"><span>FRAME HEIGHT</span><strong id="frameHeight">—</strong></div><div class="ir-metric"><span>PIXEL COUNT</span><strong id="pixelCount">—</strong></div><div class="ir-metric"><span>DATA SOURCE</span><strong id="dataSource" style="font-size:12px">NONE</strong></div></div><div class="ir-actions"><button class="ir-btn primary" id="captureBtn">CAPTURE PNG</button><button class="ir-btn" id="clearBtn">CLEAR FRAME</button></div><p class="ir-note" id="captureNote">No real camera feed is connected. Demo frames are synthetic and are clearly marked as DEMO.</p></div>
-<aside class="ir-side"><div class="ir-panel"><h2>Imaging modes</h2><p class="ir-sub">Three views of the same incoming sensor signal.</p><ul class="ir-steps"><li><b>01</b><span><strong>IR Image Capture</strong><br>A time-history pattern generated from digital IR detections.</span></li><li><b>02</b><span><strong>Dual-Color Image</strong><br>False-colour view of the same live detection history.</span></li><li><b>03</b><span><strong>Dual-Spectrum Capture</strong><br>Signal-derived pattern beside a simulated reference; there is no second optical sensor.</span></li></ul></div><div class="ir-panel"><h2>Hardware interface</h2><p class="ir-sub">Browser serial requires desktop Chrome or Edge over HTTPS and a compatible serial device.</p><div class="ir-note">Connect VCC → 5V, GND → GND, OUT → D2. Upload the included <a href="ir-vision-uno.ino" download style="color:#9ec4ff">Arduino UNO sketch ↗</a>, then connect from desktop Chrome/Edge over HTTPS. The OUT signal is usually active LOW. This module cannot determine object shape, exact distance, temperature, or capture a real night-vision photo. The second spectrum is simulated and labelled.</div></div></aside></section><div class="ir-footer">APOKOLIPS / IR VISION · EXPERIMENTAL BUILD · IMAGE PROCESSING PREVIEW</div></main>
+<aside class="ir-side"><div class="ir-panel"><h2>Imaging modes</h2><p class="ir-sub">Three views of the same incoming sensor signal.</p><ul class="ir-steps"><li><b>01</b><span><strong>IR Image Capture</strong><br>A time-history pattern generated from digital IR detections.</span></li><li><b>02</b><span><strong>Dual-Color Image</strong><br>False-colour view of the same live detection history.</span></li><li><b>03</b><span><strong>Dual-Spectrum Capture</strong><br>Signal-derived pattern beside a simulated reference; there is no second optical sensor.</span></li></ul></div><div class="ir-panel"><h2>Hardware interface</h2><p class="ir-sub">USB serial requires desktop Chrome or Edge over HTTPS. Android and in-app browsers may not support Web Serial.</p><div class="ir-note">Connect VCC → 5V, GND → GND, OUT → D2. Upload the included <a href="ir-vision-uno.ino" download style="color:#9ec4ff">Arduino UNO sketch ↗</a>, close Arduino IDE Serial Monitor, then connect from desktop Chrome/Edge over HTTPS. The OUT signal is usually active LOW. This module cannot determine object shape, exact distance, temperature, or capture a real night-vision photo. The second spectrum is simulated and labelled.</div></div></aside></section><div class="ir-footer">APOKOLIPS / IR VISION · EXPERIMENTAL BUILD · IMAGE PROCESSING PREVIEW</div></main>
 <footer class="footer"><span>© <span id="year"></span> Lakindu Sathsara</span><span><a href="My-project.html">BACK TO PROJECTS ↑</a></span></footer><script src="script.js"></script>
 <script>
-(()=> {
+(()=>{
  const $=id=>document.getElementById(id);
  const W=160,H=120,MAX=160,history=[];
- let mode='ir',port=null,reader=null,writer=null,buffer='',seq=0,detectedCount=0,totalCount=0,lastSample=null,demoTimer=null,connected=false;
+ let mode='ir',port=null,reader=null,buffer='',totalCount=0,detectedCount=0,lastSample=null,demoTimer=null,connected=false,reading=false;
  const modes={
-  ir:['IR detection history','A time history of object detections using the sensor's own IR emitter and receiver.','IR / GRAYSCALE'],
-  dual:['Dual-colour signal map','Night-view-style false colour: blue = no detection, red = detected reflection.','IR / BLUE → RED'],
-  spectrum:['Dual-spectrum simulation','Real IR history beside a clearly simulated reference channel.','IR + SIMULATED REF']
+  ir:['IR detection history','A time history of object detections using the sensor\'s IR emitter and receiver.','IR / GRAYSCALE'],
+  dual:['False-colour detection history','Blue = no detection, red = detected reflection. This is a signal visualization, not a camera image.','IR / BLUE → RED'],
+  spectrum:['Signal pattern + reference','Live IR detection history beside a clearly simulated reference channel.','IR + SIMULATED REF']
  };
- function setStatus(s,on=false){$('deviceStatus').textContent=s;$('deviceDot').classList.toggle('connected',on)}
- function color(v,type){if(type==='dual')return v?[255,55,65]:[20,70,135];if(type==='visible')return v?[90,190,255]:[16,28,43];return v?[245,245,245]:[12,18,26]}
- function pixels(){const a=new Uint8Array(W*H);for(let x=0;x<W;x++){const item=history[history.length-W+x];const val=item&&item.detected?255:0;for(let y=0;y<H;y++)a[y*W+x]=val;}return a}
- function draw(canvas,data,type){const ctx=canvas.getContext('2d'),im=ctx.createImageData(W,H);for(let i=0;i<data.length;i++){const c=color(data[i]>0,type);im.data[i*4]=c[0];im.data[i*4+1]=c[1];im.data[i*4+2]=c[2];im.data[i*4+3]=255;}ctx.putImageData(im,0,0)}
+ function setStatus(message,on=false){
+  $('deviceStatus').textContent=message;
+  $('deviceDot').classList.toggle('connected',on);
+  $('connectBtn').textContent=on?'DISCONNECT ARDUINO':'CONNECT ARDUINO ↗';
+ }
+ function colour(value,type){
+  if(type==='dual')return value?[255,55,65]:[20,70,135];
+  if(type==='visible')return value?[90,190,255]:[16,28,43];
+  return value?[245,245,245]:[12,18,26];
+ }
+ function pixels(){
+  const a=new Uint8Array(W*H);
+  for(let x=0;x<W;x++){
+   const item=history[history.length-W+x];
+   const value=item&&item.detected?255:0;
+   for(let y=0;y<H;y++)a[y*W+x]=value;
+  }
+  return a;
+ }
+ function draw(canvas,data,type){
+  const ctx=canvas.getContext('2d'),im=ctx.createImageData(W,H);
+  for(let i=0;i<data.length;i++){
+   const c=colour(data[i]>0,type);
+   im.data[i*4]=c[0];im.data[i*4+1]=c[1];im.data[i*4+2]=c[2];im.data[i*4+3]=255;
+  }
+  ctx.putImageData(im,0,0);
+ }
  function render(){
   if(!history.length)return;
   const p=pixels();
-  if(mode==='spectrum'){draw($('visibleCanvas'),p.map((v,i)=>(((Math.floor(i/W)%20)<10)&&((i%W)%20<10)?255:0)),'visible');draw($('spectrumIrCanvas'),p,'gray')}
-  else draw($('mainCanvas'),p,mode);
+  if(mode==='spectrum'){
+   const reference=p.map((v,i)=>(((Math.floor(i/W)%20)<10)&&((i%W)%20<10)?255:0));
+   draw($('visibleCanvas'),reference,'visible');
+   draw($('spectrumIrCanvas'),p,'gray');
+  }else{
+   draw($('mainCanvas'),p,mode==='dual'?'dual':'gray');
+  }
   $('mainCanvas').classList.toggle('ir-hidden',mode==='spectrum');
   $('mainPlaceholder').classList.add('ir-hidden');
-  $('frameWidth').textContent=W;$('frameHeight').textContent=H;$('pixelCount').textContent=(W*H).toLocaleString();
+  $('frameWidth').textContent=W;$('frameHeight').textContent=H;
+  $('pixelCount').textContent=(W*H).toLocaleString();
   $('dataSource').textContent=connected?'ARDUINO':(demoTimer?'DEMO':'NONE');
-  $('captureNote').textContent=connected?'LIVE SENSOR HISTORY — each column represents a recent time sample, repeated vertically for visibility.':'DEMO DATA — synthetic sensor states, not a camera image.';
+  $('captureNote').textContent=connected
+   ?'LIVE SENSOR HISTORY — each column represents a recent time sample, repeated vertically for visibility.'
+   :'DEMO DATA — synthetic sensor states, not a camera image.';
   $('sampleCount').textContent=totalCount.toLocaleString();
   $('detectionRate').textContent=totalCount?Math.round(detectedCount/totalCount*100)+'%':'—';
   $('lastState').textContent=lastSample?(lastSample.detected?'DETECTED':'CLEAR'):'—';
  }
- function sample(d){
-  if(typeof d.detected!=='boolean'||!Number.isFinite(Number(d.raw)))return;
-  const s={detected:d.detected,raw:Number(d.raw),ms:Number(d.ms)||0,seq:Number(d.seq)||0};
-  history.push(s);if(history.length>MAX)history.shift();
-  totalCount++;if(s.detected)detectedCount++;if(totalCount>1000000){totalCount=history.length;detectedCount=history.filter(x=>x.detected).length}
-  lastSample=s;render();
+ function addSample(data){
+  const raw=Number(data.raw);
+  if(typeof data.detected!=='boolean'||!Number.isFinite(raw))return false;
+  const item={detected:data.detected,raw,ms:Number(data.ms)||0,seq:Number(data.seq)||0};
+  history.push(item);if(history.length>MAX)history.shift();
+  totalCount++;if(item.detected)detectedCount++;
+  if(totalCount>1000000){totalCount=history.length;detectedCount=history.filter(x=>x.detected).length}
+  lastSample=item;render();return true;
+ }
+ function parseLine(line){
+  try{
+   const data=JSON.parse(line);
+   // Accept both the current firmware protocol and the earlier sketch's ir_sample format.
+   if(data.type==='sample'||data.type==='ir_sample'){
+    if(!addSample(data))console.warn('IR sample had an invalid payload:',data);
+   }else if(data.type==='hello'||data.type==='ready'){
+    setStatus('ARDUINO READY / '+(data.sensor||data.device||'IR SENSOR'),true);
+   }
+  }catch(error){console.warn('Ignored non-JSON serial line:',line)}
  }
  function selectMode(){
-  const d=modes[mode];$('modeTitle').textContent=d[0];$('modeDescription').textContent=d[1];$('viewLabel').textContent=d[2];
-  $('singlePanel').classList.toggle('ir-hidden',mode==='spectrum');$('spectrumPanel').classList.toggle('ir-hidden',mode!=='spectrum');
-  document.querySelectorAll('.ir-tab').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));render();
+  const d=modes[mode];
+  $('modeTitle').textContent=d[0];$('modeDescription').textContent=d[1];$('viewLabel').textContent=d[2];
+  $('singlePanel').classList.toggle('ir-hidden',mode==='spectrum');
+  $('spectrumPanel').classList.toggle('ir-hidden',mode!=='spectrum');
+  document.querySelectorAll('.ir-tab').forEach(button=>button.classList.toggle('active',button.dataset.mode===mode));
+  render();
  }
- document.querySelectorAll('.ir-tab').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.mode;selectMode()}));
- function parse(line){try{const d=JSON.parse(line);if(d.type==='sample')sample(d);else if(d.type==='hello')setStatus('ARDUINO READY / '+(d.sensor||'IR SENSOR'),true)}catch(e){console.warn('Ignored serial line',line)}}
- async function disconnect(){try{if(reader){await reader.cancel();reader.releaseLock();reader=null}}catch{}try{if(writer){await writer.close();writer=null}}catch{}try{if(port){await port.close();port=null}}catch{}connected=false;setStatus('DEVICE NOT CONNECTED')}
- $('connectBtn').onclick=async()=>{
-  if(demoTimer){clearInterval(demoTimer);demoTimer=null}
-  if(!('serial'in navigator)){alert('Web Serial needs desktop Chrome or Edge over HTTPS. On Android, use the demo or connect through a supported serial bridge.');return}
+ async function disconnect(){
+  try{if(reader){await reader.cancel();}}catch(error){console.warn('Reader close:',error)}
+  try{if(reader){reader.releaseLock();}}catch{}
+  reader=null;
+  try{if(port&&port.readable===null)await port.close();}catch(error){console.warn('Port close:',error)}
+  port=null;connected=false;reading=false;buffer='';
+  setStatus('DEVICE NOT CONNECTED');
+  $('dataSource').textContent='NONE';
+ }
+ async function connect(){
+  if(!window.isSecureContext){
+   alert('This page must be opened over HTTPS (or localhost) for Web Serial. Open the published https:// Apokolips page.');
+   return;
+  }
+  if(!('serial' in navigator)){
+   alert('Web Serial is unavailable in this browser. Use desktop Google Chrome or Microsoft Edge on Windows/Linux/macOS. Android Chrome and the ChatGPT in-app browser do not reliably support Arduino USB serial.');
+   return;
+  }
   try{
-   port=await navigator.serial.requestPort();await port.open({baudRate:115200});connected=true;setStatus('ARDUINO CONNECTED / 115200 BAUD',true);
-   const decoder=new TextDecoderStream();const closed=port.readable.pipeTo(decoder.writable);reader=decoder.readable.getReader();
-   while(true){const {value,done}=await reader.read();if(done)break;buffer+=value;let i;while((i=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,i).trim();buffer=buffer.slice(i+1);if(line)parse(line)}}
-   await closed.catch(()=>{});
-  }catch(e){console.error(e);setStatus('CONNECTION INTERRUPTED');connected=false}
+   port=await navigator.serial.requestPort();
+   await port.open({baudRate:115200});
+   connected=true;reading=true;setStatus('ARDUINO CONNECTED / 115200 BAUD',true);
+   const activePort=port;
+   reader=activePort.readable.getReader();
+   while(reading&&activePort===port){
+    const result=await reader.read();
+    if(result.done)break;
+    buffer+=new TextDecoder().decode(result.value,{stream:true});
+    let newline;
+    while((newline=buffer.indexOf('\n'))>=0){
+     const line=buffer.slice(0,newline).trim();buffer=buffer.slice(newline+1);
+     if(line)parseLine(line);
+    }
+    if(buffer.length>4096){console.warn('Discarding oversized serial buffer');buffer=''}
+   }
+  }catch(error){
+   console.error('Arduino serial connection failed:',error);
+   if(error.name==='NotFoundError')setStatus('NO PORT SELECTED');
+   else if(error.name==='SecurityError')setStatus('USB/SERIAL PERMISSION BLOCKED');
+   else setStatus('CONNECTION ERROR: '+(error.message||error.name).slice(0,48));
+  }finally{
+   try{if(reader){reader.releaseLock()}}catch{}
+   reader=null;
+   if(port){
+    const oldPort=port;port=null;
+    try{await oldPort.close()}catch{}
+   }
+   connected=false;reading=false;
+   if(!demoTimer)setStatus('DEVICE NOT CONNECTED');
+  }
+ }
+ $('connectBtn').addEventListener('click',()=>{
+  if(connected){disconnect();return}
+  if(reading)return;
+  if(demoTimer){clearInterval(demoTimer);demoTimer=null}
+  connect();
+ });
+ if('serial'in navigator){
+  navigator.serial.addEventListener('disconnect',()=>{
+   if(port){reading=false;connected=false;setStatus('ARDUINO USB DISCONNECTED')}
+  });
+ }
+ document.querySelectorAll('.ir-tab').forEach(button=>button.addEventListener('click',()=>{mode=button.dataset.mode;selectMode()}));
+ $('demoBtn').onclick=()=>{
+  if(demoTimer)clearInterval(demoTimer);
+  if(connected){alert('Disconnect the Arduino before starting demo mode.');return}
+  let n=0;setStatus('DEMO MODE / SYNTHETIC SIGNAL');
+  demoTimer=setInterval(()=>{
+   n++;const detected=Math.sin(n*.19)+Math.sin(n*.047)>.55;
+   addSample({type:'sample',seq:n,ms:n*100,detected,raw:detected?0:1});
+   $('dataSource').textContent='DEMO';
+  },100);
  };
- $('demoBtn').onclick=()=>{if(demoTimer)clearInterval(demoTimer);connected=false;setStatus('DEMO MODE / SYNTHETIC SIGNAL',false);let n=0;demoTimer=setInterval(()=>{n++;const detected=(Math.sin(n*.19)+Math.sin(n*.047)>.55);sample({type:'sample',seq:n,ms:n*50,detected,raw:detected?0:1})},100)};
- $('captureBtn').onclick=()=>{if(!history.length){alert('No sensor samples yet. Connect the Arduino or run the demo.');return}const c=document.createElement('canvas');c.width=W;c.height=H;draw(c,pixels(),mode==='dual'?'dual':'gray');const a=document.createElement('a');a.download='apokolips-ir-signal-'+mode+'.png';a.href=c.toDataURL('image/png');a.click()};
- $('clearBtn').onclick=()=>{if(demoTimer){clearInterval(demoTimer);demoTimer=null}history.length=0;totalCount=0;detectedCount=0;lastSample=null;$('mainCanvas').classList.add('ir-hidden');$('mainPlaceholder').classList.remove('ir-hidden');['frameWidth','frameHeight','pixelCount','sampleCount','detectionRate','lastState'].forEach(k=>$(k).textContent='—');$('dataSource').textContent='NONE';$('captureNote').textContent='History cleared. Connect the sensor or run the demo.'};
+ $('captureBtn').onclick=()=>{
+  if(!history.length){alert('No sensor samples yet. Connect the Arduino or run the demo.');return}
+  const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
+  draw(canvas,pixels(),mode==='dual'?'dual':'gray');
+  const link=document.createElement('a');link.download='apokolips-ir-signal-'+mode+'.png';
+  link.href=canvas.toDataURL('image/png');link.click();
+ };
+ $('clearBtn').onclick=()=>{
+  history.length=0;totalCount=0;detectedCount=0;lastSample=null;
+  ['frameWidth','frameHeight','pixelCount','sampleCount','detectionRate','lastState'].forEach(id=>$(id).textContent='—');
+  $('dataSource').textContent=connected?'ARDUINO':'NONE';
+  $('mainCanvas').classList.add('ir-hidden');$('mainPlaceholder').classList.remove('ir-hidden');
+  $('captureNote').textContent='History cleared. New sensor samples will appear here.';
+  ['visibleCanvas','spectrumIrCanvas'].forEach(id=>{const c=$(id);c.getContext('2d').clearRect(0,0,W,H)});
+ };
  $('year').textContent=new Date().getFullYear();
- // Add live telemetry fields without requiring edits to the shared site stylesheet.
- const metrics=$('frameWidth').closest('.ir-metrics');metrics.insertAdjacentHTML('beforeend','<div class="ir-metric"><span>SAMPLES</span><strong id="sampleCount">0</strong></div><div class="ir-metric"><span>DETECTION RATE</span><strong id="detectionRate">—</strong></div><div class="ir-metric"><span>LAST STATE</span><strong id="lastState">—</strong></div>');
+ const metrics=$('frameWidth').closest('.ir-metrics');
+ metrics.insertAdjacentHTML('beforeend','<div class="ir-metric"><span>SAMPLES</span><strong id="sampleCount">0</strong></div><div class="ir-metric"><span>DETECTION RATE</span><strong id="detectionRate">—</strong></div><div class="ir-metric"><span>LAST STATE</span><strong id="lastState">—</strong></div>');
+ if(!window.isSecureContext)setStatus('HTTPS REQUIRED');
+ else if(!('serial'in navigator))setStatus('USE DESKTOP CHROME / EDGE');
  selectMode();
 })();
 </script></body></html>
