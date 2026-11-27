@@ -60,7 +60,7 @@ async function readLoop(activePort){
    if(done)break;
    if(value){
     buffer+=dec.decode(value,{stream:true});
-    const lines=buffer.split(/\\r?\\n/);buffer=lines.pop()||"";
+    const lines=buffer.split(/\r?\n/);buffer=lines.pop()||"";
     lines.forEach(handleLine);
    }
   }
