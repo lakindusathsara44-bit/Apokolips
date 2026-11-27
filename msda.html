@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050609">
+<meta name="description" content="Apokolips Multi-Scale Distance Analyzer — Phase 1 digital IR detection and serial signal monitor.">
+<link rel="icon" href="file_00000000a7ec820890154ca6ed49b608.ico">
+<link rel="stylesheet" href="style.css?v=20261127-msda">
+<title>MSDA | Apokolips</title>
+<style>
+:root{--msda-cyan:#8bd8ed;--msda-blue:#70a9ff;--msda-muted:#91a0b3}
+.msda{max-width:1160px;margin:auto;padding:54px 26px 80px;position:relative;z-index:2}
+.kicker{font:10px 'DM Mono',monospace;letter-spacing:2px;color:var(--msda-cyan)}
+h1{font-size:clamp(38px,6vw,66px);letter-spacing:-2.8px;margin:14px 0}
+.lead{max-width:760px;color:#9ba7b7;font-size:14px;line-height:1.9}
+.panel{background:linear-gradient(145deg,rgba(16,20,28,.97),rgba(8,10,15,.98));border:1px solid var(--line);border-radius:12px;padding:20px;min-width:0}
+.statusbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:26px 0 16px;padding:14px;background:rgba(12,17,25,.9);border:1px solid var(--line);border-radius:9px}
+.dot{width:8px;height:8px;border-radius:50%;background:#d6a85c}.dot.on{background:#45e58b;box-shadow:0 0 12px #45e58b}
+.spacer{flex:1}.status{font:10px 'DM Mono',monospace;letter-spacing:1px;color:#c4cedb}
+.btn,.mode{border:1px solid rgba(112,169,255,.25);background:rgba(112,169,255,.07);color:#c9ddff;padding:11px 15px;border-radius:6px;cursor:pointer;font:10px 'DM Mono',monospace;letter-spacing:1px}
+.btn.primary{background:#eaf2ff;color:#080b11;font-weight:700}.btn:disabled{opacity:.35;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,.8fr);gap:14px}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.mode{cursor:default;text-align:left;min-height:76px}.mode strong{display:block;color:#dceaff;margin-bottom:7px}.mode span{font-size:9px;color:#8190a4;line-height:1.5}
+.mode.active{border-color:#70a9ff;background:rgba(112,169,255,.15)}
+.readout{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:14px 0}
+.metric{padding:13px;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.02)}
+.metric label{display:block;font:9px 'DM Mono',monospace;color:#78879a;letter-spacing:1px}
+.metric strong{display:block;font-size:19px;color:#d9e7fa;margin-top:7px}
+.signal{height:240px;background:#080d14;border:1px solid rgba(139,216,237,.17);border-radius:8px;width:100%;display:block}
+.note{padding:13px 15px;border-left:2px solid var(--msda-blue);background:rgba(112,169,255,.055);color:#9aa8ba;font-size:11px;line-height:1.8;margin-top:14px}
+.log{height:190px;overflow:auto;background:#070a0f;border:1px solid var(--line);border-radius:7px;padding:10px;font:10px/1.8 'DM Mono',monospace;color:#a9bfd6;white-space:pre-wrap;overflow-wrap:anywhere}
+.steps{padding-left:18px;color:#9aa7b8;font-size:11px;line-height:1.9}
+.range{color:#dceaff;font-size:13px;font-weight:700}
+@media(max-width:780px){.msda{padding:42px 18px 60px}.grid{grid-template-columns:1fr}.modes{grid-template-columns:1fr}.mode{min-height:auto}.readout{grid-template-columns:1fr 1fr}.spacer{display:none}.signal{height:190px}}
+</style>
+</head>
+<body>
+<canvas id="rain" aria-hidden="true"></canvas>
+<header class="topbar"><a class="brand" href="index.html"><span class="brand-mark"><img src="file_00000000a7ec820890154ca6ed49b608.png" alt="Apokolips logo"></span><span>APOKOLIPS</span></a><button class="menu-toggle" aria-label="Toggle navigation">☰</button><nav class="nav"><a href="index.html">Home</a><a href="info.html">About Me</a><a href="project.gallery.html">Community Gallery</a><a class="active" href="My-project.html">My Projects</a></nav></header>
+<main class="msda">
+<div class="kicker">PROJECT 010 / MEASUREMENT RESEARCH</div>
+<h1>Multi-Scale <span class="gradient-text">Distance Analyzer.</span></h1>
+<p class="lead">A modular measurement platform. Phase 1 connects an Arduino UNO to a digital IR obstacle sensor and verifies live detection signals. Short-range and long-range distance measurement modules will be added only when compatible ranging sensors are available.</p>
+<div class="statusbar"><span class="dot" id="dot"></span><span class="status" id="status">DEVICE NOT CONNECTED</span><span class="spacer"></span><button class="btn primary" id="connect">CONNECT ARDUINO ↗</button><button class="btn" id="demo">RUN SIGNAL DEMO</button></div>
+<div class="grid">
+<section class="panel">
+<h2>Measurement mode</h2>
+<p class="lead" style="font-size:11px">Choose a module. Unavailable ranging modes remain locked until the correct hardware is connected.</p>
+<div class="modes">
+<button class="mode active" data-mode="ir"><strong>01 · IR DETECTION</strong><span>Available now · Digital object detection</span></button>
+<button class="mode" data-mode="short" disabled><strong>02 · SHORT RANGE</strong><span>Requires ToF / ultrasonic ranging sensor</span></button>
+<button class="mode" data-mode="long" disabled><strong>03 · LONG RANGE</strong><span>Requires LiDAR / laser rangefinder</span></button>
+</div>
+<div class="readout">
+<div class="metric"><label>DETECTION STATE</label><strong id="detected">WAITING</strong></div>
+<div class="metric"><label>RAW DIGITAL LEVEL</label><strong id="raw">—</strong></div>
+<div class="metric"><label>SAMPLE COUNT</label><strong id="count">0</strong></div>
+<div class="metric"><label>DETECTION RATE</label><strong id="rate">—</strong></div>
+<div class="metric"><label>LAST SAMPLE</label><strong id="last">—</strong></div>
+<div class="metric"><label>DISTANCE</label><strong id="distance">NOT MEASURED</strong></div>
+</div>
+<h2 style="margin:22px 0 8px">Live signal history</h2>
+<canvas id="chart" class="signal" width="900" height="240" aria-label="Digital IR signal history graph"></canvas>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:13px"><button class="btn" id="clear">CLEAR HISTORY</button><button class="btn" id="export">EXPORT CSV</button></div>
+<div class="note" id="truth">No ranging sensor is connected. Distance is intentionally shown as NOT MEASURED — the digital IR module cannot calculate millimetres or metres.</div>
+</section>
+<aside style="display:grid;gap:14px;align-content:start">
+<section class="panel"><h2>Phase 1 hardware</h2><p class="lead" style="font-size:11px">Arduino UNO + 3-pin digital IR obstacle sensor.</p>
+<table style="width:100%;border-collapse:collapse;font-size:11px"><tr><td style="padding:9px;border-bottom:1px solid var(--line)">IR VCC</td><td>UNO 5V</td></tr><tr><td style="padding:9px;border-bottom:1px solid var(--line)">IR GND</td><td>UNO GND</td></tr><tr><td style="padding:9px;border-bottom:1px solid var(--line)">IR OUT</td><td>UNO D2</td></tr><tr><td style="padding:9px">Serial</td><td>115200 baud</td></tr></table>
+<a class="btn primary" style="display:inline-block;text-decoration:none;margin-top:14px" href="msda-phase1-uno.ino" download>DOWNLOAD UNO FIRMWARE ↗</a>
+</section>
+<section class="panel"><h2>Connection checklist</h2><ol class="steps"><li>Use a USB data cable and connect the UNO.</li><li>Upload the MSDA Phase 1 sketch.</li><li>Close Arduino IDE Serial Monitor.</li><li>Open this page in desktop Chrome or Edge over HTTPS.</li><li>Press CONNECT ARDUINO and select the board's serial port.</li></ol><div class="note">Web Serial may not work in Android browsers or an in-app browser. If the Connect button is unavailable, use a supported desktop browser.</div></section>
+<section class="panel"><h2>Signal event log</h2><div class="log" id="log" aria-live="polite">MSDA Phase 1 initialized. Waiting for a device…</div></section>
+</aside>
+</div>
+<p class="note">Scientific limitation: this module outputs a binary detection signal, not a calibrated distance. Surface colour, angle, ambient IR and sensor threshold affect detection. Do not interpret this signal as a real image or distance reading.</p>
+</main>
+<footer class="footer"><span>© <span id="year"></span> Lakindu Sathsara</span><span><a href="My-project.html">BACK TO PROJECTS ↑</a></span></footer>
+<script src="script.js"></script>
+<script>
+(()=>{
+ const $=id=>document.getElementById(id), samples=[], MAX=180;
+ let port=null,reader=null,reading=false,connected=false,demoTimer=null,buffer='',count=0,detectedCount=0,lastTime=null;
+ const log=(s)=>{const el=$('log');el.textContent=(s+'\n'+el.textContent).slice(0,2600)};
+ function status(s,on=false){$('status').textContent=s;$('dot').classList.toggle('on',on);$('connect').textContent=on?'DISCONNECT':'CONNECT ARDUINO ↗'}
+ function draw(){
+  const c=$('chart'),ctx=c.getContext('2d'),w=c.width,h=c.height;
+  ctx.clearRect(0,0,w,h);ctx.fillStyle='#080d14';ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='rgba(130,160,190,.16)';ctx.lineWidth=1;
+  for(let y=0;y<=4;y++){const yy=20+y*(h-40)/4;ctx.beginPath();ctx.moveTo(0,yy);ctx.lineTo(w,yy);ctx.stroke()}
+  ctx.fillStyle='#8092a8';ctx.font='12px monospace';ctx.fillText('HIGH / CLEAR',12,18);ctx.fillText('LOW / DETECTED',12,h-8);
+  if(samples.length<2)return;
+  const xStep=w/Math.max(MAX-1,1),start=MAX-samples.length;
+  ctx.strokeStyle='#8bd8ed';ctx.lineWidth=3;ctx.beginPath();
+  samples.forEach((s,i)=>{const x=(start+i)*xStep,y=s.detected?h*.76:h*.28;if(i===0)ctx.moveTo(x,y);else{const prev=samples[i-1],py=prev.detected?h*.76:h*.28;ctx.lineTo(x,py);ctx.lineTo(x,y)}});
+  ctx.stroke();
+ }
+ function render(s){
+  count++;if(s.detected)detectedCount++;
+  samples.push(s);if(samples.length>MAX)samples.shift();
+  $('detected').textContent=s.detected?'DETECTED':'CLEAR';
+  $('detected').style.color=s.detected?'#ff8d8d':'#9de4b7';
+  $('raw').textContent=String(s.raw);$('count').textContent=count.toLocaleString();
+  $('rate').textContent=Math.round(detectedCount/count*100)+'%';
+  $('last').textContent=new Date().toLocaleTimeString();
+  $('distance').textContent='NOT MEASURED';
+  $('truth').textContent='Live digital IR state received. Distance remains NOT MEASURED because this sensor has no ranging output.';
+  draw();
+ }
+ function parseLine(line){
+  if(!line.trim())return;
+  try{
+   const d=JSON.parse(line);
+   if(d.type==='hello'||d.type==='ready'){log('Device ready: '+(d.device||d.sensor||'Arduino'));return}
+   if((d.type==='sample'||d.type==='ir_sample')&&typeof d.detected==='boolean'&&Number.isFinite(Number(d.raw))){
+    render({detected:d.detected,raw:Number(d.raw),seq:Number(d.seq)||0,ms:Number(d.ms)||0});
+   }
+  }catch(e){log('Ignored non-JSON serial line: '+line.slice(0,100))}
+ }
+ async function disconnect(){
+  reading=false;
+  if(reader){try{await reader.cancel()}catch(e){}try{reader.releaseLock()}catch(e){}reader=null}
+  if(port){try{await port.close()}catch(e){}port=null}
+  connected=false;status('DEVICE NOT CONNECTED');log('Serial connection closed.');
+ }
+ async function connect(){
+  if(connected){await disconnect();return}
+  if(!('serial'in navigator)){status('WEB SERIAL UNAVAILABLE');log('Use desktop Chrome or Edge over HTTPS. Android/in-app browsers may not support Web Serial.');return}
+  try{
+   port=await navigator.serial.requestPort();
+   await port.open({baudRate:115200});
+   connected=true;status('ARDUINO CONNECTED',true);log('Serial port opened at 115200 baud.');
+   reader=port.readable.getReader();reading=true;
+   const decoder=new TextDecoder();
+   while(reading){
+    const result=await reader.read();if(result.done)break;
+    buffer+=decoder.decode(result.value,{stream:true});
+    let i;while((i=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,i).replace(/\r$/,'');buffer=buffer.slice(i+1);parseLine(line)}
+    if(buffer.length>2048){log('Serial buffer reset (line too long).');buffer=''}
+   }
+  }catch(e){log('Connection error: '+e.message);if(port)await disconnect();else status('CONNECTION CANCELLED')}
+  finally{
+   if(reader){try{reader.releaseLock()}catch(e){}reader=null}
+   if(port){try{await port.close()}catch(e){}port=null}
+   reading=false;connected=false;status('DEVICE NOT CONNECTED');
+  }
+ }
+ $('connect').addEventListener('click',connect);
+ $('demo').addEventListener('click',()=>{
+  if(demoTimer){clearInterval(demoTimer);demoTimer=null;$('demo').textContent='RUN SIGNAL DEMO';log('Demo stopped.');return}
+  if(connected){log('Disconnect the Arduino before running the demo.');return}
+  $('demo').textContent='STOP DEMO';status('DEMO MODE — SYNTHETIC',false);log('Synthetic digital signal demo started (not a real sensor reading).');
+  demoTimer=setInterval(()=>{const detected=Math.random()>.68;render({detected,raw:detected?0:1,seq:count,ms:Date.now()});$('truth').textContent='DEMO ONLY: synthetic binary states. No real object detection or distance measurement is occurring.'},180);
+ });
+ $('clear').addEventListener('click',()=>{samples.length=0;count=0;detectedCount=0;$('count').textContent='0';$('rate').textContent='—';$('detected').textContent='WAITING';$('raw').textContent='—';$('last').textContent='—';draw();log('History cleared.')});
+ $('export').addEventListener('click',()=>{
+  const rows=['sequence,detected,raw,elapsed_ms',...samples.map((s,i)=>[i,s.detected,s.raw,s.ms].join(','))];
+  const blob=new Blob([rows.join('\n')],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='msda-phase1-ir-data.csv';a.click();URL.revokeObjectURL(url);
+ });
+ if('serial'in navigator){navigator.serial.addEventListener('disconnect',()=>{if(connected){log('USB serial device disconnected.');status('DEVICE DISCONNECTED')}})}
+ draw();
+ if(!('serial'in navigator))log('Web Serial is unavailable in this browser. Use desktop Chrome/Edge over HTTPS.');
+})();
+</script>
+</body></html>
