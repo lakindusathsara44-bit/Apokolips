@@ -9,6 +9,14 @@ on:
       - "silent-classroom-indicator.html"
       - "silent-classroom-hardware.html"
       - "arduino/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-sci-ide.yml"
+      - "silent-classroom-programmer.html"
+      - "silent-classroom-indicator.html"
+      - "silent-classroom-hardware.html"
+      - "arduino/**"
   workflow_dispatch:
 
 permissions:
@@ -80,7 +88,7 @@ jobs:
       - name: Build the browser IDE
         working-directory: ${{ runner.temp }}/arduino-web
         env:
-          VITE_SOURCE_URL: https://github.com/Shubin123/arduino-web
+          VITE_SOURCE_URL: https://github.com/Shubin123/arduino-web/tree/3796156785a387d700895716a0f2b21793454f7e
         run: npm run build
 
       - name: Stage the IDE under the Apokolips website
@@ -108,6 +116,7 @@ jobs:
           NOTICE
 
       - name: Publish generated IDE files to the main Pages branch
+        if: github.event_name != 'pull_request'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
