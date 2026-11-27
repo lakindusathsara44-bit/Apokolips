@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#050609">
+<meta name="description" content="Live Arduino UNO and MAX4466 microphone hardware monitor for the Silent Classroom Indicator project.">
+<title>Hardware Monitor | Silent Classroom Indicator</title>
+<link rel="stylesheet" href="style.css?v=20261127-sci">
+<style>
+:root{--hm-bg:#070b12;--hm-panel:#0d1724;--hm-line:#243b55;--hm-text:#eef5ff;--hm-muted:#9eafc3;--hm-cyan:#50d9ed;--hm-green:#4be0a5;--hm-yellow:#ffd34d;--hm-red:#ff6377}
+.hm{max-width:1160px;margin:44px auto 76px;padding:0 26px;position:relative;z-index:3;color:var(--hm-text)}
+.hm-kicker{font:10px 'DM Mono',monospace;letter-spacing:2px;color:var(--hm-cyan)}
+.hm-title{font-size:clamp(36px,6vw,64px);letter-spacing:-2.5px;line-height:1.04;margin:13px 0}
+.hm-title span{background:linear-gradient(100deg,#eaf2ff,#83b7ff,#8bd8ed);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hm-lead{max-width:820px;color:var(--hm-muted);font-size:14px;line-height:1.85}
+.hm-actions{display:flex;gap:9px;flex-wrap:wrap;margin:20px 0}
+.hm-btn{border:1px solid #35516e;border-radius:8px;padding:11px 14px;background:#14283e;color:#eef6ff;font-size:10px;font-weight:800;letter-spacing:.5px;cursor:pointer}
+.hm-btn.primary{background:#dcecff;color:#07111d;border-color:#dcecff}
+.hm-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.hm-btn:not(:disabled):hover{filter:brightness(1.12);transform:translateY(-1px)}
+.hm-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(285px,.85fr);gap:14px;margin-top:16px}
+.hm-card{min-width:0;padding:18px;border:1px solid var(--hm-line);border-radius:13px;background:linear-gradient(145deg,#101e30,#091321);box-shadow:0 16px 40px #0005}
+.hm-card h2{font-size:15px;margin:0 0 14px}
+.hm-chart{background:#050d17;border:1px solid #203a54;border-radius:10px;overflow:hidden}
+#hmWave{display:block;width:100%;height:270px}
+.hm-legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--hm-muted);font-size:9px;margin-top:9px}
+.hm-key{display:inline-flex;align-items:center;gap:6px}.hm-dot{width:8px;height:8px;border-radius:50%}
+.hm-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hm-metric{padding:12px;border:1px solid #203953;border-radius:9px;background:#081321}
+.hm-metric span{display:block;color:var(--hm-muted);font-size:9px;letter-spacing:.4px}
+.hm-metric strong{display:block;font-size:23px;margin-top:4px}
+.hm-meter{height:9px;border-radius:20px;background:#263c52;overflow:hidden;margin:13px 0 7px}
+.hm-meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--hm-green),var(--hm-yellow),var(--hm-red));transition:width .12s}
+.hm-status{padding:11px 12px;border:1px solid #286b56;border-radius:9px;background:#102e2a;color:#b8f6dc;font-size:10px;font-weight:800;margin-top:12px;line-height:1.6}
+.hm-status.wait{background:#302819;border-color:#81632e;color:#ffe3a6}
+.hm-status.alert{background:#351925;border-color:#87384c;color:#ffc2cc}
+.hm-io{display:grid;gap:10px;margin-top:14px}
+.hm-io-row{display:flex;align-items:center;gap:9px;font-size:10px}
+.hm-led{width:11px;height:11px;border-radius:50%;background:#30445a;box-shadow:inset 0 0 0 1px #526a82;flex:none}
+.hm-led.on.green{background:var(--hm-green);box-shadow:0 0 12px var(--hm-green)}
+.hm-led.on.yellow{background:var(--hm-yellow);box-shadow:0 0 12px var(--hm-yellow);animation:hm-flash .8s infinite ease-in-out}
+.hm-led.on.red{background:var(--hm-red);box-shadow:0 0 12px var(--hm-red)}
+.hm-led.on.cyan{background:var(--hm-cyan);box-shadow:0 0 12px var(--hm-cyan)}
+@keyframes hm-flash{0%,100%{opacity:1}50%{opacity:.18}}
+.hm-state{margin-left:auto;color:var(--hm-muted);font-size:9px;font-weight:800}
+.hm-control{margin-top:15px;padding-top:13px;border-top:1px solid #203953}
+.hm-control label{display:flex;justify-content:space-between;gap:8px;color:var(--hm-muted);font-size:10px;margin-bottom:8px}
+.hm-control input{width:100%;accent-color:var(--hm-cyan)}
+.hm-speed{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.hm-speed button{border:1px solid #35516e;border-radius:7px;padding:6px 9px;background:#0a1725;color:#c8d9eb;font-size:9px;font-weight:800;cursor:pointer}
+.hm-speed button.active{background:var(--hm-cyan);border-color:var(--hm-cyan);color:#06121e}
+.hm-note{padding:13px;border:1px solid #304b68;border-radius:10px;background:#0a1725;color:#b9cce0;font-size:10px;line-height:1.8;margin-top:12px}
+.hm-note strong{color:#edf6ff}
+.hm-note.warning{border-color:#765c2c;background:#211c12;color:#ffe4ac}
+.hm-connection{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;border:1px solid #203953;border-radius:9px;background:#081321;font-size:10px}
+.hm-connection i{width:8px;height:8px;border-radius:50%;background:#78899b}
+.hm-connection.connected i{background:var(--hm-green);box-shadow:0 0 10px var(--hm-green)}
+.hm-connection span:last-child{margin-left:auto;color:var(--hm-muted)}
+.hm-footer{margin-top:25px;color:#8295ab;font-size:9px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.hm a{color:#9bdff0}
+.hm-wiring{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.hm-wire{padding:11px;border:1px solid #203953;border-radius:8px;background:#081321}
+.hm-wire b{display:block;font-size:12px;color:#fff}.hm-wire small{display:block;color:var(--hm-muted);font-size:9px;margin-top:4px}
+@media(max-width:820px){.hm-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.hm{padding:0 16px;margin-top:30px}.hm-title{letter-spacing:-1.3px}#hmWave{height:220px}.hm-wiring{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<canvas id="rain" aria-hidden="true"></canvas>
+<header class="topbar">
+<a class="brand" href="index.html"><span class="brand-mark"><img src="file_00000000a7ec820890154ca6ed49b608.png" alt="Apokolips logo"></span><span>APOKOLIPS</span></a>
+<button class="menu-toggle" aria-label="Toggle navigation">☰</button>
+<nav class="nav"><a href="index.html">Home</a><a href="info.html">About Me</a><a href="project.gallery.html">Community Gallery</a><a class="active" href="My-project.html">My Projects</a></nav>
+</header>
+<main class="hm">
+<div class="hm-kicker">PROJECT 008 / HARDWARE MODE / ARDUINO UNO + MAX4466</div>
+<h1 class="hm-title">Hardware <span>Monitor.</span></h1>
+<p class="hm-lead">Connect a real Arduino UNO and MAX4466 microphone module to stream live sound measurements into this page. The browser displays the live signal, warning indicators, trigger timer, and alert state.</p>
+<div class="hm-actions">
+<button class="hm-btn primary" id="hmConnect">CONNECT ARDUINO</button>
+<button class="hm-btn" id="hmDisconnect" disabled>DISCONNECT</button>
+<button class="hm-btn" id="hmAudio">ENABLE ALERT SOUND</button>
+<button class="hm-btn" id="hmReset">RESET MONITOR</button>
+</div>
+<div class="hm-connection" id="hmConnection"><i></i><b id="hmConnectionText">NOT CONNECTED</b><span id="hmPortText">Waiting for USB Serial device</span></div>
+<div class="hm-note warning" id="hmBrowserNote">Use Google Chrome or Microsoft Edge on a desktop/laptop over HTTPS. Web Serial is not supported by every browser or by most Android mobile browsers. The browser will ask you to select the Arduino serial port.</div>
+
+<div class="hm-grid">
+<section class="hm-card">
+<h2>Live microphone signal</h2>
+<div class="hm-chart"><canvas id="hmWave" aria-label="Live microphone amplitude history"></canvas></div>
+<div class="hm-legend"><span class="hm-key"><i class="hm-dot" style="background:var(--hm-cyan)"></i>MAX4466 amplitude envelope</span><span class="hm-key"><i class="hm-dot" style="background:var(--hm-yellow)"></i>Warning threshold</span></div>
+<div class="hm-control">
+<label for="hmSensitivity"><span>INPUT SENSITIVITY / FULL-SCALE RANGE</span><b id="hmSensitivityValue">250 ADC counts</b></label>
+<input id="hmSensitivity" type="range" min="80" max="700" step="10" value="250">
+</div>
+<div class="hm-control">
+<label for="hmThreshold"><span>WARNING THRESHOLD</span><b id="hmThresholdValue">60%</b></label>
+<input id="hmThreshold" type="range" min="10" max="95" value="60">
+</div>
+<div class="hm-control">
+<label><span>TEST TIMER SPEED</span><b id="hmSpeedLabel">1× / Real time</b></label>
+<div class="hm-speed" role="group" aria-label="Hardware monitor test timer speed">
+<button class="active" data-speed="1">1×</button><button data-speed="1.5">1.5×</button><button data-speed="2">2×</button><button data-speed="3">3×</button><button data-speed="5">5×</button><button data-speed="6">6×</button><button data-speed="7">7×</button>
+</div>
+</div>
+<div class="hm-note">Timer speed is provided for testing the browser-side alert sequence. Keep <strong>1×</strong> for real five-minute timing. Sound percentage is a relative, calibrated display value — it is not a decibel (dB) measurement.</div>
+</section>
+
+<aside class="hm-card">
+<h2>Hardware system monitor</h2>
+<div class="hm-metrics">
+<div class="hm-metric"><span>LIVE SOUND LEVEL</span><strong id="hmLevel">—%</strong></div>
+<div class="hm-metric"><span>RAW PEAK-TO-PEAK</span><strong id="hmRaw">—</strong></div>
+<div class="hm-metric"><span>HIGH-NOISE TIMER</span><strong id="hmTimer">00:00</strong></div>
+<div class="hm-metric"><span>ALERT AUTO-OFF</span><strong id="hmOffTimer">—</strong></div>
+</div>
+<div class="hm-meter"><i id="hmMeter"></i></div>
+<div class="hm-status" id="hmStatus">WAITING — Connect the Arduino to begin live monitoring.</div>
+<div class="hm-io">
+<div class="hm-io-row"><i class="hm-led" id="hmGreen"></i>Green indicator <span class="hm-state" id="hmGreenState">OFF</span></div>
+<div class="hm-io-row"><i class="hm-led" id="hmYellow"></i>Yellow warning <span class="hm-state" id="hmYellowState">OFF</span></div>
+<div class="hm-io-row"><i class="hm-led" id="hmRed"></i>Red alert <span class="hm-state" id="hmRedState">OFF</span></div>
+<div class="hm-io-row"><i class="hm-led" id="hmBuzzer"></i>Browser buzzer <span class="hm-state" id="hmBuzzerState">OFF</span></div>
+</div>
+<div class="hm-note" id="hmCalibration">Calibration: not calibrated. Press “CALIBRATE QUIET ROOM” while the room is quiet to set the microphone noise floor.</div>
+<div class="hm-actions"><button class="hm-btn" id="hmCalibrate" disabled>CALIBRATE QUIET ROOM</button><button class="hm-btn" id="hmSilence" disabled>SILENCE ALERT</button></div>
+</aside>
+</div>
+
+<section class="hm-card" style="margin-top:14px">
+<h2>MAX4466 wiring / Arduino UNO</h2>
+<div class="hm-wiring">
+<div class="hm-wire"><b>VCC → 5V</b><small>Power from Arduino UNO 5V</small></div>
+<div class="hm-wire"><b>GND → GND</b><small>Connect common ground</small></div>
+<div class="hm-wire"><b>OUT → A0</b><small>Analog microphone signal</small></div>
+</div>
+<div class="hm-note warning"><strong>Hardware scope in this version:</strong> the Arduino and microphone provide the real input. LEDs and buzzer shown above are website/browser indicators only; no physical LEDs or buzzer are controlled yet. The browser buzzer needs the “ENABLE ALERT SOUND” button. Do not connect the MAX4466 OUT pin to 5V.</div>
+<div class="hm-actions"><a class="hm-btn" href="arduino/sci_max4466_uno.ino" download>DOWNLOAD ARDUINO UNO SKETCH</a><a class="hm-btn" href="silent-classroom-indicator.html">BACK TO SIMULATION</a></div>
+</section>
+
+<div class="hm-footer"><span>SILENT CLASSROOM INDICATOR / HARDWARE MODE</span><span><a href="My-project.html">← BACK TO MY PROJECTS</a></span></div>
+</main>
+<footer class="footer"><span>© <span id="year"></span> Lakindu Sathsara</span><span><a href="silent-classroom-indicator.html">SIMULATION ↑</a></span></footer>
+<script src="script.js"></script>
+<script>
+(()=> {
+'use strict';
+const $=id=>document.getElementById(id);
+const canvas=$('hmWave'),ctx=canvas.getContext('2d');
+const history=Array(180).fill(0);
+let port=null,reader=null,readTask=null,keepReading=false,raw=0,level=0,noiseFloor=0,calibrated=false,calibrating=false,calSamples=[];
+let lastTick=performance.now(),highSeconds=0,alertSeconds=0,alertActive=false,speed=1,audioContext=null,oscillator=null,gainNode=null,pulseTimer=null;
+const TRIGGER_SECONDS=300,ALERT_SECONDS=300;
+const supported='serial' in navigator;
+function setConnection(ok,title,detail){$('hmConnection').classList.toggle('connected',ok);$('hmConnectionText').textContent=title;$('hmPortText').textContent=detail}
+function resize(){const r=canvas.getBoundingClientRect(),d=window.devicePixelRatio||1;canvas.width=Math.max(1,Math.floor(r.width*d));canvas.height=Math.max(1,Math.floor(r.height*d));ctx.setTransform(d,0,0,d,0,0)}
+window.addEventListener('resize',resize);resize();
+function fmt(v){v=Math.max(0,Math.ceil(v));return String(Math.floor(v/60)).padStart(2,'0')+':'+String(v%60).padStart(2,'0')}
+function fullScale(){return Number($('hmSensitivity').value)}
+function threshold(){return Number($('hmThreshold').value)}
+function toLevel(v){const span=Math.max(1,fullScale()-noiseFloor);return Math.max(0,Math.min(100,Math.round((v-noiseFloor)/span*100)))}
+function updateIndicators(){
+ const high=level>=threshold();
+ $('hmLevel').textContent=level+'%';$('hmRaw').textContent=raw;
+ $('hmTimer').textContent=fmt(highSeconds);$('hmOffTimer').textContent=alertActive?fmt(ALERT_SECONDS-alertSeconds):'—';
+ $('hmMeter').style.width=level+'%';
+ $('hmGreen').className='hm-led'+(!high&&!alertActive&&port?' on green':'');
+ $('hmYellow').className='hm-led'+(high&&!alertActive?' on yellow':'');
+ $('hmRed').className='hm-led'+(alertActive?' on red':'');
+ $('hmBuzzer').className='hm-led'+(alertActive?' on cyan':'');
+ $('hmGreenState').textContent=!high&&!alertActive&&port?'ON':'OFF';
+ $('hmYellowState').textContent=high&&!alertActive?'FLASHING':'OFF';
+ $('hmRedState').textContent=alertActive?'ON':'OFF';
+ $('hmBuzzerState').textContent=alertActive?'ON':'OFF';
+ const s=$('hmStatus');
+ if(alertActive){s.className='hm-status alert';s.textContent='ALERT ACTIVE — Browser warning is active. Automatic shutdown in '+fmt(ALERT_SECONDS-alertSeconds)+'.'}
+ else if(!port){s.className='hm-status';s.textContent='WAITING — Connect the Arduino to begin live monitoring.'}
+ else if(level>=threshold()){s.className='hm-status wait';s.textContent='WARNING — Sound is above threshold. Yellow indicator is flashing; five-minute timer is running.'}
+ else{s.className='hm-status';s.textContent='NORMAL — Live microphone level is below the warning threshold.'}
+}
+function stopTone(){if(pulseTimer){clearInterval(pulseTimer);pulseTimer=null}if(gainNode&&audioContext){const t=audioContext.currentTime;gainNode.gain.cancelScheduledValues(t);gainNode.gain.setTargetAtTime(0,t,.02);setTimeout(()=>{try{oscillator&&oscillator.stop();oscillator&&oscillator.disconnect();gainNode&&gainNode.disconnect()}catch(e){}oscillator=null;gainNode=null},130)}}
+function startTone(){if(!audioContext)return;stopTone();oscillator=audioContext.createOscillator();gainNode=audioContext.createGain();oscillator.type='square';oscillator.frequency.value=880;gainNode.gain.value=0;oscillator.connect(gainNode);gainNode.connect(audioContext.destination);oscillator.start();let high=true;const pulse=()=>{if(!gainNode)return;const t=audioContext.currentTime;gainNode.gain.cancelScheduledValues(t);gainNode.gain.setTargetAtTime(high ? 0.065 : 0.001,t,.015);oscillator.frequency.setTargetAtTime(high?880:660,t,.01);high=!high};pulse();pulseTimer=setInterval(pulse,300)}
+function endAlert(){alertActive=false;alertSeconds=0;stopTone();updateIndicators()}
+function beginAlert(){alertActive=true;alertSeconds=0;if(audioContext)startTone();updateIndicators()}
+function parseLine(line){
+ const m=line.trim().match(/^SCI\s*,\s*(\d{1,4})\s*$/i);
+ if(!m)return;
+ raw=Math.max(0,Math.min(1023,Number(m[1])));
+ level=toLevel(raw);
+ history.push(level);history.shift();
+ if(calibrating){calSamples.push(raw)}
+ updateIndicators();
+}
+async function connect(){
+ if(!supported){setConnection(false,'WEB SERIAL NOT AVAILABLE','Use desktop Chrome or Edge over HTTPS.');$('hmBrowserNote').textContent='This browser does not expose Web Serial. Open this page in current Google Chrome or Microsoft Edge on Windows, macOS, or Linux.';return}
+ try{
+  port=await navigator.serial.requestPort();
+  await port.open({baudRate:115200});
+  keepReading=true;$('hmDisconnect').disabled=false;$('hmCalibrate').disabled=false;$('hmSilence').disabled=false;$('hmConnect').disabled=true;
+  setConnection(true,'CONNECTED','Serial 115200 baud · Arduino UNO');
+  const decoder=new TextDecoderStream();const closed=port.readable.pipeTo(decoder.writable);reader=decoder.readable.getReader();
+  readTask=(async()=>{let buffer='';try{while(keepReading){const {value,done}=await reader.read();if(done)break;buffer+=value;let idx;while((idx=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,idx);buffer=buffer.slice(idx+1);parseLine(line)}if(buffer.length>120)buffer=buffer.slice(-40)}}catch(err){if(keepReading)console.error(err)}finally{try{reader.releaseLock()}catch(e){}reader=null;try{await closed}catch(e){}if(keepReading){keepReading=false;port=null;setConnection(false,'SERIAL CONNECTION LOST','Reconnect the Arduino USB cable.');$('hmConnect').disabled=false;$('hmDisconnect').disabled=true;$('hmCalibrate').disabled=true;$('hmSilence').disabled=true;highSeconds=0;updateIndicators()}}})();
+  updateIndicators();
+ }catch(err){port=null;setConnection(false,'NOT CONNECTED',err&&err.message?err.message:'Port selection cancelled');$('hmConnect').disabled=false}
+}
+async function disconnect(){
+ keepReading=false;
+ try{if(reader)await reader.cancel()}catch(e){}
+ try{if(port)await port.close()}catch(e){}
+ port=null;reader=null;highSeconds=0;calibrated=false;calibrating=false;
+ $('hmConnect').disabled=false;$('hmDisconnect').disabled=true;$('hmCalibrate').disabled=true;$('hmSilence').disabled=true;
+ setConnection(false,'DISCONNECTED','Arduino USB serial port closed');endAlert();updateIndicators();
+}
+$('hmConnect').addEventListener('click',connect);
+$('hmDisconnect').addEventListener('click',disconnect);
+$('hmAudio').addEventListener('click',async()=>{const AC=window.AudioContext||window.webkitAudioContext;if(!AC){$('hmBrowserNote').textContent='Web Audio is not supported in this browser.';return}if(!audioContext)audioContext=new AC();if(audioContext.state==='suspended')await audioContext.resume();$('hmAudio').textContent='ALERT SOUND ENABLED';$('hmAudio').classList.add('primary');$('hmBrowserNote').textContent='Browser alert sound is enabled. The buzzer is generated by this computer/browser, not by the Arduino board.'});
+$('hmReset').addEventListener('click',()=>{highSeconds=0;endAlert();history.fill(0);updateIndicators()});
+$('hmSilence').addEventListener('click',()=>{endAlert();highSeconds=0});
+$('hmCalibrate').addEventListener('click',()=>{if(!port)return;calSamples=[];calibrating=true;$('hmCalibrate').disabled=true;$('hmCalibration').textContent='Calibration running for 3 seconds — keep the room quiet.';setTimeout(()=>{calibrating=false;if(calSamples.length){calSamples.sort((a,b)=>a-b);noiseFloor=calSamples[Math.floor((calSamples.length-1)*.2)];calibrated=true;$('hmCalibration').textContent='Calibrated quiet-room noise floor: '+noiseFloor+' ADC counts. Recalibrate if the microphone position or room changes.'}else{$('hmCalibration').textContent='No microphone samples received. Check the Arduino connection and sketch.'}$('hmCalibrate').disabled=!port},3000)});
+$('hmSensitivity').addEventListener('input',()=>{$('hmSensitivityValue').textContent=fullScale()+' ADC counts';level=toLevel(raw);updateIndicators()});
+$('hmThreshold').addEventListener('input',()=>{$('hmThresholdValue').textContent=threshold()+'%';updateIndicators()});
+document.querySelectorAll('.hm-speed button').forEach(b=>b.addEventListener('click',()=>{speed=Number(b.dataset.speed);document.querySelectorAll('.hm-speed button').forEach(x=>x.classList.toggle('active',x===b));$('hmSpeedLabel').textContent=speed+'×'+(speed===1?' / Real time':' / Test mode');lastTick=performance.now()}));
+function tick(now){const dt=Math.min((now-lastTick)/1000,.5)*speed;lastTick=now;if(port){if(alertActive){alertSeconds+=dt;if(alertSeconds>=ALERT_SECONDS){endAlert();highSeconds=0}}else if(level>=threshold()){highSeconds+=dt;if(highSeconds>=TRIGGER_SECONDS)beginAlert()}else highSeconds=0}updateIndicators();requestAnimationFrame(tick)}
+function draw(){const w=canvas.clientWidth,h=canvas.clientHeight;ctx.clearRect(0,0,w,h);ctx.strokeStyle='#19334c';ctx.lineWidth=1;for(let y=25;y<h;y+=35){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}const ty=h-(threshold()/100)*(h-28)-10;ctx.setLineDash([6,6]);ctx.strokeStyle='#ffd34d';ctx.beginPath();ctx.moveTo(0,ty);ctx.lineTo(w,ty);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#ffe19a';ctx.font='10px Arial';ctx.fillText('WARNING THRESHOLD',9,Math.max(14,ty-7));ctx.beginPath();ctx.lineWidth=2.4;ctx.strokeStyle='#50d9ed';history.forEach((v,i)=>{const x=i/(history.length-1)*w,y=h-12-(v/100)*(h-28);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.stroke();requestAnimationFrame(draw)}
+if(!supported){$('hmConnect').disabled=true;setConnection(false,'WEB SERIAL NOT AVAILABLE','Desktop Chrome / Edge required')}
+$('hmSensitivityValue').textContent=fullScale()+' ADC counts';$('year').textContent=new Date().getFullYear();updateIndicators();requestAnimationFrame(draw);requestAnimationFrame(tick);
+window.addEventListener('beforeunload',()=>{try{reader&&reader.cancel();port&&port.close()}catch(e){}});
+})();
+</script>
+</body>
+</html>
