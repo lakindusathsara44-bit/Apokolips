@@ -19,7 +19,7 @@ button,input,a{font:inherit}a{color:inherit;text-decoration:none}
 .sci-title{font-size:clamp(32px,5vw,54px);line-height:1.05;letter-spacing:-1.8px;margin:10px 0 9px;font-weight:750}.sci-title span{color:#a9b2bb}.sci-lead{max-width:680px;color:var(--sci-muted);font-size:13px;line-height:1.8;margin:0}
 .sci-unit{border:1px solid var(--sci-line);background:#080a0c;padding:12px 15px;min-width:150px}.sci-unit span{display:block;color:var(--sci-muted);font-size:8px;letter-spacing:1.5px;margin-bottom:7px}.sci-unit strong{font:600 12px ui-monospace,Consolas,monospace;letter-spacing:.7px}
 .sci-actions{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0}.sci-btn{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:9px 13px;border:1px solid #343b42;border-radius:3px;background:#111519;color:#dce2e6;font-size:9px;font-weight:800;letter-spacing:.8px;cursor:pointer}.sci-btn.primary{background:#dce4e7;color:#080b0d;border-color:#dce4e7}.sci-btn:hover{background:#1a2025}.sci-btn.primary:hover{background:#fff}
-.sci-note{padding:12px 14px;border:1px solid var(--sci-line);border-left:2px solid #64737d;background:#090b0d;color:#aab3bb;font-size:10px;line-height:1.7;margin:14px 0}
+.sci-audio-status{margin:10px 0 18px;color:var(--sci-muted);font-size:10px;line-height:1.6}.sci-footnote{margin:14px 0 0;color:var(--sci-muted);font-size:9px;line-height:1.6}
 .sci-section{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:30px 0 12px}.sci-section h2{font-size:15px;letter-spacing:.2px;margin:0}.sci-section p{font-size:10px;color:var(--sci-muted);margin:6px 0 0}
 .sci-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,.85fr);gap:12px}.sci-card{min-width:0;padding:18px;border:1px solid var(--sci-line);background:var(--sci-panel)}.sci-card h3{font-size:10px;letter-spacing:1.3px;text-transform:uppercase;color:#c9d0d5;margin:0 0 15px}
 .sci-chart{background:#050607;border:1px solid #22282d;overflow:hidden}#sciWave{display:block;width:100%;height:270px}
@@ -42,15 +42,14 @@ button,input,a{font:inherit}a{color:inherit;text-decoration:none}
 <div class="sci-nav-links"><a href="My-project.html">← All Projects</a><a href="silent-classroom-hardware.html">Hardware Monitor</a><a href="silent-classroom-programmer.html">Arduino Programmer</a></div>
 </nav>
 <header class="sci-heading">
-<div><div class="sci-kicker">CLASSROOM ACOUSTIC CONTROL / SIMULATION MODULE</div><h1 class="sci-title">Silent Classroom <span>Simulation</span></h1><p class="sci-lead">A focused control-room interface for modelling classroom sound levels, monitoring the warning threshold, and observing the five-minute alert sequence.</p></div>
-<div class="sci-unit"><span>SYSTEM PROFILE</span><strong>SCI / SIM-01</strong></div>
+<div><h1 class="sci-title">Silent Classroom <span>Simulation</span></h1></div>
 </header>
 <div class="sci-actions">
 <button class="sci-btn primary" id="sciStart">ENABLE AUDIO</button>
 <button class="sci-btn" id="sciFull">FULL SCREEN</button>
 <button class="sci-btn" id="sciTest">TEST BUZZER</button>
 </div>
-<div id="sciAudioInfo" class="sci-note">Audio is disabled. Enable audio to hear the buzzer when an alert is triggered.</div>
+<p id="sciAudioInfo" class="sci-audio-status">Audio is disabled. Enable audio to hear the buzzer when an alert is triggered.</p>
 <div class="sci-section"><div><h2>01 / Acoustic input</h2><p>Set a simulated classroom sound level and compare it with the configured trigger threshold.</p></div><span class="sci-label">INPUT / SIGNAL</span></div>
 <div class="sci-grid">
 <section class="sci-card">
@@ -79,7 +78,7 @@ button,input,a{font:inherit}a{color:inherit;text-decoration:none}
 <div class="sci-io-row"><i class="sci-led" id="sciRedLed"></i>Red LED <span class="sci-state" id="sciRedState">OFF</span></div>
 <div class="sci-io-row"><i class="sci-led" id="sciBuzzerLed"></i>Buzzer <span class="sci-state" id="sciBuzzerState">OFF</span></div>
 </div>
-<div class="sci-note">The browser generates the buzzer tone. The five-minute noise trigger and five-minute alert auto-off period are separate timers.</div>
+<p class="sci-footnote">The browser generates the buzzer tone. The five-minute noise trigger and five-minute alert auto-off period are separate timers.</p>
 </aside>
 </div>
 <div class="sci-footer"><span>SCI / SIM-01 · CLASSROOM ACOUSTIC MONITORING</span><span><a href="My-project.html">BACK TO MY PROJECTS ↑</a></span></div>
