@@ -19,7 +19,7 @@ button,input,a{font:inherit}a{color:inherit;text-decoration:none}
 .sci-title{font-size:clamp(32px,5vw,54px);line-height:1.05;letter-spacing:-1.8px;margin:10px 0 9px;font-weight:750}.sci-title span{color:#a9b2bb}.sci-lead{max-width:680px;color:var(--sci-muted);font-size:13px;line-height:1.8;margin:0}
 .sci-unit{border:1px solid var(--sci-line);background:#080a0c;padding:12px 15px;min-width:150px}.sci-unit span{display:block;color:var(--sci-muted);font-size:8px;letter-spacing:1.5px;margin-bottom:7px}.sci-unit strong{font:600 12px ui-monospace,Consolas,monospace;letter-spacing:.7px}
 .sci-actions{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0}.sci-btn{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:9px 13px;border:1px solid #343b42;border-radius:3px;background:#111519;color:#dce2e6;font-size:9px;font-weight:800;letter-spacing:.8px;cursor:pointer}.sci-btn.primary{background:#dce4e7;color:#080b0d;border-color:#dce4e7}.sci-btn:hover{background:#1a2025}.sci-btn.primary:hover{background:#fff}
-.sci-note{padding:12px 14px;border:1px solid var(--sci-line);border-left:2px solid #64737d;background:#090b0d;color:#aab3bb;font-size:10px;line-height:1.7;margin:14px 0}
+.sci-audio-status{margin:10px 0 18px;color:var(--sci-muted);font-size:10px;line-height:1.6}.sci-footnote{margin:14px 0 0;color:var(--sci-muted);font-size:9px;line-height:1.6}
 .sci-section{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:30px 0 12px}.sci-section h2{font-size:15px;letter-spacing:.2px;margin:0}.sci-section p{font-size:10px;color:var(--sci-muted);margin:6px 0 0}
 .sci-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,.85fr);gap:12px}.sci-card{min-width:0;padding:18px;border:1px solid var(--sci-line);background:var(--sci-panel)}.sci-card h3{font-size:10px;letter-spacing:1.3px;text-transform:uppercase;color:#c9d0d5;margin:0 0 15px}
 .sci-chart{background:#050607;border:1px solid #22282d;overflow:hidden}#sciWave{display:block;width:100%;height:270px}
@@ -42,15 +42,14 @@ button,input,a{font:inherit}a{color:inherit;text-decoration:none}
 <div class="sci-nav-links"><a href="My-project.html">← All Projects</a><a href="silent-classroom-hardware.html">Hardware Monitor</a><a href="silent-classroom-programmer.html">Arduino Programmer</a></div>
 </nav>
 <header class="sci-heading">
-<div><div class="sci-kicker">CLASSROOM ACOUSTIC CONTROL / SIMULATION MODULE</div><h1 class="sci-title">Silent Classroom <span>Simulation</span></h1><p class="sci-lead">A focused control-room interface for modelling classroom sound levels, monitoring the warning threshold, and observing the five-minute alert sequence.</p></div>
-<div class="sci-unit"><span>SYSTEM PROFILE</span><strong>SCI / SIM-01</strong></div>
+<div><h1 class="sci-title">Silent Classroom <span>Simulation</span></h1></div>
 </header>
 <div class="sci-actions">
 <button class="sci-btn primary" id="sciStart">ENABLE AUDIO</button>
 <button class="sci-btn" id="sciFull">FULL SCREEN</button>
 <button class="sci-btn" id="sciTest">TEST BUZZER</button>
 </div>
-<div id="sciAudioInfo" class="sci-note">Audio is disabled. Enable audio to hear the buzzer when an alert is triggered.</div>
+<p id="sciAudioInfo" class="sci-audio-status">Audio is disabled. Enable audio to hear the buzzer when an alert is triggered.</p>
 <div class="sci-section"><div><h2>01 / Acoustic input</h2><p>Set a simulated classroom sound level and compare it with the configured trigger threshold.</p></div><span class="sci-label">INPUT / SIGNAL</span></div>
 <div class="sci-grid">
 <section class="sci-card">
@@ -79,7 +78,7 @@ button,input,a{font:inherit}a{color:inherit;text-decoration:none}
 <div class="sci-io-row"><i class="sci-led" id="sciRedLed"></i>Red LED <span class="sci-state" id="sciRedState">OFF</span></div>
 <div class="sci-io-row"><i class="sci-led" id="sciBuzzerLed"></i>Buzzer <span class="sci-state" id="sciBuzzerState">OFF</span></div>
 </div>
-<div class="sci-note">The browser generates the buzzer tone. The five-minute noise trigger and five-minute alert auto-off period are separate timers.</div>
+<p class="sci-footnote">The browser generates the buzzer tone. The five-minute noise trigger and five-minute alert auto-off period are separate timers.</p>
 </aside>
 </div>
 <div class="sci-footer"><span>SCI / SIM-01 · CLASSROOM ACOUSTIC MONITORING</span><span><a href="My-project.html">BACK TO MY PROJECTS ↑</a></span></div>
@@ -89,7 +88,7 @@ button,input,a{font:inherit}a{color:inherit;text-decoration:none}
 const $=id=>document.getElementById(id),canvas=$('sciWave'),ctx=canvas.getContext('2d'),slider=$('sciNoise');
 let threshold=60;const TRIGGER_SECONDS=300,ALERT_SECONDS=300;
 let highSeconds=0,alertSeconds=0,alertActive=false,last=performance.now(),audioCtx=null,osc=null,gain=null,pulseTimer=null,timeSpeed=1.5;
-let noiseState=false,belowSince=null;
+let noiseState=false,belowSince=null,wavePhase=0;
 const RELEASE_HYSTERESIS=6,SILENCE_GRACE_MS=1500;
 function resize(){const r=canvas.getBoundingClientRect(),d=window.devicePixelRatio||1;canvas.width=Math.max(1,Math.floor(r.width*d));canvas.height=Math.max(1,Math.floor(r.height*d));ctx.setTransform(d,0,0,d,0,0)}
 window.addEventListener('resize',()=>{resize();draw()});resize();
@@ -100,7 +99,7 @@ function stopAlert(){alertActive=false;alertSeconds=0;buzzerOff()}
 function startAlert(){alertActive=true;alertSeconds=0;highSeconds=TRIGGER_SECONDS;buzzerOn()}
 function fmt(s){s=Math.max(0,Math.ceil(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 function render(){const n=Number(slider.value),high=noiseState;$('sciNoiseValue').textContent=n+'%';$('sciMetricNoise').textContent=n+'%';$('sciThresholdValue').textContent=threshold+'%';$('sciMetricThreshold').textContent=threshold+'%';$('sciBinaryState').textContent='STATE,'+(high?1:0);$('sciTimer').textContent=fmt(highSeconds);$('sciOffTimer').textContent=alertActive?fmt(ALERT_SECONDS-alertSeconds):'—';$('sciProgress').style.width=Math.min(100,highSeconds/TRIGGER_SECONDS*100)+'%';$('sciGreenLed').className='sci-led'+(!high&&!alertActive?' on green':'');$('sciYellowLed').className='sci-led'+(high&&!alertActive?' on yellow flashing':'');$('sciRedLed').className='sci-led'+(alertActive?' on red':'');$('sciBuzzerLed').className='sci-led'+(alertActive?' on cyan':'');$('sciGreenState').textContent=!high&&!alertActive?'ON':'OFF';$('sciYellowState').textContent=high&&!alertActive?'ON':'OFF';$('sciRedState').textContent=alertActive?'ON':'OFF';$('sciBuzzerState').textContent=alertActive?'ON':'OFF';const s=$('sciStatus');if(alertActive){s.className='sci-status alert';s.textContent='ALERT ACTIVE — Red LED and buzzer are ON. Automatic shutdown in '+fmt(ALERT_SECONDS-alertSeconds)+'.'}else if(high){s.className='sci-status wait';s.textContent=belowSince===null?'WARNING — Yellow warning LED is ON. Five-minute timer is running.':'BRIEF SOUND DIP — Timer paused; it resets only after 1.5 seconds below the release threshold.'}else{s.className='sci-status';s.textContent='NORMAL — Sound level is below the configured threshold.'}}
-function draw(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;const d=window.devicePixelRatio||1;canvas.width=Math.max(1,Math.floor(w*d));canvas.height=Math.max(1,Math.floor(h*d));ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,w,h);ctx.strokeStyle='#20262b';ctx.lineWidth=1;for(let y=25;y<h;y+=35){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}const ty=h-(threshold/110)*(h-36)-12;ctx.setLineDash([6,5]);ctx.strokeStyle='#e35c62';ctx.beginPath();ctx.moveTo(0,ty);ctx.lineTo(w,ty);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#e89a9d';ctx.font='9px Arial';ctx.fillText('TRIGGER LEVEL',9,Math.max(14,ty-7));const amp=8+(Number(slider.value)/100)*(h*.37),mid=h*.57;ctx.beginPath();ctx.lineWidth=2;ctx.strokeStyle='#63c7d5';for(let x=0;x<=w;x+=2){const t=x/w*Math.PI*11,y=mid+Math.sin(t)*amp*(.7+.3*Math.sin(t*1.7))+Math.sin(t*2.6+1)*amp*.12;if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.stroke()}function tick(now){const elapsed=Math.max(0,Math.min((now-last)/1000,1));last=now;const dt=elapsed*timeSpeed;if(alertActive){alertSeconds+=dt;if(alertSeconds>=ALERT_SECONDS){stopAlert();highSeconds=0;noiseState=false;belowSince=null}}else{const current=Number(slider.value),exitThreshold=Math.max(0,threshold-RELEASE_HYSTERESIS);if(!noiseState&&current>=threshold){noiseState=true;belowSince=null}else if(noiseState){if(current<=exitThreshold){if(belowSince===null)belowSince=now;if(now-belowSince>=SILENCE_GRACE_MS){noiseState=false;belowSince=null;highSeconds=0}}else{belowSince=null}}if(noiseState&&belowSince===null){highSeconds+=dt;if(highSeconds>=TRIGGER_SECONDS)startAlert()}}render();requestAnimationFrame(tick)}
+function draw(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;ctx.clearRect(0,0,w,h);ctx.strokeStyle='#20262b';ctx.lineWidth=1;for(let y=25;y<h;y+=35){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}const ty=h-(threshold/110)*(h-36)-12;ctx.setLineDash([6,5]);ctx.strokeStyle='#e35c62';ctx.beginPath();ctx.moveTo(0,ty);ctx.lineTo(w,ty);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#e89a9d';ctx.font='9px Arial';ctx.fillText('TRIGGER LEVEL',9,Math.max(14,ty-7));const amp=8+(Number(slider.value)/100)*(h*.37),mid=h*.57;ctx.beginPath();ctx.lineWidth=2;ctx.strokeStyle='#63c7d5';for(let x=0;x<=w;x+=2){const t=x/w*Math.PI*11+wavePhase,y=mid+Math.sin(t)*amp*(.7+.3*Math.sin(t*1.7))+Math.sin(t*2.6+1)*amp*.12;if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.stroke()}function tick(now){const elapsed=Math.max(0,Math.min((now-last)/1000,1));last=now;wavePhase=(wavePhase+elapsed*2.2)%(Math.PI*2);const dt=elapsed*timeSpeed;if(alertActive){alertSeconds+=dt;if(alertSeconds>=ALERT_SECONDS){stopAlert();highSeconds=0;noiseState=false;belowSince=null}}else{const current=Number(slider.value),exitThreshold=Math.max(0,threshold-RELEASE_HYSTERESIS);if(!noiseState&&current>=threshold){noiseState=true;belowSince=null}else if(noiseState){if(current<=exitThreshold){if(belowSince===null)belowSince=now;if(now-belowSince>=SILENCE_GRACE_MS){noiseState=false;belowSince=null;highSeconds=0}}else{belowSince=null}}if(noiseState&&belowSince===null){highSeconds+=dt;if(highSeconds>=TRIGGER_SECONDS)startAlert()}}render();draw();requestAnimationFrame(tick)}
 slider.addEventListener('input',()=>{render();draw()});$('sciThreshold').addEventListener('input',()=>{threshold=Number($('sciThreshold').value);render();draw()});
 $('sciNormal').addEventListener('click',()=>{slider.value=25;render();draw()});
 $('sciHigh').addEventListener('click',()=>{slider.value=85;render();draw()});
