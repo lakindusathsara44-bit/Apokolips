@@ -4,46 +4,36 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#050609">
-<meta name="description" content="Silent Classroom Indicator web programming workspace for editing Arduino sketches and monitoring serial output.">
-<title>Web Programmer | Silent Classroom Indicator</title>
+<meta name="description" content="Full Arduino programming workspace for the Silent Classroom Indicator: edit, compile, upload, verify and monitor Arduino firmware.">
+<title>Arduino Programmer | Silent Classroom Indicator</title>
 <link rel="stylesheet" href="style.css?v=20261127-sci">
 <style>
-:root{--sp-bg:#070b12;--sp-panel:#0d1724;--sp-line:#243b55;--sp-text:#eef5ff;--sp-muted:#9eafc3;--sp-cyan:#50d9ed;--sp-green:#4be0a5;--sp-yellow:#ffd34d;--sp-red:#ff6377}
-.sp{max-width:1200px;margin:42px auto 76px;padding:0 26px;position:relative;z-index:3;color:var(--sp-text)}
+:root{--sp-line:#243b55;--sp-text:#eef5ff;--sp-muted:#9eafc3;--sp-cyan:#50d9ed}
+.sp{max-width:1440px;margin:38px auto 72px;padding:0 24px;position:relative;z-index:3;color:var(--sp-text)}
 .sp-kicker{font:10px 'DM Mono',monospace;letter-spacing:2px;color:var(--sp-cyan)}
-.sp-title{font-size:clamp(36px,6vw,64px);letter-spacing:-2.5px;line-height:1.04;margin:13px 0}
+.sp-title{font-size:clamp(34px,5.5vw,60px);letter-spacing:-2.3px;line-height:1.05;margin:12px 0}
 .sp-title span{background:linear-gradient(100deg,#eaf2ff,#83b7ff,#8bd8ed);-webkit-background-clip:text;background-clip:text;color:transparent}
-.sp-lead{max-width:850px;color:var(--sp-muted);font-size:14px;line-height:1.85}
-.sp-actions{display:flex;gap:9px;flex-wrap:wrap;margin:18px 0}
+.sp-lead{max-width:900px;color:var(--sp-muted);font-size:14px;line-height:1.85}
+.sp-actions{display:flex;gap:9px;flex-wrap:wrap;margin:17px 0}
 .sp-btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid #35516e;border-radius:8px;padding:10px 13px;background:#14283e;color:#eef6ff;font-size:10px;font-weight:800;letter-spacing:.45px;cursor:pointer;text-decoration:none}
 .sp-btn.primary{background:#dcecff;color:#07111d;border-color:#dcecff}
-.sp-btn:disabled{opacity:.4;cursor:not-allowed}
-.sp-btn:not(:disabled):hover{filter:brightness(1.12);transform:translateY(-1px)}
-.sp-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(270px,.75fr);gap:14px;margin-top:16px}
-.sp-card{min-width:0;padding:18px;border:1px solid var(--sp-line);border-radius:13px;background:linear-gradient(145deg,#101e30,#091321);box-shadow:0 16px 40px #0005}
-.sp-card h2{font-size:15px;margin:0 0 13px}
-.sp-toolbar{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;margin-bottom:9px}
-.sp-toolbar small,.sp-muted{color:var(--sp-muted);font-size:9px}
-.sp-editor{width:100%;min-height:490px;resize:vertical;border:1px solid #29445f;border-radius:9px;background:#050d17;color:#d9edff;padding:15px;font:12px/1.7 'DM Mono',Consolas,monospace;tab-size:2;outline:none;white-space:pre;overflow:auto}
-.sp-editor:focus{border-color:var(--sp-cyan);box-shadow:0 0 0 2px #50d9ed22}
-.sp-status{padding:11px 12px;border:1px solid #286b56;border-radius:9px;background:#102e2a;color:#b8f6dc;font-size:10px;font-weight:800;line-height:1.65}
-.sp-status.warn{background:#302819;border-color:#81632e;color:#ffe3a6}
-.sp-status.error{background:#351925;border-color:#87384c;color:#ffc2cc}
-.sp-field{display:grid;gap:6px;margin:12px 0}
-.sp-field label{font-size:9px;color:var(--sp-muted);letter-spacing:.5px}
-.sp-select{width:100%;padding:10px;border:1px solid #35516e;border-radius:7px;background:#081321;color:#eef5ff;font-size:10px}
-.sp-terminal{min-height:220px;max-height:330px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;border:1px solid #203a54;border-radius:9px;background:#03080e;color:#b8d5e8;font:10px/1.7 'DM Mono',Consolas,monospace}
-.sp-terminal .muted{color:#6f879e}.sp-terminal .good{color:var(--sp-green)}.sp-terminal .bad{color:var(--sp-red)}
-.sp-connection{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #203953;border-radius:9px;background:#081321;font-size:10px;margin:12px 0}
-.sp-connection i{width:8px;height:8px;border-radius:50%;background:#78899b}.sp-connection.connected i{background:var(--sp-green);box-shadow:0 0 10px var(--sp-green)}
-.sp-connection span{margin-left:auto;color:var(--sp-muted)}
-.sp-note{padding:12px;border:1px solid #304b68;border-radius:10px;background:#0a1725;color:#b9cce0;font-size:10px;line-height:1.8;margin-top:12px}
-.sp-note strong{color:#edf6ff}.sp-note.warning{border-color:#765c2c;background:#211c12;color:#ffe4ac}
-.sp-list{padding-left:17px;color:var(--sp-muted);font-size:10px;line-height:1.9}
+.sp-btn:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.sp-panel{border:1px solid var(--sp-line);border-radius:13px;background:linear-gradient(145deg,#101e30,#091321);box-shadow:0 16px 40px #0005;overflow:hidden}
+.sp-panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid #243b55}
+.sp-panel-head strong{font-size:12px;letter-spacing:.5px}
+.sp-panel-head small{font-size:9px;color:var(--sp-muted)}
+.sp-ide{display:block;width:100%;height:clamp(850px,115vh,1250px);border:0;background:#101820}
+.sp-note{padding:13px 15px;border:1px solid #304b68;border-radius:10px;background:#0a1725;color:#b9cce0;font-size:10px;line-height:1.85;margin:13px 0}
+.sp-note strong{color:#edf6ff}
+.sp-note.warning{border-color:#765c2c;background:#211c12;color:#ffe4ac}
+.sp-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
+.sp-card{padding:15px;border:1px solid var(--sp-line);border-radius:11px;background:#0c1725}
+.sp-card h2{font-size:12px;margin:0 0 8px}
+.sp-card p{font-size:10px;color:var(--sp-muted);line-height:1.8;margin:0}
 .sp-footer{margin-top:24px;color:#8295ab;font-size:9px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .sp a{color:#9bdff0}
-@media(max-width:850px){.sp-grid{grid-template-columns:1fr}}
-@media(max-width:560px){.sp{padding:0 15px;margin-top:28px}.sp-title{letter-spacing:-1.3px}.sp-editor{min-height:390px;font-size:11px}}
+@media(max-width:850px){.sp-grid{grid-template-columns:1fr 1fr}.sp-ide{height:1050px}}
+@media(max-width:560px){.sp{padding:0 13px;margin-top:25px}.sp-title{letter-spacing:-1.2px}.sp-grid{grid-template-columns:1fr}.sp-ide{height:1100px}.sp-panel-head{align-items:flex-start}}
 </style>
 </head>
 <body>
@@ -54,179 +44,31 @@
 <nav class="nav"><a href="index.html">Home</a><a href="info.html">About Me</a><a href="project.gallery.html">Community Gallery</a><a class="active" href="My-project.html">My Projects</a></nav>
 </header>
 <main class="sp">
-<div class="sp-kicker">PROJECT 008 / WEB DEVELOPMENT WORKSPACE / ARDUINO UNO</div>
-<h1 class="sp-title">Web <span>Programmer.</span></h1>
-<p class="sp-lead">Edit and manage the Silent Classroom Indicator Arduino sketch from the Apokolips website. This workspace currently provides a sketch editor, browser-side saving, file download, and a USB serial monitor.</p>
+<div class="sp-kicker">PROJECT 008 / EMBEDDED SYSTEMS / FULL PROGRAMMING WORKSPACE</div>
+<h1 class="sp-title">Arduino <span>Programmer.</span></h1>
+<p class="sp-lead">A complete browser-based Arduino IDE for the Silent Classroom Indicator. Write and manage sketches, compile firmware, upload it to a supported board, verify the flash, and inspect serial output in one workspace.</p>
 <div class="sp-actions">
 <a class="sp-btn" href="silent-classroom-hardware.html">← HARDWARE MONITOR</a>
 <a class="sp-btn" href="silent-classroom-indicator.html">SIMULATION</a>
-<button class="sp-btn primary" id="spDownload">DOWNLOAD .INO</button>
-<button class="sp-btn" id="spSave">SAVE IN BROWSER</button>
-<button class="sp-btn" id="spRestore">RESTORE SAVED</button>
+<a class="sp-btn primary" href="sci-ide/" target="_blank" rel="noopener">OPEN FULL WORKSPACE ↗</a>
+<a class="sp-btn" href="arduino/sci_max4466_uno.ino" download>DOWNLOAD SCI FIRMWARE (.INO)</a>
 </div>
-<div class="sp-status warn" id="spCompilerStatus">COMPILER / UPLOADER NOT CONNECTED — Editing and sketch download are available. Direct Compile &amp; Upload will be enabled after the Arduino build and bootloader upload engine is integrated.</div>
+<div class="sp-note warning"><strong>First deployment:</strong> GitHub Actions builds the IDE assets after this integration is merged. If the workspace temporarily shows a not-found page before the first build completes, wait for the build to finish and refresh this page.</div>
+<section class="sp-panel" aria-label="Arduino programming workspace">
+<div class="sp-panel-head"><strong>ARDUINO WEB IDE / SCI FIRMWARE WORKSPACE</strong><small>UNO · AVR-GCC WebAssembly · Web Serial · Serial Monitor</small></div>
+<iframe class="sp-ide" src="sci-ide/" title="Arduino Web programming workspace" allow="serial" loading="eager" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</section>
 <div class="sp-grid">
-<section class="sp-card">
-<div class="sp-toolbar"><h2>Arduino sketch editor</h2><small id="spCount">0 lines · 0 characters</small></div>
-<textarea class="sp-editor" id="spCode" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Arduino C++ code editor"></textarea>
-<div class="sp-actions">
-<button class="sp-btn" id="spCheck">CHECK CODE STRUCTURE</button>
-<button class="sp-btn" id="spReset">LOAD SCI TEMPLATE</button>
-<button class="sp-btn" id="spClear">CLEAR EDITOR</button>
+<section class="sp-card"><h2>01 / Import SCI firmware</h2><p>In the IDE, open File → Import Sketch, then select the downloaded <code>sci_max4466_uno.ino</code> file. The editor will create a sketch you can modify and save in this browser.</p></section>
+<section class="sp-card"><h2>02 / Compile and upload</h2><p>Select Arduino UNO, press Verify to compile, then connect the USB board and press Upload. The IDE checks the firmware before writing and verifies the uploaded flash where supported.</p></section>
+<section class="sp-card"><h2>03 / Serial verification</h2><p>Open Serial Monitor at 115200 baud. The SCI firmware should report <code>SCI,&lt;ADC&gt;</code> and <code>STATE,0</code> or <code>STATE,1</code>. Only one browser tab/app can own the board's serial port at a time.</p></section>
 </div>
-<div class="sp-status" id="spEditorStatus">READY — Edit the sketch, save it in this browser, or download it as an .ino file.</div>
-<div class="sp-note warning"><strong>Upload status:</strong> This page does not yet compile C++ or flash firmware to the UNO. A browser serial connection alone cannot upload an Arduino sketch; the AVR compiler toolchain and avrdude-compatible bootloader uploader must be integrated first. The Upload control is intentionally not presented as working.</div>
-</section>
-<aside class="sp-card">
-<h2>Board &amp; programming</h2>
-<div class="sp-field"><label for="spBoard">TARGET BOARD</label><select class="sp-select" id="spBoard"><option value="uno">Arduino UNO (ATmega328P)</option><option value="leonardo" disabled>Arduino Leonardo (planned)</option></select></div>
-<div class="sp-field"><label for="spBaud">SERIAL MONITOR BAUD RATE</label><select class="sp-select" id="spBaud"><option>115200</option><option>9600</option><option>57600</option><option>38400</option><option>19200</option></select></div>
-<div class="sp-connection" id="spConnection"><i></i><b id="spConnectionText">NOT CONNECTED</b><span id="spPort">USB serial idle</span></div>
-<div class="sp-actions"><button class="sp-btn primary" id="spConnect">CONNECT USB</button><button class="sp-btn" id="spDisconnect" disabled>DISCONNECT</button></div>
-<div class="sp-note">Use desktop Chrome or Edge over HTTPS. Select the Arduino UNO serial port in the browser permission window. Close Arduino IDE Serial Monitor before connecting.</div>
-<div class="sp-field"><label>SERIAL MONITOR</label><div class="sp-terminal" id="spTerminal" role="log" aria-live="polite"><span class="muted">Serial output will appear here after connecting the board.</span></div></div>
-<div class="sp-actions"><button class="sp-btn" id="spClearLog">CLEAR OUTPUT</button></div>
-<div class="sp-field"><label for="spCommand">SEND SERIAL COMMAND</label><input class="sp-select" id="spCommand" type="text" placeholder="Example: MODE,WEB"></div>
-<div class="sp-actions"><button class="sp-btn" id="spSend" disabled>SEND COMMAND</button></div>
-</aside>
-</div>
-<section class="sp-card" style="margin-top:14px">
-<h2>Programming workflow</h2>
-<ol class="sp-list">
-<li>Write or edit the Arduino C++ sketch in the editor.</li>
-<li>Save a browser copy or download the .ino file.</li>
-<li>Connect the Arduino over USB to inspect serial output and send supported SCI commands.</li>
-<li>Compile and upload from this website after the AVR compiler and bootloader upload engine is added.</li>
-</ol>
-<div class="sp-actions"><a class="sp-btn" href="arduino/sci_max4466_uno.ino" download>DOWNLOAD CURRENT SCI FIRMWARE</a><a class="sp-btn" href="silent-classroom-hardware.html">OPEN HARDWARE MONITOR →</a></div>
-</section>
-<div class="sp-footer"><span>SILENT CLASSROOM INDICATOR / WEB PROGRAMMER</span><span><a href="My-project.html">← BACK TO MY PROJECTS</a></span></div>
+<div class="sp-note"><strong>Browser and hardware requirements:</strong> Editing and compiling work in modern browsers. USB upload and Serial Monitor require desktop Chrome, Edge or Opera over HTTPS, a USB data cable, and permission to access the Arduino serial port. Android mobile browsers generally cannot use Web Serial. Close the Hardware Monitor serial connection and Arduino IDE Serial Monitor before connecting here.</div>
+<div class="sp-note">The embedded IDE is powered by <a href="https://github.com/Shubin123/arduino-web" target="_blank" rel="noopener">Arduino Web by Shubin123</a>, licensed under AGPL-3.0-or-later. This is an independent project and is not affiliated with or endorsed by Arduino.</div>
+<div class="sp-footer"><span>SILENT CLASSROOM INDICATOR / ARDUINO PROGRAMMER</span><span><a href="My-project.html">← BACK TO MY PROJECTS</a></span></div>
 </main>
 <footer class="footer"><span>© <span id="year"></span> Lakindu Sathsara</span><span><a href="silent-classroom-hardware.html">HARDWARE MONITOR ↑</a></span></footer>
 <script src="script.js"></script>
-<script>
-(()=> {
-'use strict';
-const $=id=>document.getElementById(id);
-const template=`/*
-  SILENT CLASSROOM INDICATOR
-  Arduino UNO + MAX4466 microphone module
-
-  MAX4466 VCC -> Arduino 5V
-  MAX4466 GND -> Arduino GND
-  MAX4466 OUT -> Arduino A0
-
-  Serial output at 115200 baud:
-    SCI,<filtered_ADC_value>
-    STATE,<0_or_1>
-*/
-const byte MIC_PIN = A0;
-const unsigned int SAMPLE_COUNT = 180;
-const unsigned int SAMPLE_GAP_US = 60;
-const float ATTACK_TIME_MS = 70.0;
-const float RELEASE_TIME_MS = 650.0;
-const int FIXED_THRESHOLD = 50;
-const int HYSTERESIS = 6;
-
-float filteredLevel = 0.0;
-bool filterInitialized = false;
-unsigned long previousSampleTime = 0;
-bool webMode = false;
-bool noiseDetected = false;
-int websiteThreshold = 50;
-char commandBuffer[32];
-byte commandIndex = 0;
-
-void readSerialCommands() {
-  while (Serial.available() > 0) {
-    const char incoming = (char)Serial.read();
-    if (incoming == '\\n' || incoming == '\\r') {
-      if (commandIndex > 0) {
-        commandBuffer[commandIndex] = '\\0';
-        if (strcmp(commandBuffer, "MODE,FIXED") == 0) {
-          webMode = false;
-          noiseDetected = false;
-        } else if (strcmp(commandBuffer, "MODE,WEB") == 0) {
-          webMode = true;
-          noiseDetected = false;
-        } else if (strncmp(commandBuffer, "TH,", 3) == 0) {
-          const int value = atoi(commandBuffer + 3);
-          if (value >= 1 && value <= 1023) websiteThreshold = value;
-        }
-        commandIndex = 0;
-      }
-    } else if (commandIndex < sizeof(commandBuffer) - 1) {
-      commandBuffer[commandIndex++] = incoming;
-    }
-  }
-}
-
-void setup() {
-  Serial.begin(115200);
-  pinMode(MIC_PIN, INPUT);
-}
-
-void loop() {
-  readSerialCommands();
-  int signalMin = 1023;
-  int signalMax = 0;
-  for (unsigned int i = 0; i < SAMPLE_COUNT; i++) {
-    const int sampleValue = analogRead(MIC_PIN);
-    if (sampleValue < signalMin) signalMin = sampleValue;
-    if (sampleValue > signalMax) signalMax = sampleValue;
-    delayMicroseconds(SAMPLE_GAP_US);
-  }
-  const int peakToPeak = signalMax - signalMin;
-  const unsigned long now = millis();
-  if (!filterInitialized) {
-    filteredLevel = (float)peakToPeak;
-    previousSampleTime = now;
-    filterInitialized = true;
-  } else {
-    float elapsedMs = (float)(now - previousSampleTime);
-    previousSampleTime = now;
-    if (elapsedMs > 250.0) elapsedMs = 250.0;
-    const float timeConstant = ((float)peakToPeak > filteredLevel)
-      ? ATTACK_TIME_MS : RELEASE_TIME_MS;
-    const float alpha = elapsedMs / (timeConstant + elapsedMs);
-    filteredLevel += ((float)peakToPeak - filteredLevel) * alpha;
-  }
-  const int activeThreshold = webMode ? websiteThreshold : FIXED_THRESHOLD;
-  if (!noiseDetected && filteredLevel >= activeThreshold) {
-    noiseDetected = true;
-  } else if (noiseDetected && filteredLevel < (activeThreshold - HYSTERESIS)) {
-    noiseDetected = false;
-  }
-  Serial.print(F("SCI,"));
-  Serial.println((int)(filteredLevel + 0.5f));
-  Serial.print(F("STATE,"));
-  Serial.println(noiseDetected ? 1 : 0);
-  delay(8);
-}`;
-let port=null,reader=null,writer=null,keepReading=false,readTask=null;
-const encoder=new TextEncoder();
-function log(message,kind=''){const el=$('spTerminal');const line=document.createElement('div');if(kind)line.className=kind;line.textContent=message;el.appendChild(line);el.scrollTop=el.scrollHeight}
-function updateCount(){const value=$('spCode').value;$('spCount').textContent=value.split('\n').length+' lines · '+value.length+' characters'}
-function setConnection(connected,label,detail){$('spConnection').classList.toggle('connected',connected);$('spConnectionText').textContent=label;$('spPort').textContent=detail;$('spConnect').disabled=connected;$('spDisconnect').disabled=!connected;$('spSend').disabled=!connected}
-function download(){const blob=new Blob([$('spCode').value],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sci_firmware.ino';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);$('spEditorStatus').textContent='DOWNLOADED — sci_firmware.ino'}
-function checkStructure(){const code=$('spCode').value;const pairs=[['{','}'],['(',')'],['[',']']];let valid=true;const problems=[];for(const [open,close] of pairs){let depth=0;for(const ch of code){if(ch===open)depth++;if(ch===close)depth--;if(depth<0){valid=false;problems.push('Unexpected '+close);break}}if(depth>0){valid=false;problems.push('Missing '+close)}}const hasSetup=/\bvoid\s+setup\s*\(/.test(code),hasLoop=/\bvoid\s+loop\s*\(/.test(code);if(!hasSetup)problems.push('Missing void setup()');if(!hasLoop)problems.push('Missing void loop()');valid=valid&&hasSetup&&hasLoop;$('spEditorStatus').className='sp-status'+(valid?'':' error');$('spEditorStatus').textContent=valid?'STRUCTURE CHECK PASSED — Basic delimiters and Arduino entry points look present. This is not a real C++ compilation.':'STRUCTURE CHECK — '+problems.join(' · ');return valid}
-async function connect(){if(!('serial'in navigator)){log('Web Serial is unavailable. Use desktop Chrome or Edge over HTTPS.','bad');return}try{port=await navigator.serial.requestPort();await port.open({baudRate:Number($('spBaud').value)});keepReading=true;writer=port.writable.getWriter();setConnection(true,'CONNECTED','USB serial · '+$('spBaud').value+' baud');log('Connected to serial port.','good');const decoder=new TextDecoderStream();const closed=port.readable.pipeTo(decoder.writable);reader=decoder.readable.getReader();readTask=(async()=>{let buffer='';try{while(keepReading){const {value,done}=await reader.read();if(done)break;buffer+=value;let idx;while((idx=buffer.indexOf('\n'))>=0){log(buffer.slice(0,idx).replace(/\r$/,''));buffer=buffer.slice(idx+1)}if(buffer.length>4096){log(buffer.slice(0,4096));buffer=buffer.slice(4096)}}}catch(err){if(keepReading)log('Serial read error: '+err.message,'bad')}finally{try{reader.releaseLock()}catch(e){}reader=null;try{await closed}catch(e){}if(keepReading){keepReading=false;port=null;writer=null;setConnection(false,'CONNECTION LOST','Reconnect USB');log('Serial connection ended.','bad')}}})();}catch(err){port=null;setConnection(false,'NOT CONNECTED',err.message||'Port selection cancelled');log('Could not connect: '+(err.message||err),'bad')}}
-async function disconnect(){keepReading=false;try{if(reader)await reader.cancel()}catch(e){}try{if(writer){writer.releaseLock();writer=null}}catch(e){}try{if(port)await port.close()}catch(e){}port=null;reader=null;setConnection(false,'DISCONNECTED','USB serial idle');log('Disconnected.')}
-$('spCode').value=template;updateCount();$('year').textContent=new Date().getFullYear();
-$('spCode').addEventListener('input',updateCount);
-$('spDownload').addEventListener('click',download);
-$('spSave').addEventListener('click',()=>{try{localStorage.setItem('sci-programmer-sketch',$('spCode').value);$('spEditorStatus').textContent='SAVED — Sketch stored in this browser on this device.'}catch(e){$('spEditorStatus').textContent='SAVE FAILED — Browser storage is unavailable.'}});
-$('spRestore').addEventListener('click',()=>{const saved=localStorage.getItem('sci-programmer-sketch');if(saved===null){$('spEditorStatus').textContent='NO SAVED SKETCH — Save a sketch first.';return}$('spCode').value=saved;updateCount();$('spEditorStatus').textContent='RESTORED — Loaded the saved browser copy.'});
-$('spReset').addEventListener('click',()=>{if(confirm('Replace the editor contents with the SCI starter sketch?')){$('spCode').value=template;updateCount();$('spEditorStatus').textContent='SCI TEMPLATE LOADED.'}});
-$('spClear').addEventListener('click',()=>{if(confirm('Clear the code editor?')){$('spCode').value='';updateCount();$('spEditorStatus').textContent='EDITOR CLEARED.'}});
-$('spCheck').addEventListener('click',checkStructure);
-$('spConnect').addEventListener('click',connect);$('spDisconnect').addEventListener('click',disconnect);
-$('spClearLog').addEventListener('click',()=>{$('spTerminal').textContent=''});
-$('spSend').addEventListener('click',async()=>{const command=$('spCommand').value.trim();if(!command||!writer)return;try{await writer.write(encoder.encode(command+'\n'));log('> '+command,'good');$('spCommand').value=''}catch(err){log('Send failed: '+err.message,'bad')}});
-$('spCommand').addEventListener('keydown',e=>{if(e.key==='Enter')$('spSend').click()});
-if(!('serial'in navigator)){$('spConnect').disabled=true;setConnection(false,'WEB SERIAL UNAVAILABLE','Desktop Chrome / Edge required')}
-window.addEventListener('beforeunload',()=>{try{reader&&reader.cancel();port&&port.close()}catch(e){}});
-})();
-</script>
+<script>document.getElementById('year').textContent=new Date().getFullYear();</script>
 </body>
 </html>
