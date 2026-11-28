@@ -3,134 +3,308 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#050609">
-<meta name="description" content="Interactive presentation of the Silent Classroom Indicator, an Arduino-based classroom noise monitoring and alert system.">
-<link rel="icon" href="file_00000000a7ec820890154ca6ed49b608.ico">
-<title>Silent Classroom Indicator | Apokolips</title>
-<link rel="stylesheet" href="style.css?v=20261127-sci">
+<meta name="theme-color" content="#050505">
+<meta name="description" content="Silent Classroom Indicator simulation — an Arduino classroom noise monitoring system.">
+<title>Silent Classroom / Simulation</title>
 <style>
-:root{--sci-bg:#070b12;--sci-panel:#0d1724;--sci-line:#243b55;--sci-text:#eef5ff;--sci-muted:#9eafc3;--sci-cyan:#50d9ed;--sci-red:#ff6377;--sci-green:#4be0a5;--sci-yellow:#ffd34d;--sci-amber:#ffd477}
-.sci{max-width:1160px;margin:48px auto 80px;padding:0 28px;position:relative;z-index:3}
-.sci-kicker{font:10px 'DM Mono',monospace;letter-spacing:2px;color:var(--sci-cyan)}
-.sci-title{font-size:clamp(38px,6vw,68px);letter-spacing:-3px;line-height:1.04;margin:14px 0}
-.sci-title span{background:linear-gradient(100deg,#eaf2ff,#83b7ff,#8bd8ed);-webkit-background-clip:text;background-clip:text;color:transparent}
-.sci-lead{max-width:800px;color:var(--sci-muted);font-size:14px;line-height:1.85}
-.sci-actions{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}
-.sci-btn{border:1px solid #35516e;border-radius:8px;padding:11px 15px;background:#14283e;color:#eef6ff;font-size:10px;font-weight:800;letter-spacing:.6px;cursor:pointer}
-.sci-btn.primary{background:#dcecff;color:#07111d;border-color:#dcecff}.sci-btn:hover{filter:brightness(1.12);transform:translateY(-1px)}
-.sci-section{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:28px 0 12px}
-.sci-section h2{font-size:19px;margin:0}.sci-section p{font-size:10px;color:var(--sci-muted);margin:5px 0 0}
-.sci-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(290px,.85fr);gap:14px}
-.sci-card{min-width:0;padding:18px;border:1px solid var(--sci-line);border-radius:13px;background:linear-gradient(145deg,#101e30,#091321);box-shadow:0 16px 40px #0005}
-.sci-card h3{font-size:13px;margin:0 0 13px}
-.sci-chart{background:#050d17;border:1px solid #203a54;border-radius:10px;overflow:hidden}
-#sciWave{display:block;width:100%;height:280px}
-.sci-legend{display:flex;gap:15px;flex-wrap:wrap;color:var(--sci-muted);font-size:9px;margin-top:10px}
-.sci-key{display:inline-flex;align-items:center;gap:6px}.sci-dot{width:8px;height:8px;border-radius:50%}
-.sci-control{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;margin-top:17px}
-.sci-control label{display:block;color:var(--sci-muted);font-size:10px;margin-bottom:7px}
-.sci-control input{width:100%;accent-color:var(--sci-cyan)}
-.sci-value{border:1px solid #35516e;border-radius:7px;padding:7px 10px;font-weight:800;font-size:12px}
-.sci-presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
-.sci-speed{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:15px;padding-top:13px;border-top:1px solid #203953}.sci-speed-label{width:100%;color:var(--sci-muted);font-size:9px;font-weight:800;letter-spacing:.8px}.sci-speed-btn{border:1px solid #35516e;border-radius:7px;padding:7px 10px;background:#0a1725;color:#c8d9eb;font-size:10px;font-weight:800;cursor:pointer}.sci-speed-btn.active{background:var(--sci-cyan);border-color:var(--sci-cyan);color:#06121e}.sci-speed-hint{font-size:9px;color:var(--sci-muted);margin-top:8px}
-.sci-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.sci-metric{padding:11px;border:1px solid #203953;border-radius:9px;background:#081321}
-.sci-metric span{display:block;color:var(--sci-muted);font-size:9px}.sci-metric strong{font-size:21px}
-.sci-progress{height:7px;border-radius:20px;background:#263c52;overflow:hidden;margin-top:12px}
-.sci-progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--sci-amber),var(--sci-red))}
-.sci-status{padding:11px 12px;border:1px solid #286b56;border-radius:9px;background:#102e2a;color:#b8f6dc;font-size:10px;font-weight:800;margin-top:12px}
-.sci-status.wait{background:#302819;border-color:#81632e;color:#ffe3a6}.sci-status.alert{background:#351925;border-color:#87384c;color:#ffc2cc}
-.sci-io{display:grid;gap:10px;margin-top:14px}.sci-io-row{display:flex;align-items:center;gap:9px;font-size:10px}.sci-led{width:11px;height:11px;border-radius:50%;background:#30445a;box-shadow:inset 0 0 0 1px #526a82}.sci-led.on.green{background:var(--sci-green);box-shadow:0 0 12px var(--sci-green)}.sci-led.on.yellow{background:var(--sci-yellow);box-shadow:0 0 12px var(--sci-yellow)}.sci-led.on.yellow.flashing{animation:sci-yellow-flash .8s infinite ease-in-out}@keyframes sci-yellow-flash{0%,100%{opacity:1;box-shadow:0 0 14px var(--sci-yellow)}50%{opacity:.18;box-shadow:0 0 2px transparent}}.sci-led.on.red{background:var(--sci-red);box-shadow:0 0 12px var(--sci-red)}.sci-led.on.cyan{background:var(--sci-cyan);box-shadow:0 0 12px var(--sci-cyan)}
-.sci-state{margin-left:auto;color:var(--sci-muted);font-size:9px;font-weight:800}
-.sci-note{padding:13px;border:1px solid #304b68;border-radius:10px;background:#0a1725;color:#b9cce0;font-size:10px;line-height:1.8;margin-top:12px}
-.sci-footer{margin-top:26px;color:#8295ab;font-size:9px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-@media(max-width:820px){.sci-grid{grid-template-columns:1fr}}
-@media(max-width:560px){.sci{padding:0 17px;margin-top:34px}.sci-title{letter-spacing:-1.5px}#sciWave{height:220px}.sci-section{display:block}}
+:root{color-scheme:dark;--bg:#050505;--panel:#0c0c0c;--panel2:#101010;--line:#282828;--line2:#3a3a3a;--text:#f1f1f1;--muted:#929292;--dim:#626262;--cyan:#7edce5;--green:#78c99b;--yellow:#e8c66a;--red:#e47777}
+*{box-sizing:border-box}
+html{background:var(--bg);scroll-behavior:auto}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.5}
+button,input{font:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+.shell{max-width:1280px;margin:auto;padding:0 26px}
+.topline{height:58px;border-bottom:1px solid var(--line);background:#080808}
+.topline-inner{height:100%;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.project-mark{display:flex;align-items:center;gap:11px;font-size:11px;font-weight:800;letter-spacing:1.7px}
+.mark-box{width:28px;height:28px;border:1px solid #555;display:grid;place-items:center;font-size:12px;color:#fff}
+.top-meta{display:flex;align-items:center;gap:16px;color:var(--muted);font:10px ui-monospace,monospace;letter-spacing:1px}
+.top-meta a{color:#c8c8c8}
+main{padding:38px 0 64px}
+.eyebrow{font:10px ui-monospace,monospace;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding-bottom:26px;border-bottom:1px solid var(--line)}
+h1{font-size:clamp(32px,5vw,54px);line-height:1.03;letter-spacing:-2px;margin:12px 0 10px;font-weight:650}
+h1 span{color:#a7a7a7}
+.lead{max-width:720px;color:#a4a4a4;font-size:13px;line-height:1.8;margin:0}
+.system-chip{border:1px solid var(--line2);padding:9px 12px;color:#bcbcbc;font:10px ui-monospace,monospace;white-space:nowrap}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 26px}
+.btn{min-height:38px;padding:0 13px;border:1px solid var(--line2);background:#111;color:#ddd;font-size:10px;font-weight:750;letter-spacing:.7px}
+.btn:hover{background:#1a1a1a;border-color:#686868}
+.btn.primary{background:#e7e7e7;border-color:#e7e7e7;color:#080808}
+.btn.primary:hover{background:#fff}
+.btn:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.workspace{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr);gap:14px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);min-width:0}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 17px;border-bottom:1px solid var(--line)}
+.panel-head h2,.panel-head h3{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;margin:0;font-weight:800}
+.panel-index{color:var(--dim);font:10px ui-monospace,monospace}
+.panel-body{padding:17px}
+.signal-screen{background:#070707;border:1px solid #303030;padding:12px}
+.signal-top{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font:9px ui-monospace,monospace;letter-spacing:1px;margin-bottom:8px}
+#signalCanvas{display:block;width:100%;height:240px;background:#080808}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:10px}
+.legend-item{display:flex;align-items:center;gap:7px}
+.legend-dot{width:8px;height:8px;background:var(--cyan)}
+.legend-dot.threshold{background:var(--red)}
+.control{margin-top:22px}
+.control-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px}
+.control label{font-size:10px;color:#c4c4c4;font-weight:750;letter-spacing:.8px}
+.readout{min-width:58px;text-align:right;color:#fff;font:700 15px ui-monospace,monospace}
+input[type=range]{width:100%;accent-color:#d8d8d8;cursor:pointer}
+.scale{display:flex;justify-content:space-between;color:var(--dim);font:9px ui-monospace,monospace;margin-top:4px}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;padding-top:17px;border-top:1px solid var(--line)}
+.speed-wrap{margin-top:18px}
+.speed-label{display:block;color:var(--muted);font-size:9px;font-weight:800;letter-spacing:1px;margin-bottom:9px}
+.speed-options{display:flex;gap:6px;flex-wrap:wrap}
+.speed-btn{min-width:42px;padding:7px 9px;background:#0b0b0b;color:#aaa;border:1px solid #303030;font:10px ui-monospace,monospace}
+.speed-btn.active{background:#dedede;color:#080808;border-color:#dedede}
+.speed-note{margin:8px 0 0;color:var(--dim);font-size:10px}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.metric{background:#090909;border:1px solid #262626;padding:13px;min-height:82px}
+.metric-label{display:block;color:var(--muted);font:9px ui-monospace,monospace;letter-spacing:.8px;margin-bottom:8px}
+.metric-value{display:block;font:700 21px ui-monospace,monospace;color:#f0f0f0}
+.metric-value.small{font-size:15px}
+.status{margin-top:12px;padding:13px;border:1px solid #3a3a3a;background:#101010}
+.status-title{font:800 10px ui-monospace,monospace;letter-spacing:1px;margin-bottom:5px}
+.status-copy{font-size:11px;color:#aaa;line-height:1.65}
+.status.normal{border-left:3px solid var(--green)}
+.status.wait{border-left:3px solid var(--yellow)}
+.status.alert{border-left:3px solid var(--red)}
+.progress-label{display:flex;justify-content:space-between;color:var(--muted);font:9px ui-monospace,monospace;margin:17px 0 7px}
+.progress{height:5px;background:#242424}
+.progress span{display:block;height:100%;width:0;background:#c9c9c9}
+.io-list{margin-top:17px;border-top:1px solid var(--line)}
+.io-row{display:flex;align-items:center;gap:10px;padding:11px 2px;border-bottom:1px solid #202020;font-size:11px}
+.indicator{width:9px;height:9px;border:1px solid #555;background:#171717}
+.indicator.green.on{background:var(--green);border-color:var(--green)}
+.indicator.yellow.on{background:var(--yellow);border-color:var(--yellow)}
+.indicator.red.on{background:var(--red);border-color:var(--red)}
+.indicator.cyan.on{background:var(--cyan);border-color:var(--cyan)}
+.io-state{margin-left:auto;color:var(--muted);font:9px ui-monospace,monospace}
+.note{margin-top:14px;padding:12px;border:1px solid #292929;color:#929292;font-size:10px;line-height:1.75}
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.info-block{padding:17px;background:#0b0b0b;border:1px solid var(--line)}
+.info-block h3{font-size:10px;letter-spacing:1px;margin:0 0 9px}
+.info-block p{font-size:11px;line-height:1.75;color:#999;margin:0}
+.footer{display:flex;justify-content:space-between;gap:14px;margin-top:30px;padding-top:16px;border-top:1px solid var(--line);color:#777;font:9px ui-monospace,monospace;letter-spacing:.6px}
+.footer a{color:#bbb}
+.audio-state{margin-top:12px;color:#888;font-size:10px;min-height:16px}
+@media(max-width:850px){.workspace{grid-template-columns:1fr}.hero{align-items:flex-start;flex-direction:column}.system-chip{align-self:flex-start}}
+@media(max-width:560px){.shell{padding:0 15px}.topline{height:52px}.top-meta{gap:9px;font-size:9px}.project-mark{font-size:10px}.hero{padding-bottom:20px}main{padding-top:28px}h1{letter-spacing:-1.2px}.panel-body{padding:13px}#signalCanvas{height:190px}.bottom-grid{grid-template-columns:1fr}.system-chip{white-space:normal}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<canvas id="rain" aria-hidden="true"></canvas>
-<header class="topbar">
-<a class="brand" href="index.html"><span class="brand-mark"><img src="file_00000000a7ec820890154ca6ed49b608.png" alt="Apokolips logo"></span><span>APOKOLIPS</span></a>
-<button class="menu-toggle" aria-label="Toggle navigation">☰</button>
-<nav class="nav"><a href="index.html">Home</a><a href="info.html">About Me</a><a href="project.gallery.html">Community Gallery</a><a class="active" href="My-project.html">My Projects</a></nav>
+<header class="topline">
+<div class="shell topline-inner">
+<div class="project-mark"><span class="mark-box">SCI</span><span>CLASSROOM SYSTEMS / SIMULATOR</span></div>
+<div class="top-meta"><span>MODULE 008A</span><a href="My-project.html">← PROJECTS</a></div>
+</div>
 </header>
-<main class="sci">
-<div class="sci-kicker">PROJECT 008 / EMBEDDED SYSTEMS / INTERACTIVE PRESENTATION</div>
-<h1 class="sci-title">Silent Classroom <span>Indicator.</span></h1>
-<p class="sci-lead">An Arduino-based classroom noise monitoring concept. The system observes sound levels and activates a visual and audible warning when excessive noise continues for five minutes. Explore the animated waveform, trigger logic, indicator outputs, and automatic alert shutdown.</p>
-<div class="sci-actions">
-<button class="sci-btn primary" id="sciStart">START PRESENTATION / ENABLE AUDIO</button>
-<button class="sci-btn" id="sciFull">FULL SCREEN</button>
-<button class="sci-btn" id="sciTest">TEST BUZZER SOUND</button>
-<a class="sci-btn" href="silent-classroom-hardware.html">OPEN HARDWARE MONITOR ↗</a>
-<a class="sci-btn" href="silent-classroom-programmer.html">OPEN ARDUINO PROGRAMMER ↗</a>
+<main class="shell">
+<section class="hero">
+<div>
+<div class="eyebrow">Embedded systems / Arduino UNO / MAX4466</div>
+<h1>Silent Classroom <span>Simulation</span></h1>
+<p class="lead">A control-room style simulation for the classroom noise monitoring system. Adjust the sound input, set the warning threshold, and inspect the trigger timer, indicator states, and automatic alert shutdown.</p>
 </div>
-<div id="sciAudioInfo" class="sci-note">Press Start Presentation or Test Buzzer Sound once to allow your browser to play the generated buzzer tone.</div>
-
-<div class="sci-section"><div><h2>01 / Live Sound Waveform</h2><p>Adjust the simulated classroom noise level and observe the signal amplitude.</p></div><span class="sci-kicker">SIGNAL / TIME</span></div>
-<div class="sci-grid">
-<section class="sci-card">
-<h3>Sound Signal Visualisation</h3>
-<div class="sci-chart"><canvas id="sciWave" aria-label="Animated sound waveform with threshold line"></canvas></div>
-<div class="sci-legend"><span class="sci-key"><i class="sci-dot" style="background:var(--sci-cyan)"></i>Sound waveform</span><span class="sci-key"><i class="sci-dot" style="background:var(--sci-red)"></i>Noise threshold</span></div>
-<div class="sci-control"><div><label for="sciNoise">SIMULATED SOUND LEVEL</label><input id="sciNoise" type="range" min="0" max="100" value="25"></div><div class="sci-value" id="sciNoiseValue">25%</div></div>
-<div class="sci-control"><div><label for="sciThreshold">WARNING THRESHOLD / WEB MODE</label><input id="sciThreshold" type="range" min="10" max="95" value="60"></div><div class="sci-value" id="sciThresholdValue">60%</div></div>
-<div class="sci-presets"><button class="sci-btn" id="sciNormal">NORMAL NOISE</button><button class="sci-btn" id="sciHigh">HIGH NOISE</button><button class="sci-btn" id="sciReset">RESET SYSTEM</button></div>
-<div class="sci-speed" role="group" aria-label="Simulation time speed"><span class="sci-speed-label">DEMO TIME SPEED</span><button class="sci-speed-btn" data-speed="1">1×</button><button class="sci-speed-btn active" data-speed="1.5">1.5×</button><button class="sci-speed-btn" data-speed="2">2×</button><button class="sci-speed-btn" data-speed="3">3×</button><button class="sci-speed-btn" data-speed="5">5×</button><button class="sci-speed-btn" data-speed="6">6×</button><button class="sci-speed-btn" data-speed="7">7×</button></div><div class="sci-speed-hint" id="sciSpeedHint">Selected speed: 1.5× — five simulated minutes take about 3 minutes 20 seconds.</div>
+<div class="system-chip">SIMULATION MODE&nbsp; / &nbsp;LOCAL</div>
 </section>
-<aside class="sci-card">
-<h3>System Monitor</h3>
-<div class="sci-metrics">
-<div class="sci-metric"><span>CURRENT SOUND</span><strong id="sciMetricNoise">25%</strong></div>
-<div class="sci-metric"><span>TRIGGER THRESHOLD</span><strong id="sciMetricThreshold">60%</strong></div>
-<div class="sci-metric"><span>BINARY STATE</span><strong id="sciBinaryState">STATE,0</strong></div>
-<div class="sci-metric"><span>HIGH-NOISE TIMER</span><strong id="sciTimer">00:00</strong></div>
-<div class="sci-metric"><span>AUTO-OFF COUNTDOWN</span><strong id="sciOffTimer">—</strong></div>
+<div class="toolbar">
+<button class="btn primary" id="audioEnable">ENABLE AUDIO</button>
+<button class="btn" id="buzzerTest">TEST BUZZER</button>
+<button class="btn" id="fullScreen">FULL SCREEN</button>
+<a class="btn" href="silent-classroom-hardware.html">HARDWARE MONITOR ↗</a>
+<a class="btn" href="silent-classroom-programmer.html">ARDUINO PROGRAMMER ↗</a>
 </div>
-<div class="sci-progress"><i id="sciProgress"></i></div>
-<div class="sci-status" id="sciStatus">NORMAL — Sound level is below the configured threshold.</div>
-<div class="sci-io">
-<div class="sci-io-row"><i class="sci-led on green" id="sciGreenLed"></i>Green LED <span class="sci-state" id="sciGreenState">ON</span></div>
-<div class="sci-io-row"><i class="sci-led" id="sciYellowLed"></i>Yellow LED <span class="sci-state" id="sciYellowState">OFF</span></div>
-<div class="sci-io-row"><i class="sci-led" id="sciRedLed"></i>Red LED <span class="sci-state" id="sciRedState">OFF</span></div>
-<div class="sci-io-row"><i class="sci-led" id="sciBuzzerLed"></i>Buzzer <span class="sci-state" id="sciBuzzerState">OFF</span></div>
+<div class="workspace">
+<section class="panel">
+<div class="panel-head"><h2>01 / Input signal controls</h2><span class="panel-index">SIGNAL IN</span></div>
+<div class="panel-body">
+<div class="signal-screen">
+<div class="signal-top"><span>MICROPHONE INPUT / SIMULATED</span><span id="signalMode">NORMAL RANGE</span></div>
+<canvas id="signalCanvas" role="img" aria-label="Static sound signal plot showing current input level and warning threshold"></canvas>
+<div class="legend"><span class="legend-item"><i class="legend-dot"></i>Input signal</span><span class="legend-item"><i class="legend-dot threshold"></i>Warning threshold</span></div>
 </div>
-<div class="sci-note">The buzzer tone is generated by your browser. Once an alert starts, it automatically switches OFF after five minutes. The five-minute trigger timer and five-minute alert duration are separate.</div>
+<div class="control">
+<div class="control-row"><label for="noiseInput">CLASSROOM SOUND LEVEL</label><output class="readout" id="noiseValue">25%</output></div>
+<input id="noiseInput" type="range" min="0" max="100" value="25">
+<div class="scale"><span>0 / QUIET</span><span>50 / MODERATE</span><span>100 / LOUD</span></div>
+</div>
+<div class="control">
+<div class="control-row"><label for="thresholdInput">WARNING THRESHOLD</label><output class="readout" id="thresholdValue">60%</output></div>
+<input id="thresholdInput" type="range" min="10" max="95" value="60">
+<div class="scale"><span>10 / SENSITIVE</span><span>95 / LESS SENSITIVE</span></div>
+</div>
+<div class="presets">
+<button class="btn" id="normalPreset">SET NORMAL NOISE</button>
+<button class="btn" id="highPreset">SET HIGH NOISE</button>
+<button class="btn" id="resetSystem">RESET SIMULATION</button>
+</div>
+<div class="speed-wrap">
+<span class="speed-label">SIMULATION CLOCK SPEED</span>
+<div class="speed-options" role="group" aria-label="Simulation clock speed">
+<button class="speed-btn" data-speed="1">1×</button>
+<button class="speed-btn active" data-speed="1.5">1.5×</button>
+<button class="speed-btn" data-speed="2">2×</button>
+<button class="speed-btn" data-speed="3">3×</button>
+<button class="speed-btn" data-speed="5">5×</button>
+<button class="speed-btn" data-speed="6">6×</button>
+<button class="speed-btn" data-speed="7">7×</button>
+</div>
+<p class="speed-note" id="speedNote">At 1.5×, the five-minute trigger period takes 3 minutes 20 seconds.</p>
+</div>
+<div class="audio-state" id="audioState" aria-live="polite">Audio is disabled. Enable audio to hear the simulated buzzer.</div>
+</div>
+</section>
+<aside class="panel">
+<div class="panel-head"><h2>02 / System status</h2><span class="panel-index">OUTPUT</span></div>
+<div class="panel-body">
+<div class="metric-grid">
+<div class="metric"><span class="metric-label">INPUT LEVEL</span><strong class="metric-value" id="metricNoise">25%</strong></div>
+<div class="metric"><span class="metric-label">SET THRESHOLD</span><strong class="metric-value" id="metricThreshold">60%</strong></div>
+<div class="metric"><span class="metric-label">DIGITAL STATE</span><strong class="metric-value small" id="binaryState">STATE,0</strong></div>
+<div class="metric"><span class="metric-label">HIGH-NOISE TIME</span><strong class="metric-value" id="highTimer">00:00</strong></div>
+<div class="metric"><span class="metric-label">ALERT AUTO-OFF</span><strong class="metric-value" id="offTimer">—</strong></div>
+<div class="metric"><span class="metric-label">CLOCK SPEED</span><strong class="metric-value" id="speedValue">1.5×</strong></div>
+</div>
+<div class="progress-label"><span>TRIGGER TIMER PROGRESS</span><span id="progressText">0%</span></div>
+<div class="progress"><span id="timerProgress"></span></div>
+<div class="status normal" id="systemStatus" aria-live="polite">
+<div class="status-title" id="statusTitle">SYSTEM NORMAL</div>
+<div class="status-copy" id="statusCopy">Sound level is below the configured warning threshold.</div>
+</div>
+<div class="io-list">
+<div class="io-row"><i class="indicator green on" id="greenLed"></i>Green indicator <span class="io-state" id="greenState">ON</span></div>
+<div class="io-row"><i class="indicator yellow" id="yellowLed"></i>Yellow warning <span class="io-state" id="yellowState">OFF</span></div>
+<div class="io-row"><i class="indicator red" id="redLed"></i>Red alert <span class="io-state" id="redState">OFF</span></div>
+<div class="io-row"><i class="indicator cyan" id="buzzerLed"></i>Buzzer output <span class="io-state" id="buzzerState">OFF</span></div>
+</div>
+<div class="note">The warning timer reaches five minutes before the red alert and buzzer activate. Once active, the alert has its own five-minute automatic shutdown timer. A short sound dip does not immediately erase the trigger timer.</div>
+</div>
 </aside>
 </div>
-
-<div class="sci-footer"><span>SILENT CLASSROOM INDICATOR / PROJECT 008</span><span><a href="My-project.html">← BACK TO MY PROJECTS</a></span></div>
+<div class="bottom-grid">
+<section class="info-block"><h3>TRIGGER LOGIC</h3><p>When the input reaches the warning threshold, the yellow warning state is enabled and the high-noise timer begins. The timer resets only after the input remains below the release threshold for 1.5 seconds.</p></section>
+<section class="info-block"><h3>SIMULATION OUTPUT</h3><p>This page models the system behaviour in the browser. The on-screen indicators and generated buzzer sound are simulation outputs; physical LEDs and a buzzer require the corresponding hardware circuit.</p></section>
+</div>
+<footer class="footer"><span>SILENT CLASSROOM INDICATOR / MODULE 008A</span><a href="My-project.html">BACK TO MY PROJECTS ↑</a></footer>
 </main>
-<footer class="footer"><span>© <span id="year"></span> Lakindu Sathsara</span><span><a href="My-project.html">MY PROJECTS ↑</a></span></footer>
-<script src="script.js"></script>
 <script>
 (()=>{
-const $=id=>document.getElementById(id),canvas=$('sciWave'),ctx=canvas.getContext('2d'),slider=$('sciNoise');
-let threshold=60;const TRIGGER_SECONDS=300,ALERT_SECONDS=300;
-let highSeconds=0,alertSeconds=0,alertActive=false,last=performance.now(),phase=0,audioCtx=null,osc=null,gain=null,pulseTimer=null,timeSpeed=1.5;
-let noiseState=false,belowSince=null;
-const RELEASE_HYSTERESIS=6,SILENCE_GRACE_MS=1500;
-function resize(){const r=canvas.getBoundingClientRect(),d=window.devicePixelRatio||1;canvas.width=Math.max(1,Math.floor(r.width*d));canvas.height=Math.max(1,Math.floor(r.height*d));ctx.setTransform(d,0,0,d,0,0)}
-window.addEventListener('resize',resize);resize();
-function enableAudio(){const AC=window.AudioContext||window.webkitAudioContext;if(!AC){$('sciAudioInfo').textContent='Web Audio is not supported by this browser.';return false}if(!audioCtx)audioCtx=new AC();if(audioCtx.state==='suspended')audioCtx.resume();$('sciAudioInfo').textContent='Audio enabled. The electronic buzzer tone will play when an alert is triggered.';return true}
-function buzzerOff(){if(pulseTimer){clearInterval(pulseTimer);pulseTimer=null}if(gain&&audioCtx){const t=audioCtx.currentTime;gain.gain.cancelScheduledValues(t);gain.gain.setTargetAtTime(0,t,.025);setTimeout(()=>{try{if(osc){osc.stop();osc.disconnect()}if(gain)gain.disconnect()}catch(e){}osc=null;gain=null},130)}}
-function buzzerOn(){if(!enableAudio())return;buzzerOff();osc=audioCtx.createOscillator();gain=audioCtx.createGain();osc.type='square';osc.frequency.value=880;gain.gain.value=0;osc.connect(gain);gain.connect(audioCtx.destination);osc.start();let high=true;const pulse=()=>{if(!gain||!audioCtx)return;const t=audioCtx.currentTime;gain.gain.cancelScheduledValues(t);gain.gain.setTargetAtTime(high?.075:.001,t,.012);osc.frequency.setTargetAtTime(high?880:660,t,.01);high=!high};pulse();pulseTimer=setInterval(pulse,280)}
+'use strict';
+const $=id=>document.getElementById(id);
+const canvas=$('signalCanvas'),ctx=canvas.getContext('2d'),noiseInput=$('noiseInput'),thresholdInput=$('thresholdInput');
+const TRIGGER_SECONDS=300,ALERT_SECONDS=300,RELEASE_HYSTERESIS=6,SILENCE_GRACE_MS=1500;
+let threshold=60,timeSpeed=1.5,highSeconds=0,alertSeconds=0,alertActive=false,noiseState=false,belowSince=null,last=performance.now();
+let audioContext=null,oscillator=null,gainNode=null,testTimeout=null;
+const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+function formatTime(value){const total=Math.max(0,Math.ceil(value));return String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0')}
+function resizeCanvas(){const rect=canvas.getBoundingClientRect(),ratio=window.devicePixelRatio||1;canvas.width=Math.max(1,Math.round(rect.width*ratio));canvas.height=Math.max(1,Math.round(rect.height*ratio));ctx.setTransform(ratio,0,0,ratio,0,0);drawSignal()}
+function drawSignal(){
+ const width=canvas.clientWidth,height=canvas.clientHeight;if(!width||!height)return;
+ ctx.clearRect(0,0,width,height);ctx.fillStyle='#080808';ctx.fillRect(0,0,width,height);
+ ctx.strokeStyle='#202020';ctx.lineWidth=1;
+ for(let x=0;x<=width;x+=Math.max(32,width/12)){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,height);ctx.stroke()}
+ for(let y=0;y<=height;y+=Math.max(25,height/6)){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(width,y);ctx.stroke()}
+ const base=height*.72,level=Number(noiseInput.value),amp=5+level/100*height*.32,thresholdY=height-(threshold/110)*(height-24)-10;
+ ctx.setLineDash([5,5]);ctx.strokeStyle='#b35f5f';ctx.beginPath();ctx.moveTo(0,thresholdY);ctx.lineTo(width,thresholdY);ctx.stroke();ctx.setLineDash([]);
+ ctx.fillStyle='#d28b8b';ctx.font='9px ui-monospace,monospace';ctx.fillText('THRESHOLD '+threshold+'%',8,Math.max(12,thresholdY-6));
+ ctx.beginPath();ctx.strokeStyle='#8bcbd1';ctx.lineWidth=2;
+ for(let x=0;x<=width;x+=2){const t=x/width*Math.PI*10;const irregular=Math.sin(t*2.4+1)*.11+Math.sin(t*4.7)*.055;const y=base+Math.sin(t)*amp*(.72+irregular)+Math.sin(t*2.1+.8)*amp*.12;if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}
+ ctx.stroke();
+ ctx.fillStyle='#8b8b8b';ctx.font='9px ui-monospace,monospace';ctx.fillText('INPUT '+level+'%',8,height-9);
+ $('signalMode').textContent=level>=threshold?'ABOVE THRESHOLD':level>threshold-12?'NEAR THRESHOLD':'NORMAL RANGE';
+}
+function enableAudio(){
+ const AudioCtx=window.AudioContext||window.webkitAudioContext;
+ if(!AudioCtx){$('audioState').textContent='Web Audio is unavailable in this browser.';return false}
+ if(!audioContext)audioContext=new AudioCtx();
+ if(audioContext.state==='suspended')audioContext.resume();
+ $('audioState').textContent='Audio enabled. Buzzer output is ready.';
+ $('audioEnable').textContent='AUDIO ENABLED';return true;
+}
+function buzzerOn(){
+ if(!enableAudio())return;
+ buzzerOff();
+ oscillator=audioContext.createOscillator();gainNode=audioContext.createGain();
+ oscillator.type='square';oscillator.frequency.value=880;gainNode.gain.value=.055;
+ oscillator.connect(gainNode);gainNode.connect(audioContext.destination);oscillator.start();
+ $('audioState').textContent='Buzzer output active.';
+}
+function buzzerOff(){
+ if(oscillator){try{oscillator.stop();oscillator.disconnect()}catch(e){}oscillator=null}
+ if(gainNode){try{gainNode.disconnect()}catch(e){}gainNode=null}
+}
 function stopAlert(){alertActive=false;alertSeconds=0;buzzerOff()}
 function startAlert(){alertActive=true;alertSeconds=0;highSeconds=TRIGGER_SECONDS;buzzerOn()}
-function fmt(s){s=Math.max(0,Math.ceil(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
-function render(){const n=Number(slider.value),high=noiseState;$('sciNoiseValue').textContent=n+'%';$('sciMetricNoise').textContent=n+'%';$('sciThresholdValue').textContent=threshold+'%';$('sciMetricThreshold').textContent=threshold+'%';$('sciBinaryState').textContent='STATE,'+(high?1:0);$('sciTimer').textContent=fmt(highSeconds);$('sciOffTimer').textContent=alertActive?fmt(ALERT_SECONDS-alertSeconds):'—';$('sciProgress').style.width=Math.min(100,highSeconds/TRIGGER_SECONDS*100)+'%';$('sciGreenLed').className='sci-led'+(!high&&!alertActive?' on green':'');$('sciYellowLed').className='sci-led'+(high&&!alertActive?' on yellow flashing':'');$('sciRedLed').className='sci-led'+(alertActive?' on red':'');$('sciBuzzerLed').className='sci-led'+(alertActive?' on cyan':'');$('sciGreenState').textContent=!high&&!alertActive?'ON':'OFF';$('sciYellowState').textContent=high&&!alertActive?'FLASHING':'OFF';$('sciRedState').textContent=alertActive?'ON':'OFF';$('sciBuzzerState').textContent=alertActive?'ON':'OFF';const s=$('sciStatus');if(alertActive){s.className='sci-status alert';s.textContent='ALERT ACTIVE — Red LED and buzzer are ON. Automatic shutdown in '+fmt(ALERT_SECONDS-alertSeconds)+'.'}else if(high){s.className='sci-status wait';s.textContent=belowSince===null?'WARNING — Yellow LED is flashing. Five-minute timer is running.':'BRIEF SOUND DIP — Timer paused; it resets only after 1.5 seconds below the release threshold.'}else{s.className='sci-status';s.textContent='NORMAL — Sound level is below the configured threshold.'}}
-function draw(){const w=canvas.clientWidth,h=canvas.clientHeight;ctx.clearRect(0,0,w,h);ctx.strokeStyle='#19334c';ctx.lineWidth=1;for(let y=25;y<h;y+=35){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}const ty=h-(threshold/110)*(h-36)-12;ctx.setLineDash([7,6]);ctx.strokeStyle='#ff6377';ctx.beginPath();ctx.moveTo(0,ty);ctx.lineTo(w,ty);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#ff9eaa';ctx.font='10px Arial';ctx.fillText('NOISE THRESHOLD',9,Math.max(14,ty-7));const amp=8+(Number(slider.value)/100)*(h*.37),mid=h*.57;ctx.beginPath();ctx.lineWidth=2.4;ctx.strokeStyle='#50d9ed';for(let x=0;x<=w;x+=2){const t=x/w*Math.PI*11+phase,y=mid+Math.sin(t)*amp*(.7+.3*Math.sin(t*1.7))+Math.sin(t*2.6+1)*amp*.12;if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.stroke();phase+=.045;requestAnimationFrame(draw)}
-function tick(now){const elapsed=Math.max(0,Math.min((now-last)/1000,1));last=now;const dt=elapsed*timeSpeed;if(alertActive){alertSeconds+=dt;if(alertSeconds>=ALERT_SECONDS){stopAlert();highSeconds=0;noiseState=false;belowSince=null}}else{const current=Number(slider.value),exitThreshold=Math.max(0,threshold-RELEASE_HYSTERESIS);if(!noiseState&&current>=threshold){noiseState=true;belowSince=null}else if(noiseState){if(current<=exitThreshold){if(belowSince===null)belowSince=now;if(now-belowSince>=SILENCE_GRACE_MS){noiseState=false;belowSince=null;highSeconds=0}}else{belowSince=null}}if(noiseState&&belowSince===null){highSeconds+=dt;if(highSeconds>=TRIGGER_SECONDS)startAlert()}}render();requestAnimationFrame(tick)}
-slider.addEventListener('input',render);$('sciThreshold').addEventListener('input',()=>{threshold=Number($('sciThreshold').value);render()});
-$('sciNormal').addEventListener('click',()=>{slider.value=25;render()});
-$('sciHigh').addEventListener('click',()=>{slider.value=85;render()});
-$('sciReset').addEventListener('click',()=>{stopAlert();highSeconds=0;noiseState=false;belowSince=null;slider.value=25;$('sciThreshold').value=60;threshold=60;last=performance.now();render()});
-document.querySelectorAll('.sci-speed-btn').forEach(button=>button.addEventListener('click',()=>{timeSpeed=Number(button.dataset.speed);document.querySelectorAll('.sci-speed-btn').forEach(b=>b.classList.toggle('active',b===button));const realSeconds=300/timeSpeed;const minutes=Math.floor(realSeconds/60),seconds=Math.round(realSeconds%60);$('sciSpeedHint').textContent='Selected speed: '+timeSpeed+'× — five simulated minutes take about '+(minutes?minutes+' minute'+(minutes===1?'':'s'):'')+(minutes&&seconds?' ':'')+(seconds?seconds+' seconds':'')+'.';last=performance.now()}));
-$('sciTest').addEventListener('click',()=>{if(!enableAudio())return;buzzerOn();$('sciAudioInfo').textContent='Buzzer sound test is playing.';setTimeout(()=>{buzzerOff();$('sciAudioInfo').textContent='Buzzer sound test completed.'},1800)});
-$('sciStart').addEventListener('click',()=>{enableAudio();$('sciStart').textContent='PRESENTATION READY / AUDIO ENABLED'});
-$('sciFull').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(e){$('sciAudioInfo').textContent='Full screen is not available in this browser.'}});
-$('year').textContent=new Date().getFullYear();render();requestAnimationFrame(draw);requestAnimationFrame(tick);
+function updateIndicators(){
+ const n=Number(noiseInput.value),isHigh=noiseState;
+ $('noiseValue').textContent=n+'%';$('metricNoise').textContent=n+'%';
+ $('thresholdValue').textContent=threshold+'%';$('metricThreshold').textContent=threshold+'%';
+ $('binaryState').textContent='STATE,'+(isHigh?1:0);
+ $('highTimer').textContent=formatTime(highSeconds);
+ $('offTimer').textContent=alertActive?formatTime(ALERT_SECONDS-alertSeconds):'—';
+ $('speedValue').textContent=timeSpeed+'×';
+ const progress=clamp(highSeconds/TRIGGER_SECONDS*100,0,100);
+ $('timerProgress').style.width=progress+'%';$('progressText').textContent=Math.round(progress)+'%';
+ $('greenLed').className='indicator green'+(!isHigh&&!alertActive?' on':'');
+ $('yellowLed').className='indicator yellow'+(isHigh&&!alertActive?' on':'');
+ $('redLed').className='indicator red'+(alertActive?' on':'');
+ $('buzzerLed').className='indicator cyan'+(alertActive?' on':'');
+ $('greenState').textContent=!isHigh&&!alertActive?'ON':'OFF';
+ $('yellowState').textContent=isHigh&&!alertActive?'ON':'OFF';
+ $('redState').textContent=alertActive?'ON':'OFF';
+ $('buzzerState').textContent=alertActive?'ON':'OFF';
+ const status=$('systemStatus');
+ if(alertActive){status.className='status alert';$('statusTitle').textContent='ALERT ACTIVE';$('statusCopy').textContent='Red alert and buzzer are active. Automatic shutdown in '+formatTime(ALERT_SECONDS-alertSeconds)+'.'}
+ else if(isHigh){status.className='status wait';$('statusTitle').textContent='HIGH NOISE DETECTED';$('statusCopy').textContent=belowSince===null?'Yellow warning is active. Trigger timer is running.':'Brief sound dip detected. Timer is being held during the 1.5-second release check.'}
+ else{status.className='status normal';$('statusTitle').textContent='SYSTEM NORMAL';$('statusCopy').textContent='Sound level is below the configured warning threshold.'}
+}
+function resetSimulation(){
+ stopAlert();highSeconds=0;noiseState=false;belowSince=null;noiseInput.value=25;thresholdInput.value=60;threshold=60;last=performance.now();drawSignal();updateIndicators();
+}
+function tick(){
+ const now=performance.now(),elapsed=clamp((now-last)/1000,0,1);last=now;const delta=elapsed*timeSpeed;
+ if(alertActive){alertSeconds+=delta;if(alertSeconds>=ALERT_SECONDS){stopAlert();highSeconds=0;noiseState=false;belowSince=null}}
+ else{
+  const current=Number(noiseInput.value),releaseThreshold=Math.max(0,threshold-RELEASE_HYSTERESIS);
+  if(!noiseState&&current>=threshold){noiseState=true;belowSince=null}
+  else if(noiseState){
+   if(current<=releaseThreshold){if(belowSince===null)belowSince=now;if(now-belowSince>=SILENCE_GRACE_MS){noiseState=false;belowSince=null;highSeconds=0}}
+   else belowSince=null;
+  }
+  if(noiseState&&belowSince===null){highSeconds+=delta;if(highSeconds>=TRIGGER_SECONDS)startAlert()}
+ }
+ updateIndicators();
+}
+noiseInput.addEventListener('input',()=>{drawSignal();updateIndicators()});
+thresholdInput.addEventListener('input',()=>{threshold=Number(thresholdInput.value);drawSignal();updateIndicators()});
+$('normalPreset').addEventListener('click',()=>{noiseInput.value=25;drawSignal();updateIndicators()});
+$('highPreset').addEventListener('click',()=>{noiseInput.value=85;drawSignal();updateIndicators()});
+$('resetSystem').addEventListener('click',resetSimulation);
+document.querySelectorAll('.speed-btn').forEach(button=>button.addEventListener('click',()=>{
+ timeSpeed=Number(button.dataset.speed);
+ document.querySelectorAll('.speed-btn').forEach(item=>item.classList.toggle('active',item===button));
+ const seconds=300/timeSpeed,minutes=Math.floor(seconds/60),remainder=Math.round(seconds%60);
+ $('speedNote').textContent='At '+timeSpeed+'×, the five-minute trigger period takes '+(minutes?minutes+' minute'+(minutes===1?'':'s'):'')+(minutes&&remainder?' ':'')+(remainder?remainder+' seconds':'')+'.';
+ last=performance.now();updateIndicators();
+}));
+$('audioEnable').addEventListener('click',enableAudio);
+$('buzzerTest').addEventListener('click',()=>{
+ if(!enableAudio())return;
+ buzzerOn();$('audioState').textContent='Buzzer test is playing.';
+ if(testTimeout)clearTimeout(testTimeout);
+ testTimeout=setTimeout(()=>{if(!alertActive)buzzerOff();$('audioState').textContent='Buzzer test completed.'},1800);
+});
+$('fullScreen').addEventListener('click',async()=>{
+ try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}
+ catch(e){$('audioState').textContent='Full screen is unavailable in this browser.'}
+});
+window.addEventListener('resize',resizeCanvas);
+window.addEventListener('beforeunload',()=>{if(testTimeout)clearTimeout(testTimeout);buzzerOff()});
+resizeCanvas();updateIndicators();setInterval(tick,100);
 })();
 </script>
 </body>
