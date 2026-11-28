@@ -6,28 +6,29 @@
 <meta name="theme-color" content="#050609">
 <meta name="description" content="Full Arduino programming workspace for the Silent Classroom Indicator: edit, compile, upload, verify and monitor Arduino firmware.">
 <title>Arduino Programmer | Silent Classroom Indicator</title>
-<link rel="stylesheet" href="style.css?v=20261127-sci">
+
 <style>
-:root{--sp-line:#243b55;--sp-text:#eef5ff;--sp-muted:#9eafc3;--sp-cyan:#50d9ed}
-.sp{max-width:1440px;margin:38px auto 72px;padding:0 24px;position:relative;z-index:3;color:var(--sp-text)}
+:root{color-scheme:dark;--sp-line:#20272d;--sp-text:#f1f4f6;--sp-muted:#929ba4;--sp-cyan:#55d9e8}
+.sp{max-width:1440px;margin:32px auto 64px;padding:0 24px;color:var(--sp-text)}
+body{margin:0;background:#030405;color:var(--sp-text);font-family:Arial,Helvetica,sans-serif}
 .sp-kicker{font:10px 'DM Mono',monospace;letter-spacing:2px;color:var(--sp-cyan)}
 .sp-title{font-size:clamp(34px,5.5vw,60px);letter-spacing:-2.3px;line-height:1.05;margin:12px 0}
-.sp-title span{background:linear-gradient(100deg,#eaf2ff,#83b7ff,#8bd8ed);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sp-title span{color:#f1f4f6}
 .sp-lead{max-width:900px;color:var(--sp-muted);font-size:14px;line-height:1.85}
 .sp-actions{display:flex;gap:9px;flex-wrap:wrap;margin:17px 0}
-.sp-btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid #35516e;border-radius:8px;padding:10px 13px;background:#14283e;color:#eef6ff;font-size:10px;font-weight:800;letter-spacing:.45px;cursor:pointer;text-decoration:none}
+.sp-btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid #343e44;border-radius:8px;padding:10px 13px;background:#111619;color:#eef6ff;font-size:10px;font-weight:800;letter-spacing:.45px;cursor:pointer;text-decoration:none}
 .sp-btn.primary{background:#dcecff;color:#07111d;border-color:#dcecff}
-.sp-btn:hover{filter:brightness(1.12);transform:translateY(-1px)}
-.sp-panel{border:1px solid var(--sp-line);border-radius:13px;background:linear-gradient(145deg,#101e30,#091321);box-shadow:0 16px 40px #0005;overflow:hidden}
-.sp-panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid #243b55}
+.sp-btn:hover{filter:brightness(1.12);}
+.sp-panel{border:1px solid var(--sp-line);border-radius:10px;background:#090b0d;box-shadow:none;overflow:hidden}
+.sp-panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid #20272d}
 .sp-panel-head strong{font-size:12px;letter-spacing:.5px}
 .sp-panel-head small{font-size:9px;color:var(--sp-muted)}
-.sp-ide{display:block;width:100%;height:clamp(850px,115vh,1250px);border:0;background:#101820}
-.sp-note{padding:13px 15px;border:1px solid #304b68;border-radius:10px;background:#0a1725;color:#b9cce0;font-size:10px;line-height:1.85;margin:13px 0}
+.sp-ide{display:block;width:100%;height:clamp(850px,115vh,1250px);border:0;background:#030405}
+.sp-note{padding:13px 15px;border:1px solid #304b68;border-radius:10px;background:#090b0d;color:#b9cce0;font-size:10px;line-height:1.85;margin:13px 0}
 .sp-note strong{color:#edf6ff}
 .sp-note.warning{border-color:#765c2c;background:#211c12;color:#ffe4ac}
 .sp-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
-.sp-card{padding:15px;border:1px solid var(--sp-line);border-radius:11px;background:#0c1725}
+.sp-card{padding:15px;border:1px solid var(--sp-line);border-radius:11px;background:#090b0d}
 .sp-card h2{font-size:12px;margin:0 0 8px}
 .sp-card p{font-size:10px;color:var(--sp-muted);line-height:1.8;margin:0}
 .sp-footer{margin-top:24px;color:#8295ab;font-size:9px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
@@ -37,12 +38,6 @@
 </style>
 </head>
 <body>
-<canvas id="rain" aria-hidden="true"></canvas>
-<header class="topbar">
-<a class="brand" href="index.html"><span class="brand-mark"><img src="file_00000000a7ec820890154ca6ed49b608.png" alt="Apokolips logo"></span><span>APOKOLIPS</span></a>
-<button class="menu-toggle" aria-label="Toggle navigation">☰</button>
-<nav class="nav"><a href="index.html">Home</a><a href="info.html">About Me</a><a href="project.gallery.html">Community Gallery</a><a class="active" href="My-project.html">My Projects</a></nav>
-</header>
 <main class="sp">
 <div class="sp-kicker">PROJECT 008 / EMBEDDED SYSTEMS / FULL PROGRAMMING WORKSPACE</div>
 <h1 class="sp-title">Arduino <span>Programmer.</span></h1>
@@ -67,8 +62,6 @@
 <div class="sp-note">The embedded IDE is powered by <a href="https://github.com/Shubin123/arduino-web" target="_blank" rel="noopener">Arduino Web by Shubin123</a>, licensed under AGPL-3.0-or-later. This is an independent project and is not affiliated with or endorsed by Arduino.</div>
 <div class="sp-footer"><span>SILENT CLASSROOM INDICATOR / ARDUINO PROGRAMMER</span><span><a href="My-project.html">← BACK TO MY PROJECTS</a></span></div>
 </main>
-<footer class="footer"><span>© <span id="year"></span> Lakindu Sathsara</span><span><a href="silent-classroom-hardware.html">HARDWARE MONITOR ↑</a></span></footer>
-<script src="script.js"></script>
-<script>document.getElementById('year').textContent=new Date().getFullYear();</script>
+
 </body>
 </html>
