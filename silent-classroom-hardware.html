@@ -6,73 +6,68 @@
 <meta name="theme-color" content="#050609">
 <meta name="description" content="Live Arduino UNO and MAX4466 microphone hardware monitor for the Silent Classroom Indicator project.">
 <title>Hardware Monitor | Silent Classroom Indicator</title>
-<link rel="stylesheet" href="style.css?v=20261127-sci">
+
 <style>
-:root{--hm-bg:#070b12;--hm-panel:#0d1724;--hm-line:#243b55;--hm-text:#eef5ff;--hm-muted:#9eafc3;--hm-cyan:#50d9ed;--hm-green:#4be0a5;--hm-yellow:#ffd34d;--hm-red:#ff6377}
-.hm{max-width:1160px;margin:44px auto 76px;padding:0 26px;position:relative;z-index:3;color:var(--hm-text)}
+:root{color-scheme:dark;--hm-bg:#030405;--hm-panel:#090b0d;--hm-line:#20272d;--hm-text:#f1f4f6;--hm-muted:#929ba4;--hm-cyan:#55d9e8;--hm-green:#53d6a0;--hm-yellow:#e7c45a;--hm-red:#f06470}
+.hm{max-width:1160px;margin:34px auto 64px;padding:0 26px;color:var(--hm-text)}
+body{margin:0;background:#030405;color:var(--hm-text);font-family:Arial,Helvetica,sans-serif}
 .hm-kicker{font:10px 'DM Mono',monospace;letter-spacing:2px;color:var(--hm-cyan)}
 .hm-title{font-size:clamp(36px,6vw,64px);letter-spacing:-2.5px;line-height:1.04;margin:13px 0}
 .hm-title span{background:linear-gradient(100deg,#eaf2ff,#83b7ff,#8bd8ed);-webkit-background-clip:text;background-clip:text;color:transparent}
 .hm-lead{max-width:820px;color:var(--hm-muted);font-size:14px;line-height:1.85}
 .hm-actions{display:flex;gap:9px;flex-wrap:wrap;margin:20px 0}
-.hm-btn{border:1px solid #35516e;border-radius:8px;padding:11px 14px;background:#14283e;color:#eef6ff;font-size:10px;font-weight:800;letter-spacing:.5px;cursor:pointer}
+.hm-btn{border:1px solid #343e44;border-radius:8px;padding:11px 14px;background:#111619;color:#eef6ff;font-size:10px;font-weight:800;letter-spacing:.5px;cursor:pointer}
 .hm-btn.primary{background:#dcecff;color:#07111d;border-color:#dcecff}
 .hm-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
-.hm-btn:not(:disabled):hover{filter:brightness(1.12);transform:translateY(-1px)}
+.hm-btn:not(:disabled):hover{filter:brightness(1.12);}
 .hm-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(285px,.85fr);gap:14px;margin-top:16px}
-.hm-card{min-width:0;padding:18px;border:1px solid var(--hm-line);border-radius:13px;background:linear-gradient(145deg,#101e30,#091321);box-shadow:0 16px 40px #0005}
+.hm-card{min-width:0;padding:18px;border:1px solid var(--hm-line);border-radius:13px;background:#090b0d;box-shadow:none}
 .hm-card h2{font-size:15px;margin:0 0 14px}
-.hm-chart{background:#050d17;border:1px solid #203a54;border-radius:10px;overflow:hidden}
+.hm-chart{background:#050607;border:1px solid #20272d;border-radius:10px;overflow:hidden}
 #hmWave{display:block;width:100%;height:270px}
 .hm-legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--hm-muted);font-size:9px;margin-top:9px}
 .hm-key{display:inline-flex;align-items:center;gap:6px}.hm-dot{width:8px;height:8px;border-radius:50%}
 .hm-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.hm-metric{padding:12px;border:1px solid #203953;border-radius:9px;background:#081321}
+.hm-metric{padding:12px;border:1px solid #20272d;border-radius:9px;background:#080a0c}
 .hm-metric span{display:block;color:var(--hm-muted);font-size:9px;letter-spacing:.4px}
 .hm-metric strong{display:block;font-size:23px;margin-top:4px}
 .hm-meter{height:9px;border-radius:20px;background:#263c52;overflow:hidden;margin:13px 0 7px}
-.hm-meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--hm-green),var(--hm-yellow),var(--hm-red));transition:width .12s}
-.hm-status{padding:11px 12px;border:1px solid #286b56;border-radius:9px;background:#102e2a;color:#b8f6dc;font-size:10px;font-weight:800;margin-top:12px;line-height:1.6}
-.hm-status.wait{background:#302819;border-color:#81632e;color:#ffe3a6}
-.hm-status.alert{background:#351925;border-color:#87384c;color:#ffc2cc}
+.hm-meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--hm-green),var(--hm-yellow),var(--hm-red));}
+.hm-status{padding:11px 12px;border:1px solid #286b56;border-radius:9px;background:#101b17;color:#b8f6dc;font-size:10px;font-weight:800;margin-top:12px;line-height:1.6}
+.hm-status.wait{background:#1c1911;border-color:#81632e;color:#ffe3a6}
+.hm-status.alert{background:#1e1114;border-color:#87384c;color:#ffc2cc}
 .hm-io{display:grid;gap:10px;margin-top:14px}
 .hm-io-row{display:flex;align-items:center;gap:9px;font-size:10px}
 .hm-led{width:11px;height:11px;border-radius:50%;background:#30445a;box-shadow:inset 0 0 0 1px #526a82;flex:none}
-.hm-led.on.green{background:var(--hm-green);box-shadow:0 0 12px var(--hm-green)}
-.hm-led.on.yellow{background:var(--hm-yellow);box-shadow:0 0 12px var(--hm-yellow);animation:hm-flash .8s infinite ease-in-out}
-.hm-led.on.red{background:var(--hm-red);box-shadow:0 0 12px var(--hm-red)}
-.hm-led.on.cyan{background:var(--hm-cyan);box-shadow:0 0 12px var(--hm-cyan)}
-@keyframes hm-flash{0%,100%{opacity:1}50%{opacity:.18}}
+.hm-led.on.green{background:var(--hm-green);}
+.hm-led.on.yellow{background:var(--hm-yellow);box-shadow:none}
+.hm-led.on.red{background:var(--hm-red);}
+.hm-led.on.cyan{background:var(--hm-cyan);}
+
 .hm-state{margin-left:auto;color:var(--hm-muted);font-size:9px;font-weight:800}
-.hm-control{margin-top:15px;padding-top:13px;border-top:1px solid #203953}
+.hm-control{margin-top:15px;padding-top:13px;border-top:1px solid #20272d}
 .hm-control label{display:flex;justify-content:space-between;gap:8px;color:var(--hm-muted);font-size:10px;margin-bottom:8px}
 .hm-control input{width:100%;accent-color:var(--hm-cyan)}
 .hm-speed{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
-.hm-speed button{border:1px solid #35516e;border-radius:7px;padding:6px 9px;background:#0a1725;color:#c8d9eb;font-size:9px;font-weight:800;cursor:pointer}
+.hm-speed button{border:1px solid #343e44;border-radius:7px;padding:6px 9px;background:#090b0d;color:#c8d9eb;font-size:9px;font-weight:800;cursor:pointer}
 .hm-speed button.active{background:var(--hm-cyan);border-color:var(--hm-cyan);color:#06121e}
-.hm-note{padding:13px;border:1px solid #304b68;border-radius:10px;background:#0a1725;color:#b9cce0;font-size:10px;line-height:1.8;margin-top:12px}
+.hm-note{padding:13px;border:1px solid #304b68;border-radius:10px;background:#090b0d;color:#b9cce0;font-size:10px;line-height:1.8;margin-top:12px}
 .hm-note strong{color:#edf6ff}
 .hm-note.warning{border-color:#765c2c;background:#211c12;color:#ffe4ac}
-.hm-connection{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;border:1px solid #203953;border-radius:9px;background:#081321;font-size:10px}
+.hm-connection{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;border:1px solid #20272d;border-radius:9px;background:#080a0c;font-size:10px}
 .hm-connection i{width:8px;height:8px;border-radius:50%;background:#78899b}
-.hm-connection.connected i{background:var(--hm-green);box-shadow:0 0 10px var(--hm-green)}
+.hm-connection.connected i{background:var(--hm-green);}
 .hm-connection span:last-child{margin-left:auto;color:var(--hm-muted)}
 .hm-footer{margin-top:25px;color:#8295ab;font-size:9px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .hm a{color:#9bdff0}
 .hm-wiring{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-.hm-wire{padding:11px;border:1px solid #203953;border-radius:8px;background:#081321}
+.hm-wire{padding:11px;border:1px solid #20272d;border-radius:8px;background:#080a0c}
 .hm-wire b{display:block;font-size:12px;color:#fff}.hm-wire small{display:block;color:var(--hm-muted);font-size:9px;margin-top:4px}
 @media(max-width:820px){.hm-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.hm{padding:0 16px;margin-top:30px}.hm-title{letter-spacing:-1.3px}#hmWave{height:220px}.hm-wiring{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<canvas id="rain" aria-hidden="true"></canvas>
-<header class="topbar">
-<a class="brand" href="index.html"><span class="brand-mark"><img src="file_00000000a7ec820890154ca6ed49b608.png" alt="Apokolips logo"></span><span>APOKOLIPS</span></a>
-<button class="menu-toggle" aria-label="Toggle navigation">☰</button>
-<nav class="nav"><a href="index.html">Home</a><a href="info.html">About Me</a><a href="project.gallery.html">Community Gallery</a><a class="active" href="My-project.html">My Projects</a></nav>
-</header>
 <main class="hm">
 <div class="hm-kicker">PROJECT 008 / HARDWARE MODE / ARDUINO UNO + MAX4466</div>
 <h1 class="hm-title">Hardware <span>Monitor.</span></h1>
@@ -99,7 +94,7 @@
 </div>
 <div class="hm-control">
 <label for="hmMode"><span>ARDUINO THRESHOLD MODE</span><b id="hmModeLabel">WEBSITE CONTROL</b></label>
-<select id="hmMode" style="width:100%;padding:9px;border-radius:7px;background:#081321;color:#eef5ff;border:1px solid #35516e"><option value="WEB">Website adjustable</option><option value="FIXED">Fixed in Arduino firmware</option></select>
+<select id="hmMode" style="width:100%;padding:9px;border-radius:7px;background:#080a0c;color:#eef5ff;border:1px solid #343e44"><option value="WEB">Website adjustable</option><option value="FIXED">Fixed in Arduino firmware</option></select>
 </div>
 <div class="hm-control">
 <label for="hmThreshold"><span>ARDUINO ADC THRESHOLD</span><b id="hmThresholdValue">50 ADC</b></label>
@@ -150,8 +145,7 @@
 
 <div class="hm-footer"><span>SILENT CLASSROOM INDICATOR / HARDWARE MODE</span><span><a href="My-project.html">← BACK TO MY PROJECTS</a></span></div>
 </main>
-<footer class="footer"><span>© <span id="year"></span> Lakindu Sathsara</span><span><a href="silent-classroom-indicator.html">SIMULATION ↑</a></span></footer>
-<script src="script.js"></script>
+
 <script>
 (()=> {
 'use strict';
@@ -211,7 +205,7 @@ function parseLine(line){
  if(!m)return;
  raw=Math.max(0,Math.min(1023,Number(m[1])));
  level=toLevel(raw);
- history.push(raw);history.shift();
+ history.push(raw);history.shift();draw();
  if(calibrating){calSamples.push(raw)}
  updateIndicators();
 }
@@ -247,14 +241,14 @@ $('hmReset').addEventListener('click',()=>{highSeconds=0;noiseState=false;belowS
 $('hmSilence').addEventListener('click',()=>{endAlert();highSeconds=0;noiseState=false;belowSince=null});
 $('hmCalibrate').addEventListener('click',()=>{if(!port)return;calSamples=[];calibrating=true;$('hmCalibrate').disabled=true;$('hmCalibration').textContent='Calibration running for 3 seconds — keep the room quiet.';setTimeout(()=>{calibrating=false;if(calSamples.length){calSamples.sort((a,b)=>a-b);noiseFloor=calSamples[Math.floor((calSamples.length-1)*.2)];calibrated=true;$('hmCalibration').textContent='Calibrated quiet-room noise floor: '+noiseFloor+' ADC counts. Recalibrate if the microphone position or room changes.'}else{$('hmCalibration').textContent='No microphone samples received. Check the Arduino connection and sketch.'}$('hmCalibrate').disabled=!port},3000)});
 $('hmSensitivity').addEventListener('input',()=>{$('hmSensitivityValue').textContent=fullScale()+' ADC counts';level=toLevel(raw);updateIndicators()});
-$('hmThreshold').addEventListener('input',()=>{$('hmThresholdValue').textContent=threshold()+' ADC'});
+$('hmThreshold').addEventListener('input',()=>{$('hmThresholdValue').textContent=threshold()+' ADC';draw()});
 $('hmThreshold').addEventListener('change',()=>{if($('hmMode').value==='WEB')sendCommand('TH,'+threshold())});
 $('hmMode').addEventListener('change',()=>{updateModeControls();if(writer){sendCommand('MODE,'+$('hmMode').value);if($('hmMode').value==='WEB')sendCommand('TH,'+threshold());noiseState=false;belowSince=null;highSeconds=0;arduinoNoiseState=null;updateIndicators()}});
 document.querySelectorAll('.hm-speed button').forEach(b=>b.addEventListener('click',()=>{speed=Number(b.dataset.speed);document.querySelectorAll('.hm-speed button').forEach(x=>x.classList.toggle('active',x===b));$('hmSpeedLabel').textContent=speed+'×'+(speed===1?' / Real time':' / Test mode');lastTick=performance.now()}));
 function tick(now){const elapsed=Math.max(0,Math.min((now-lastTick)/1000,.5));lastTick=now;const dt=elapsed*speed;if(port){if(alertActive){alertSeconds+=dt;if(alertSeconds>=ALERT_SECONDS){endAlert();highSeconds=0;noiseState=false;belowSince=null}}else{if(arduinoNoiseState===1){noiseState=true;belowSince=null}else if(noiseState&&arduinoNoiseState===0){if(belowSince===null)belowSince=now;if(now-belowSince>=SILENCE_GRACE_MS){noiseState=false;belowSince=null;highSeconds=0}}if(noiseState&&belowSince===null){highSeconds+=dt;if(highSeconds>=TRIGGER_SECONDS)beginAlert()}}}updateIndicators();requestAnimationFrame(tick)}
-function draw(){const w=canvas.clientWidth,hc=canvas.clientHeight;ctx.clearRect(0,0,w,hc);ctx.strokeStyle='#19334c';ctx.lineWidth=1;for(let y=25;y<hc;y+=35){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}const ty=hc-(threshold()/500)*(hc-28)-10;ctx.setLineDash([6,6]);ctx.strokeStyle='#ffd34d';ctx.beginPath();ctx.moveTo(0,ty);ctx.lineTo(w,ty);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#ffe19a';ctx.font='10px Arial';ctx.fillText('ADC THRESHOLD',9,Math.max(14,ty-7));ctx.beginPath();ctx.lineWidth=2.4;ctx.strokeStyle='#50d9ed';history.forEach((v,i)=>{const x=i/(history.length-1)*w,y=hc-12-(v/1023)*(hc-28);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.stroke();const bc=$('hmBinaryWave'),bctx=bc.getContext('2d'),bw=bc.clientWidth,bh=bc.clientHeight,d=window.devicePixelRatio||1;if(bc.width!==Math.max(1,Math.floor(bw*d))||bc.height!==Math.max(1,Math.floor(bh*d))){bc.width=Math.max(1,Math.floor(bw*d));bc.height=Math.max(1,Math.floor(bh*d))}bctx.setTransform(d,0,0,d,0,0);bctx.clearRect(0,0,bw,bh);bctx.strokeStyle='#19334c';bctx.beginPath();bctx.moveTo(0,bh/2);bctx.lineTo(bw,bh/2);bctx.stroke();bctx.beginPath();bctx.lineWidth=2.5;bctx.strokeStyle='#ff6377';binaryHistory.forEach((v,i)=>{const x=i/(binaryHistory.length-1)*bw,y=v?bh*.25:bh*.75;if(i===0)bctx.moveTo(x,y);else bctx.lineTo(x,y)});bctx.stroke();requestAnimationFrame(draw)}
+function draw(){const w=canvas.clientWidth,hc=canvas.clientHeight;ctx.clearRect(0,0,w,hc);ctx.strokeStyle='#20272d';ctx.lineWidth=1;for(let y=25;y<hc;y+=35){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}const ty=hc-(threshold()/500)*(hc-28)-10;ctx.setLineDash([6,6]);ctx.strokeStyle='#ffd34d';ctx.beginPath();ctx.moveTo(0,ty);ctx.lineTo(w,ty);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#ffe19a';ctx.font='10px Arial';ctx.fillText('ADC THRESHOLD',9,Math.max(14,ty-7));ctx.beginPath();ctx.lineWidth=2.4;ctx.strokeStyle='#50d9ed';history.forEach((v,i)=>{const x=i/(history.length-1)*w,y=hc-12-(v/1023)*(hc-28);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.stroke();const bc=$('hmBinaryWave'),bctx=bc.getContext('2d'),bw=bc.clientWidth,bh=bc.clientHeight,d=window.devicePixelRatio||1;if(bc.width!==Math.max(1,Math.floor(bw*d))||bc.height!==Math.max(1,Math.floor(bh*d))){bc.width=Math.max(1,Math.floor(bw*d));bc.height=Math.max(1,Math.floor(bh*d))}bctx.setTransform(d,0,0,d,0,0);bctx.clearRect(0,0,bw,bh);bctx.strokeStyle='#20272d';bctx.beginPath();bctx.moveTo(0,bh/2);bctx.lineTo(bw,bh/2);bctx.stroke();bctx.beginPath();bctx.lineWidth=2.5;bctx.strokeStyle='#ff6377';binaryHistory.forEach((v,i)=>{const x=i/(binaryHistory.length-1)*bw,y=v?bh*.25:bh*.75;if(i===0)bctx.moveTo(x,y);else bctx.lineTo(x,y)});bctx.stroke()}
 if(!supported){$('hmConnect').disabled=true;setConnection(false,'WEB SERIAL NOT AVAILABLE','Desktop Chrome / Edge required')}
-$('hmSensitivityValue').textContent=fullScale()+' ADC counts';$('hmThresholdValue').textContent=threshold()+' ADC';updateModeControls();$('year').textContent=new Date().getFullYear();updateIndicators();requestAnimationFrame(draw);requestAnimationFrame(tick);
+$('hmSensitivityValue').textContent=fullScale()+' ADC counts';$('hmThresholdValue').textContent=threshold()+' ADC';updateModeControls();updateIndicators();draw();requestAnimationFrame(tick);
 window.addEventListener('beforeunload',()=>{try{reader&&reader.cancel();port&&port.close()}catch(e){}});
 })();
 </script>
