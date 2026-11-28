@@ -1,0 +1,13 @@
+Apokolips Silent Classroom Indicator — Arduino Web IDE
+
+This IDE is built from the unmodified upstream Arduino Web project:
+https://github.com/Shubin123/arduino-web
+Pinned upstream commit:
+3796156785a387d700895716a0f2b21793454f7e
+
+Upstream license: GNU Affero General Public License v3.0 or later.
+The upstream LICENSE.txt and THIRD_PARTY_NOTICES.md are included here.
+The IDE's Source link points to the upstream source repository.
+
+This is an independent integration and is not affiliated with or
+endorsed by Arduino.

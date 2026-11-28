@@ -1,0 +1,568 @@
+{
+  "core": {
+    "version": "1.8.8",
+    "ideVersion": "10607"
+  },
+  "sysroot": "sysroot.pack",
+  "multilibs": {
+    "avr5": "lib-avr5.pack",
+    "avr6": "lib-avr6.pack"
+  },
+  "profiles": {
+    "uno": {
+      "mcu": "atmega328p",
+      "variant": "standard",
+      "pack": "core-uno.pack",
+      "multilib": "avr5",
+      "defines": [
+        "-DF_CPU=16000000L",
+        "-DARDUINO=10607",
+        "-DARDUINO_AVR_UNO",
+        "-DARDUINO_ARCH_AVR"
+      ],
+      "includes": [
+        "/arduino/cores/arduino",
+        "/arduino/variants/standard"
+      ],
+      "cc1plus": [
+        "-imultilib",
+        "avr5",
+        "-D__AVR_ATmega328P__",
+        "-D__AVR_DEVICE_NAME__=atmega328p",
+        "-mn-flash=1",
+        "-mno-skip-bug",
+        "-mmcu=avr5",
+        "-fno-rtti",
+        "-fno-enforce-eh-specs",
+        "-fno-exceptions"
+      ],
+      "as": [
+        "-mmcu=avr5",
+        "-mno-skip-bug"
+      ],
+      "ld": {
+        "emulation": "avr5",
+        "dataStart": "0x800100",
+        "crt": "crtatmega328p.o",
+        "libs": [
+          "-lgcc",
+          "-lm",
+          "-lc",
+          "-latmega328p"
+        ]
+      },
+      "libraries": [
+        "/board/libHID.a",
+        "/board/libSPI.a",
+        "/board/libSoftwareSerial.a",
+        "/board/libWire.a"
+      ],
+      "signature": [
+        30,
+        149,
+        15
+      ],
+      "pageSize": 128
+    },
+    "nano": {
+      "mcu": "atmega328p",
+      "variant": "eightanaloginputs",
+      "pack": "core-nano.pack",
+      "multilib": "avr5",
+      "defines": [
+        "-DF_CPU=16000000L",
+        "-DARDUINO=10607",
+        "-DARDUINO_AVR_NANO",
+        "-DARDUINO_ARCH_AVR"
+      ],
+      "includes": [
+        "/arduino/cores/arduino",
+        "/arduino/variants/eightanaloginputs"
+      ],
+      "cc1plus": [
+        "-imultilib",
+        "avr5",
+        "-D__AVR_ATmega328P__",
+        "-D__AVR_DEVICE_NAME__=atmega328p",
+        "-mn-flash=1",
+        "-mno-skip-bug",
+        "-mmcu=avr5",
+        "-fno-rtti",
+        "-fno-enforce-eh-specs",
+        "-fno-exceptions"
+      ],
+      "as": [
+        "-mmcu=avr5",
+        "-mno-skip-bug"
+      ],
+      "ld": {
+        "emulation": "avr5",
+        "dataStart": "0x800100",
+        "crt": "crtatmega328p.o",
+        "libs": [
+          "-lgcc",
+          "-lm",
+          "-lc",
+          "-latmega328p"
+        ]
+      },
+      "libraries": [
+        "/board/libHID.a",
+        "/board/libSPI.a",
+        "/board/libSoftwareSerial.a",
+        "/board/libWire.a"
+      ],
+      "signature": [
+        30,
+        149,
+        15
+      ],
+      "pageSize": 128
+    },
+    "mega": {
+      "mcu": "atmega2560",
+      "variant": "mega",
+      "pack": "core-mega.pack",
+      "multilib": "avr6",
+      "defines": [
+        "-DF_CPU=16000000L",
+        "-DARDUINO=10607",
+        "-DARDUINO_AVR_MEGA2560",
+        "-DARDUINO_ARCH_AVR"
+      ],
+      "includes": [
+        "/arduino/cores/arduino",
+        "/arduino/variants/mega"
+      ],
+      "cc1plus": [
+        "-imultilib",
+        "avr6",
+        "-D__AVR_ATmega2560__",
+        "-D__AVR_DEVICE_NAME__=atmega2560",
+        "-mn-flash=4",
+        "-mno-skip-bug",
+        "-mmcu=avr6",
+        "-fno-rtti",
+        "-fno-enforce-eh-specs",
+        "-fno-exceptions"
+      ],
+      "as": [
+        "-mmcu=avr6",
+        "-mno-skip-bug"
+      ],
+      "ld": {
+        "emulation": "avr6",
+        "dataStart": "0x800200",
+        "crt": "crtatmega2560.o",
+        "libs": [
+          "-lgcc",
+          "-lm",
+          "-lc",
+          "-latmega2560"
+        ]
+      },
+      "libraries": [
+        "/board/libHID.a",
+        "/board/libSPI.a",
+        "/board/libSoftwareSerial.a",
+        "/board/libWire.a"
+      ],
+      "signature": [
+        30,
+        152,
+        1
+      ],
+      "pageSize": 256
+    },
+    "leonardo": {
+      "mcu": "atmega32u4",
+      "variant": "leonardo",
+      "pack": "core-leonardo.pack",
+      "multilib": "avr5",
+      "defines": [
+        "-DF_CPU=16000000L",
+        "-DARDUINO=10607",
+        "-DARDUINO_AVR_LEONARDO",
+        "-DARDUINO_ARCH_AVR",
+        "-DUSB_VID=0x2341",
+        "-DUSB_PID=0x8036",
+        "-DUSB_MANUFACTURER=\"Unknown\"",
+        "-DUSB_PRODUCT=\"Arduino Leonardo\""
+      ],
+      "includes": [
+        "/arduino/cores/arduino",
+        "/arduino/variants/leonardo"
+      ],
+      "cc1plus": [
+        "-imultilib",
+        "avr5",
+        "-D__AVR_ATmega32U4__",
+        "-D__AVR_DEVICE_NAME__=atmega32u4",
+        "-mn-flash=1",
+        "-mno-skip-bug",
+        "-mmcu=avr5",
+        "-fno-rtti",
+        "-fno-enforce-eh-specs",
+        "-fno-exceptions"
+      ],
+      "as": [
+        "-mmcu=avr5",
+        "-mno-skip-bug"
+      ],
+      "ld": {
+        "emulation": "avr5",
+        "dataStart": "0x800100",
+        "crt": "crtatmega32u4.o",
+        "libs": [
+          "-lgcc",
+          "-lm",
+          "-lc",
+          "-latmega32u4"
+        ]
+      },
+      "libraries": [
+        "/board/libHID.a",
+        "/board/libSPI.a",
+        "/board/libSoftwareSerial.a",
+        "/board/libWire.a"
+      ],
+      "signature": [
+        30,
+        149,
+        135
+      ],
+      "pageSize": 128
+    },
+    "micro": {
+      "mcu": "atmega32u4",
+      "variant": "micro",
+      "pack": "core-micro.pack",
+      "multilib": "avr5",
+      "defines": [
+        "-DF_CPU=16000000L",
+        "-DARDUINO=10607",
+        "-DARDUINO_AVR_MICRO",
+        "-DARDUINO_ARCH_AVR",
+        "-DUSB_VID=0x2341",
+        "-DUSB_PID=0x8037",
+        "-DUSB_MANUFACTURER=\"Unknown\"",
+        "-DUSB_PRODUCT=\"Arduino Micro\""
+      ],
+      "includes": [
+        "/arduino/cores/arduino",
+        "/arduino/variants/micro"
+      ],
+      "cc1plus": [
+        "-imultilib",
+        "avr5",
+        "-D__AVR_ATmega32U4__",
+        "-D__AVR_DEVICE_NAME__=atmega32u4",
+        "-mn-flash=1",
+        "-mno-skip-bug",
+        "-mmcu=avr5",
+        "-fno-rtti",
+        "-fno-enforce-eh-specs",
+        "-fno-exceptions"
+      ],
+      "as": [
+        "-mmcu=avr5",
+        "-mno-skip-bug"
+      ],
+      "ld": {
+        "emulation": "avr5",
+        "dataStart": "0x800100",
+        "crt": "crtatmega32u4.o",
+        "libs": [
+          "-lgcc",
+          "-lm",
+          "-lc",
+          "-latmega32u4"
+        ]
+      },
+      "libraries": [
+        "/board/libHID.a",
+        "/board/libSPI.a",
+        "/board/libSoftwareSerial.a",
+        "/board/libWire.a"
+      ],
+      "signature": [
+        30,
+        149,
+        135
+      ],
+      "pageSize": 128
+    }
+  },
+  "boards": [
+    {
+      "id": "uno",
+      "name": "Arduino UNO",
+      "fqbn": "arduino:avr:uno",
+      "profile": "uno",
+      "upload": {
+        "protocol": "stk500v1",
+        "speed": 115200
+      },
+      "maximumSize": 32256,
+      "maximumDataSize": 2048,
+      "usb": [
+        [
+          9025,
+          67
+        ],
+        [
+          9025,
+          1
+        ],
+        [
+          10755,
+          67
+        ],
+        [
+          9025,
+          579
+        ],
+        [
+          9025,
+          106
+        ]
+      ]
+    },
+    {
+      "id": "nano",
+      "name": "Arduino Nano",
+      "fqbn": "arduino:avr:nano",
+      "profile": "nano",
+      "upload": {
+        "protocol": "stk500v1",
+        "speed": 115200
+      },
+      "maximumSize": 30720,
+      "maximumDataSize": 2048,
+      "usb": [],
+      "options": {
+        "cpu": {
+          "label": "Processor",
+          "values": [
+            {
+              "id": "atmega328",
+              "label": "ATmega328P",
+              "upload": {
+                "speed": 115200
+              }
+            },
+            {
+              "id": "atmega328old",
+              "label": "ATmega328P (Old Bootloader)",
+              "upload": {
+                "speed": 57600
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "mega",
+      "name": "Arduino Mega or Mega 2560",
+      "fqbn": "arduino:avr:mega:cpu=atmega2560",
+      "profile": "mega",
+      "upload": {
+        "protocol": "stk500v2",
+        "speed": 115200
+      },
+      "maximumSize": 253952,
+      "maximumDataSize": 8192,
+      "usb": [
+        [
+          9025,
+          16
+        ],
+        [
+          9025,
+          66
+        ],
+        [
+          10755,
+          16
+        ],
+        [
+          10755,
+          66
+        ],
+        [
+          9025,
+          528
+        ],
+        [
+          9025,
+          578
+        ]
+      ]
+    },
+    {
+      "id": "leonardo",
+      "name": "Arduino Leonardo",
+      "fqbn": "arduino:avr:leonardo",
+      "profile": "leonardo",
+      "upload": {
+        "protocol": "avr109",
+        "speed": 57600,
+        "touch1200": true,
+        "bootloaderPids": [
+          54
+        ]
+      },
+      "maximumSize": 28672,
+      "maximumDataSize": 2560,
+      "usb": [
+        [
+          9025,
+          54
+        ],
+        [
+          9025,
+          32822
+        ],
+        [
+          10755,
+          54
+        ],
+        [
+          10755,
+          32822
+        ]
+      ]
+    },
+    {
+      "id": "micro",
+      "name": "Arduino Micro",
+      "fqbn": "arduino:avr:micro",
+      "profile": "micro",
+      "upload": {
+        "protocol": "avr109",
+        "speed": 57600,
+        "touch1200": true,
+        "bootloaderPids": [
+          55
+        ]
+      },
+      "maximumSize": 28672,
+      "maximumDataSize": 2560,
+      "usb": [
+        [
+          9025,
+          55
+        ],
+        [
+          9025,
+          32823
+        ],
+        [
+          10755,
+          55
+        ],
+        [
+          10755,
+          32823
+        ]
+      ]
+    }
+  ],
+  "builtinLibraries": [
+    {
+      "name": "EEPROM",
+      "headers": [
+        "EEPROM.h"
+      ],
+      "include": "/arduino/libraries/EEPROM/src"
+    },
+    {
+      "name": "HID",
+      "headers": [
+        "HID.h"
+      ],
+      "include": "/arduino/libraries/HID/src"
+    },
+    {
+      "name": "SPI",
+      "headers": [
+        "SPI.h"
+      ],
+      "include": "/arduino/libraries/SPI/src"
+    },
+    {
+      "name": "SoftwareSerial",
+      "headers": [
+        "SoftwareSerial.h"
+      ],
+      "include": "/arduino/libraries/SoftwareSerial/src"
+    },
+    {
+      "name": "Wire",
+      "headers": [
+        "Wire.h"
+      ],
+      "include": "/arduino/libraries/Wire/src"
+    }
+  ],
+  "keywords": [
+    "AppendDescriptor",
+    "EEPROM",
+    "EEPtr",
+    "EERef",
+    "HID",
+    "HID_TX",
+    "SPI",
+    "SPI_CLOCK_DIV128",
+    "SPI_CLOCK_DIV16",
+    "SPI_CLOCK_DIV2",
+    "SPI_CLOCK_DIV32",
+    "SPI_CLOCK_DIV4",
+    "SPI_CLOCK_DIV64",
+    "SPI_CLOCK_DIV8",
+    "SPI_MODE0",
+    "SPI_MODE1",
+    "SPI_MODE2",
+    "SPI_MODE3",
+    "SendReport",
+    "SoftwareSerial",
+    "Wire",
+    "available",
+    "begin",
+    "beginTransmission",
+    "end",
+    "endTransmission",
+    "flush",
+    "isListening",
+    "listen",
+    "onReceive",
+    "onRequest",
+    "overflow",
+    "peek",
+    "read",
+    "requestFrom",
+    "setBitOrder",
+    "setClock",
+    "setClockDivider",
+    "setDataMode",
+    "transfer",
+    "update",
+    "write"
+  ],
+  "toolchain": {
+    "package": "@horang-corp/avr-gcc-wasm",
+    "version": "0.2.0",
+    "base": "https://cdn.jsdelivr.net/npm/@horang-corp/avr-gcc-wasm@0.2.0/",
+    "files": {
+      "tools/cc1plus.mjs": "sha384-XbV8vcwgEBpmMt0u5koi57A33EQZ3NFIb423Hc/EPfySEa0jhM+92QDxYSUOad6C",
+      "tools/cc1plus.wasm": "sha384-DZ5vsdP5iR+sooAShBAqFX6wKXh027mEZ50B6LvcT8N8o0vGxRxoJ575clxdhbf8",
+      "tools/avr-as.mjs": "sha384-U+rvoWFAO4mGO8ruBUUYVKCp1NZr252A4rGO6H6Xa1kObbYavJkGapqZMGUz5AbF",
+      "tools/avr-as.wasm": "sha384-dXRJb5gdz0z+oKA6DUr/+eLHeokvH1TnFUQ+BJud4rzklMDABqZSb1TEJM4eDtcG",
+      "tools/avr-ld.mjs": "sha384-Hp4JlxcLbBxRYX+AUxR79/3vgwgRefgZG4Q21Zb/t8b8tVyNBMVVgDPoj7MPo3aZ",
+      "tools/avr-ld.wasm": "sha384-96Vza02NQmZItFPqPQ7N3OCuuP5YudgwpWhp/9qm9ycjw/g3Wvb6Hu6VLc9yl8zZ",
+      "tools/avr-objcopy.mjs": "sha384-3pPcCwmyWP+g9WmmpKPUJ2yr3ANj/PDhJSAMwWY0nhUr7SQJxJKrS4aWzyzUT9fC",
+      "tools/avr-objcopy.wasm": "sha384-xNmeMwUjuEkpitUtQhkMftvZXKoYaPsv3iTqMKSQ4UVVY7P33CCqOX/GH2Y2aCWv"
+    }
+  }
+}
