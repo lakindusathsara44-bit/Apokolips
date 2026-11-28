@@ -83,8 +83,6 @@ body{margin:0;background:#030405;color:var(--hm-text);font-family:Arial,Helvetic
 <h2>Live microphone signal</h2>
 <div class="hm-chart"><canvas id="hmWave" aria-label="Live microphone amplitude history"></canvas></div>
 <div class="hm-legend"><span class="hm-key"><i class="hm-dot" style="background:var(--hm-cyan)"></i>Filtered analog ADC signal</span><span class="hm-key"><i class="hm-dot" style="background:var(--hm-yellow)"></i>Arduino ADC threshold</span></div>
-<div class="hm-chart" style="margin-top:12px"><canvas id="hmBinaryWave" aria-label="Arduino binary state history" style="display:block;width:100%;height:110px"></canvas></div>
-<div class="hm-legend"><span class="hm-key">STATE,0 — Normal</span><span class="hm-key">STATE,1 — High noise</span></div>
 <div class="hm-control">
 <label for="hmSensitivity"><span>INPUT SENSITIVITY / FULL-SCALE RANGE</span><b id="hmSensitivityValue">250 ADC counts</b></label>
 <input id="hmSensitivity" type="range" min="80" max="700" step="10" value="250">
@@ -150,7 +148,6 @@ const $=id=>document.getElementById(id);
 const canvas=$('hmWave'),ctx=canvas.getContext('2d');
 const history=Array(180).fill(0);
 let port=null,reader=null,writer=null,readTask=null,keepReading=false,raw=0,level=0,noiseFloor=0,calibrated=false,calibrating=false,calSamples=[],arduinoNoiseState=null;
-const binaryHistory=Array(120).fill(0);
 let lastTick=performance.now(),highSeconds=0,alertSeconds=0,alertActive=false,speed=1,audioContext=null,oscillator=null,gainNode=null,pulseTimer=null;
 let noiseState=false,belowSince=null;
 const RELEASE_HYSTERESIS=6, SILENCE_GRACE_MS=1500;
@@ -193,7 +190,6 @@ function parseLine(line){
  const stateMatch=clean.match(/^STATE\s*,\s*([01])\s*$/i);
  if(stateMatch){
   arduinoNoiseState=Number(stateMatch[1]);
-  binaryHistory.push(arduinoNoiseState);binaryHistory.shift();
   if(arduinoNoiseState===1){noiseState=true;belowSince=null}
   else if(noiseState&&belowSince===null){belowSince=performance.now()}
   updateIndicators();return;
@@ -227,7 +223,7 @@ async function disconnect(){
  try{if(reader)await reader.cancel()}catch(e){}
  try{if(writer)writer.releaseLock()}catch(e){}writer=null;
  try{if(port)await port.close()}catch(e){}
- port=null;reader=null;highSeconds=0;noiseState=false;belowSince=null;arduinoNoiseState=null;binaryHistory.fill(0);calibrated=false;calibrating=false;
+ port=null;reader=null;highSeconds=0;noiseState=false;belowSince=null;arduinoNoiseState=null;calibrated=false;calibrating=false;
  $('hmConnect').disabled=false;$('hmDisconnect').disabled=true;$('hmCalibrate').disabled=true;$('hmSilence').disabled=true;
  setConnection(false,'DISCONNECTED','Arduino USB serial port closed');endAlert();updateIndicators();
 }
@@ -243,7 +239,7 @@ $('hmThreshold').addEventListener('change',()=>{if($('hmMode').value==='WEB')sen
 $('hmMode').addEventListener('change',()=>{updateModeControls();if(writer){sendCommand('MODE,'+$('hmMode').value);if($('hmMode').value==='WEB')sendCommand('TH,'+threshold());noiseState=false;belowSince=null;highSeconds=0;arduinoNoiseState=null;updateIndicators()}});
 document.querySelectorAll('.hm-speed button').forEach(b=>b.addEventListener('click',()=>{speed=Number(b.dataset.speed);document.querySelectorAll('.hm-speed button').forEach(x=>x.classList.toggle('active',x===b));$('hmSpeedLabel').textContent=speed+'×'+(speed===1?' / Real time':' / Test mode');lastTick=performance.now()}));
 function tick(now){const elapsed=Math.max(0,Math.min((now-lastTick)/1000,.5));lastTick=now;const dt=elapsed*speed;if(port){if(alertActive){alertSeconds+=dt;if(alertSeconds>=ALERT_SECONDS){endAlert();highSeconds=0;noiseState=false;belowSince=null}}else{if(arduinoNoiseState===1){noiseState=true;belowSince=null}else if(noiseState&&arduinoNoiseState===0){if(belowSince===null)belowSince=now;if(now-belowSince>=SILENCE_GRACE_MS){noiseState=false;belowSince=null;highSeconds=0}}if(noiseState&&belowSince===null){highSeconds+=dt;if(highSeconds>=TRIGGER_SECONDS)beginAlert()}}}updateIndicators();requestAnimationFrame(tick)}
-function draw(){const w=canvas.clientWidth,hc=canvas.clientHeight;ctx.clearRect(0,0,w,hc);ctx.strokeStyle='#20272d';ctx.lineWidth=1;for(let y=25;y<hc;y+=35){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}const ty=hc-(threshold()/500)*(hc-28)-10;ctx.setLineDash([6,6]);ctx.strokeStyle='#ffd34d';ctx.beginPath();ctx.moveTo(0,ty);ctx.lineTo(w,ty);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#ffe19a';ctx.font='10px Arial';ctx.fillText('ADC THRESHOLD',9,Math.max(14,ty-7));ctx.beginPath();ctx.lineWidth=2.4;ctx.strokeStyle='#50d9ed';history.forEach((v,i)=>{const x=i/(history.length-1)*w,y=hc-12-(v/1023)*(hc-28);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.stroke();const bc=$('hmBinaryWave'),bctx=bc.getContext('2d'),bw=bc.clientWidth,bh=bc.clientHeight,d=window.devicePixelRatio||1;if(bc.width!==Math.max(1,Math.floor(bw*d))||bc.height!==Math.max(1,Math.floor(bh*d))){bc.width=Math.max(1,Math.floor(bw*d));bc.height=Math.max(1,Math.floor(bh*d))}bctx.setTransform(d,0,0,d,0,0);bctx.clearRect(0,0,bw,bh);bctx.strokeStyle='#20272d';bctx.beginPath();bctx.moveTo(0,bh/2);bctx.lineTo(bw,bh/2);bctx.stroke();bctx.beginPath();bctx.lineWidth=2.5;bctx.strokeStyle='#ff6377';binaryHistory.forEach((v,i)=>{const x=i/(binaryHistory.length-1)*bw,y=v?bh*.25:bh*.75;if(i===0)bctx.moveTo(x,y);else bctx.lineTo(x,y)});bctx.stroke()}
+function draw(){const w=canvas.clientWidth,hc=canvas.clientHeight;ctx.clearRect(0,0,w,hc);ctx.strokeStyle='#20272d';ctx.lineWidth=1;for(let y=25;y<hc;y+=35){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}const ty=hc-(threshold()/500)*(hc-28)-10;ctx.setLineDash([6,6]);ctx.strokeStyle='#ffd34d';ctx.beginPath();ctx.moveTo(0,ty);ctx.lineTo(w,ty);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#ffe19a';ctx.font='10px Arial';ctx.fillText('ADC THRESHOLD',9,Math.max(14,ty-7));ctx.beginPath();ctx.lineWidth=2.4;ctx.strokeStyle='#50d9ed';history.forEach((v,i)=>{const x=i/(history.length-1)*w,y=hc-12-(v/1023)*(hc-28);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.stroke()}
 if(!supported){$('hmConnect').disabled=true;setConnection(false,'WEB SERIAL NOT AVAILABLE','Desktop Chrome / Edge required')}
 $('hmSensitivityValue').textContent=fullScale()+' ADC counts';$('hmThresholdValue').textContent=threshold()+' ADC';updateModeControls();updateIndicators();draw();requestAnimationFrame(tick);
 window.addEventListener('beforeunload',()=>{try{reader&&reader.cancel();port&&port.close()}catch(e){}});
